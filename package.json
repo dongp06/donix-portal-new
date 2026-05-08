@@ -1,0 +1,17 @@
+{
+  "name": "donix-portal",
+  "private": true,
+  "workspaces": ["web", "api"],
+  "scripts": {
+    "dev": "concurrently -n web,api -c blue,green \"npm run dev -w web\" \"npm run start:dev -w api\"",
+    "build": "npm run build -w api && npm run build -w web",
+    "start": "concurrently -n web,api \"npm run start -w web\" \"npm run start:prod -w api\""
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  },
+  "overrides": {
+    "prisma": "5.22.0",
+    "@prisma/client": "5.22.0"
+  }
+}

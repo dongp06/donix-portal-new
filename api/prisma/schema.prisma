@@ -1,0 +1,42 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Category {
+  id       String  @id
+  slug     String  @unique
+  name     String
+  navLabel String?
+  posts    Post[]
+}
+
+model Post {
+  id              String   @id
+  slug            String   @unique
+  title           String
+  excerpt         String
+  content         String
+  coverImage      String
+  categoryId      String
+  category        Category @relation(fields: [categoryId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  categoryName    String
+  views           Int      @default(0)
+  date            String
+  isPinned        Boolean  @default(false)
+  readTimeMinutes Int?
+  stackLabel      String?
+  tagLine         String?
+  codeExample     String?
+  sampleOutput    String?
+  attachments     String?
+  relatedSlugs    String?
+
+  @@index([categoryId])
+  @@index([date])
+  @@index([isPinned])
+}
