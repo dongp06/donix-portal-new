@@ -1,172 +1,107 @@
+'use client';
+
+import React from 'react';
 import Link from 'next/link';
-import { Github, Globe, Mail } from 'lucide-react';
-
-import { DonixLogo } from '@/components/brand/DonixLogo';
-import { cn } from '@/lib/utils';
-
-const linkClass = cn(
-  'text-[13px] md:text-sm text-gray-400 transition-colors duration-200',
-  'hover:text-orange-400',
-  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0a0a0a]',
-);
-
-const headingClass =
-  'text-base md:text-lg font-semibold text-orange-500 mb-4 tracking-tight';
+import { Bot, Shield, Zap, Server, MessageSquare, Terminal, Heart } from 'lucide-react';
 
 export function Footer() {
   return (
-    <footer className="border-t border-gray-800/60 bg-[#0a0a0a] py-8 font-sans text-gray-300 md:py-12">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-2 gap-x-4 gap-y-8 lg:grid-cols-4 lg:gap-12">
-          {/* Brand — mobile full width, desktop one column */}
-          <div className="col-span-2 space-y-3 lg:col-span-1">
-            <Link
-              href="/"
-              className="inline-block transition-opacity duration-200 hover:opacity-90"
-            >
-              <DonixLogo variant="darkBar" size="lg" />
+    <footer className="border-t border-zinc-800/80 bg-zinc-950 text-zinc-400">
+      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
+          {/* Brand Col */}
+          <div className="space-y-4 md:col-span-1">
+            <Link href="/" className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center">
+                <Bot className="w-5 h-5 text-white" />
+              </div>
+              <span className="text-base font-black tracking-wider text-white">
+                THUEBOT<span className="text-cyan-400">.SITE</span>
+              </span>
             </Link>
-            <p className="text-justify text-[13px] leading-relaxed text-gray-400 md:text-sm">
-              Không phải sản phẩm hoàn hảo hay đột phá. Những gì ở đây được đúc
-              kết từ trải nghiệm thực tế — học, làm và vấp ngã. Không phô
-              trương; chỉ tập trung chia sẻ tài nguyên và công cụ thực chiến
-              cho dev và cộng đồng.
+            <p className="text-xs text-zinc-400 leading-relaxed">
+              Sàn giao dịch trung gian cho thuê bot tự động hóa số 1 Việt Nam. Chuyên biệt các dòng Bot Messenger, Telegram, Discord, Zalo & Instagram.
             </p>
+            <div className="flex items-center gap-2 text-xs text-emerald-400 font-semibold">
+              <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span>Hệ thống Uptime 99.94% Online</span>
+            </div>
           </div>
 
-          {/* Chuyên mục */}
-          <div className="col-span-1">
-            <h3 className={headingClass}>Chuyên mục</h3>
-            <ul className="space-y-2.5 text-[13px] md:text-sm">
+          {/* Quick Links */}
+          <div className="space-y-3">
+            <h4 className="text-xs font-bold text-white uppercase tracking-wider">Khám Phá Bot</h4>
+            <ul className="space-y-2 text-xs">
               <li>
-                <Link href="/category/lap-trinh" className={linkClass}>
-                  Lập trình
+                <Link href="/bots?category=messenger" className="hover:text-cyan-400 transition-colors">
+                  Bot Facebook Messenger Auto Inbox
                 </Link>
               </li>
               <li>
-                <Link href="/category/game-mod" className={linkClass}>
-                  Mobi Army2 / Game mod
+                <Link href="/bots?category=telegram" className="hover:text-cyan-400 transition-colors">
+                  Bot Telegram Spam Group & Kéo Mem
                 </Link>
               </li>
               <li>
-                <Link href="/category/phan-mem" className={linkClass}>
-                  Phần mềm &amp; TUT
+                <Link href="/bots?category=discord" className="hover:text-cyan-400 transition-colors">
+                  Bot Discord Auto Role & Notice Signal
                 </Link>
               </li>
               <li>
-                <Link href="/category/tool-tien-ich" className={linkClass}>
-                  Tool tiện ích
+                <Link href="/bots?category=zalo" className="hover:text-cyan-400 transition-colors">
+                  Bot Zalo OA & Auto Spam Tin Nhắn SĐT
+                </Link>
+              </li>
+              <li>
+                <Link href="/bots?category=instagram" className="hover:text-cyan-400 transition-colors">
+                  Bot Instagram Direct (DM) & Seeding
                 </Link>
               </li>
             </ul>
           </div>
 
-          {/* Thông tin */}
-          <div className="col-span-1">
-            <h3 className={headingClass}>Thông tin</h3>
-            <ul className="space-y-2.5 text-[13px] md:text-sm">
+          {/* Dành Cho Nhà Cung Cấp */}
+          <div className="space-y-3">
+            <h4 className="text-xs font-bold text-white uppercase tracking-wider">Dành Cho Chủ Bot</h4>
+            <ul className="space-y-2 text-xs">
               <li>
-                <Link href="/" className={linkClass}>
-                  Trang chủ
+                <Link href="/dashboard" className="hover:text-cyan-400 transition-colors">
+                  Đăng Cho Thuê Phần Mềm (0% Phí Ban Đầu)
                 </Link>
               </li>
               <li>
-                <Link href="/bai-ghim" className={linkClass}>
-                  Bài viết đã ghim
+                <Link href="/community" className="hover:text-cyan-400 transition-colors">
+                  Nhận Làm Bot Theo Yêu Cầu
                 </Link>
               </li>
               <li>
-                <Link href="/bai-moi" className={linkClass}>
-                  Bài viết mới nhất
+                <Link href="/dashboard" className="hover:text-cyan-400 transition-colors">
+                  Hệ Thống Tạo Key & Quản Lý Khách Thuê
                 </Link>
               </li>
               <li>
-                <Link href="/" className={linkClass}>
-                  Điều khoản sử dụng
-                </Link>
-              </li>
-              <li>
-                <Link href="/" className={linkClass}>
-                  Chính sách bảo mật
-                </Link>
-              </li>
-              <li>
-                <Link href="/" className={linkClass}>
-                  Liên hệ quảng cáo
+                <Link href="/dashboard" className="hover:text-cyan-400 transition-colors">
+                  Quản Lý Doanh Thu Tự Động 24/7
                 </Link>
               </li>
             </ul>
           </div>
 
-          {/* Liên hệ — mobile full width */}
-          <div className="col-span-2 mt-2 lg:col-span-1 lg:mt-0">
-            <h3 className={headingClass}>Liên hệ</h3>
-            <ul className="space-y-3.5 text-[13px] md:text-sm">
-              <li className="group flex items-center gap-3">
-                <Mail
-                  size={16}
-                  className="shrink-0 text-gray-500 transition-colors group-hover:text-orange-500"
-                  aria-hidden
-                />
-                <a
-                  href="mailto:contact@donix.net"
-                  className={cn(
-                    linkClass,
-                    'min-w-0 truncate border-b border-transparent hover:border-orange-400/40',
-                  )}
-                >
-                  contact@donix.net
-                </a>
-              </li>
-              <li className="group flex items-center gap-3">
-                <Github
-                  size={16}
-                  className="shrink-0 text-gray-500 transition-colors group-hover:text-orange-500"
-                  aria-hidden
-                />
-                <a
-                  href="https://github.com/donix-portal"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={cn(
-                    linkClass,
-                    'min-w-0 truncate border-b border-transparent hover:border-orange-400/40',
-                  )}
-                >
-                  github.com/donix-portal
-                </a>
-              </li>
-              <li className="group flex items-start gap-3">
-                <Globe
-                  size={16}
-                  className="mt-0.5 shrink-0 text-gray-500 transition-colors group-hover:text-orange-500"
-                  aria-hidden
-                />
-                <a
-                  href="https://www.facebook.com"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={cn(
-                    linkClass,
-                    'leading-snug border-b border-transparent hover:border-orange-400/40',
-                  )}
-                >
-                  Group Fb: ReverseVN – Developers Powered by ChatAI
-                </a>
-              </li>
-            </ul>
+          {/* Support & Community */}
+          <div className="space-y-3">
+            <h4 className="text-xs font-bold text-white uppercase tracking-wider">Hỗ Trợ & Cộng Đồng</h4>
+            <div className="space-y-2 text-xs">
+              <p>Hotline/Zalo Support: <span className="text-white font-semibold">0988.xxx.xxx</span></p>
+              <p>Group Telegram Dev: <span className="text-cyan-400 font-semibold">t.me/donix_bot_dev</span></p>
+              <p>Email: <span className="text-white">support@donix.vn</span></p>
+            </div>
           </div>
         </div>
 
-        <div className="mt-10 flex flex-col items-center justify-between gap-3 border-t border-gray-800/60 pt-5 text-[11px] text-gray-500 md:flex-row md:text-xs">
-          <p>© 2024 – 2026 Donix Portal. Mọi quyền được bảo lưu.</p>
-          <p className="text-center md:text-right">
-            <span>
-              Thiết kế bởi{' '}
-              <span className="cursor-pointer font-medium text-gray-300 transition-colors hover:text-orange-500">
-                Donix Team
-              </span>
-            </span>
+        <div className="border-t border-zinc-800/80 pt-6 flex flex-col sm:flex-row items-center justify-between text-xs text-zinc-500 gap-4">
+          <p>© 2026 Donix Bot Rental Portal. Phát triển theo mô hình chợ cho thuê bot tự động.</p>
+          <p className="flex items-center gap-1">
+            Made with <Heart className="w-3.5 h-3.5 text-rose-500 fill-rose-500" /> for Bot Developers & Automation Community.
           </p>
         </div>
       </div>

@@ -7,13 +7,13 @@ import { Search, TrendingUp, FolderOpen } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { MOCK_CATEGORIES, MOCK_POSTS } from '@shared/mock-data';
+import { MOCK_CATEGORIES, MOCK_BOTS } from '@shared/mock-data';
 import { cn } from '@/lib/utils';
 import { formatViewCount } from '@/lib/format';
 
 export function Sidebar() {
   const pathname = usePathname();
-  const popularPosts = [...MOCK_POSTS].sort((a, b) => b.views - a.views).slice(0, 4);
+  const popularPosts = [...MOCK_BOTS].sort((a, b) => b.totalRentals - a.totalRentals).slice(0, 4);
 
   return (
     <aside className="space-y-8 sticky top-28">
@@ -79,7 +79,7 @@ export function Sidebar() {
         </div>
         <div className="space-y-4">
           {popularPosts.map((post) => (
-            <Link key={post.id} href={`/posts/${post.slug}`} className="flex gap-3 group items-start">
+            <Link key={post.id} href={`/bots/${post.id}`} className="flex gap-3 group items-start">
               <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 border border-border">
                 <img
                   src={post.coverImage}
@@ -92,7 +92,7 @@ export function Sidebar() {
                   {post.title}
                 </h4>
                 <div className="flex items-center gap-2 text-[10px] text-muted-foreground tabular-nums">
-                  <span>{formatViewCount(post.views)} lượt xem</span>
+                  <span>{formatViewCount(post.totalRentals)} lượt thuê</span>
                 </div>
               </div>
             </Link>
