@@ -3,17 +3,14 @@ import {
   Controller,
   Post,
   UploadedFile,
-  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { AdminGuard } from '../common/admin.guard';
 import { ok } from '../common/api-response';
 import { FilesService } from './files.service';
 
-@Controller('admin/files')
-@UseGuards(AdminGuard)
-export class AdminFilesController {
+@Controller('files')
+export class FilesUploadController {
   constructor(private readonly files: FilesService) {}
 
   @Post('upload')

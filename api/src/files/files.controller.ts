@@ -8,15 +8,12 @@ export class FilesController {
 
   @Get(':fileId')
   download(@Param('fileId') fileId: string, @Res() res: Response) {
-    const entry = this.files.get(fileId);
-    if (!entry) {
-      throw new NotFoundException({ success: false, error: 'File not found' });
-    }
-    res.setHeader('Content-Type', entry.mime);
+    const { filename, mime, buffer } = this.files.read(fileId);
+    res.setHeader('Content-Type', mime);
     res.setHeader(
       'Content-Disposition',
-      `attachment; filename="${encodeURIComponent(entry.filename)}"`,
+      `attachment; filename="${encodeURIComponent(filename)}"`,
     );
-    res.send(entry.buffer);
+    res.send(buffer);
   }
 }
