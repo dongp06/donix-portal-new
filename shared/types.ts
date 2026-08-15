@@ -37,6 +37,11 @@ export interface BotProviderInfo {
   totalSales: number;
   isVerified: boolean;
   joinedDate: string;
+  contact?: {
+    zalo?: string;
+    telegram?: string;
+    phone?: string;
+  };
 }
 
 export interface BotPricing {

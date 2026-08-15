@@ -4,8 +4,7 @@ import React, { useState } from 'react';
 import { useRole } from '../../context/RoleContext';
 import { BotItem, BotCategorySlug } from '@shared/types';
 import { BotCard } from '../../components/bot/BotCard';
-import { RentalModal } from '../../components/modals/RentalModal';
-import { DepositModal } from '../../components/modals/DepositModal';
+import { ContactModal } from '../../components/modals/ContactModal';
 import { Search, ArrowUpDown } from 'lucide-react';
 
 export default function BotsCatalogPage() {
@@ -13,10 +12,8 @@ export default function BotsCatalogPage() {
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [licenseFilter, setLicenseFilter] = useState<string>('all');
   const [sortOption, setSortOption] = useState<string>('popular');
-  const [selectedBotForRent, setSelectedBotForRent] = useState<BotItem | null>(null);
-  const [isDepositOpen, setIsDepositOpen] = useState(false);
+  const [selectedBotForContact, setSelectedBotForContact] = useState<BotItem | null>(null);
 
   const categories = [
     { id: 'all', name: 'Tất cả danh mục' },
@@ -31,13 +28,12 @@ export default function BotsCatalogPage() {
     .filter((b) => {
       const matchCat = selectedCategory === 'all' || b.categorySlug === selectedCategory;
       const matchStatus = statusFilter === 'all' || b.status === statusFilter;
-      const matchLicense = licenseFilter === 'all' || b.licenseType === licenseFilter;
       const matchSearch =
         !search ||
         b.title.toLowerCase().includes(search.toLowerCase()) ||
         b.description.toLowerCase().includes(search.toLowerCase()) ||
         b.tags.some((t) => t.toLowerCase().includes(search.toLowerCase()));
-      return matchCat && matchStatus && matchLicense && matchSearch;
+      return matchCat && matchStatus && matchSearch;
     })
     .sort((a, b) => {
       if (sortOption === 'popular') return b.totalRentals - a.totalRentals;
@@ -94,13 +90,6 @@ export default function BotsCatalogPage() {
               <option value="offline">Ngoại tuyến</option>
             </select>
 
-            <select value={licenseFilter} onChange={(e) => setLicenseFilter(e.target.value)} className={selectClass} aria-label="Lọc theo kiểu license">
-              <option value="all">Tất cả kiểu license</option>
-              <option value="key">Mã License Key</option>
-              <option value="web_portal">Web Cloud Portal</option>
-              <option value="api_access">REST API Access</option>
-            </select>
-
             <select value={sortOption} onChange={(e) => setSortOption(e.target.value)} className={selectClass} aria-label="Sắp xếp">
               <option value="popular">Nổi bật (nhiều lượt thuê)</option>
               <option value="rating">Đánh giá cao nhất</option>
@@ -114,7 +103,7 @@ export default function BotsCatalogPage() {
         {filteredBots.length > 0 ? (
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {filteredBots.map((bot) => (
-              <BotCard key={bot.id} bot={bot} onRentClick={(b) => setSelectedBotForRent(b)} />
+              <BotCard key={bot.id} bot={bot} onContactClick={(b) => setSelectedBotForContact(b)} />
             ))}
           </div>
         ) : (
@@ -127,7 +116,6 @@ export default function BotsCatalogPage() {
                 setSearch('');
                 setSelectedCategory('all');
                 setStatusFilter('all');
-                setLicenseFilter('all');
               }}
               className="text-xs font-semibold text-brand underline"
             >
@@ -137,13 +125,11 @@ export default function BotsCatalogPage() {
         )}
       </div>
 
-      <RentalModal
-        bot={selectedBotForRent}
-        isOpen={!!selectedBotForRent}
-        onClose={() => setSelectedBotForRent(null)}
-        onOpenDeposit={() => setIsDepositOpen(true)}
+      <ContactModal
+        bot={selectedBotForContact}
+        isOpen={!!selectedBotForContact}
+        onClose={() => setSelectedBotForContact(null)}
       />
-      <DepositModal isOpen={isDepositOpen} onClose={() => setIsDepositOpen(false)} />
     </div>
   );
 }

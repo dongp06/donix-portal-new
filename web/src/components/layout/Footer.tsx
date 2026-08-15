@@ -13,8 +13,7 @@ const exploreLinks = [
 ];
 
 const supportLinks = [
-  { href: '/dashboard', label: 'Bảng điều khiển' },
-  { href: '/wallet', label: 'Ví Donix' },
+  { href: '/dashboard', label: 'Tin đăng của tôi' },
   { href: '/community', label: 'Báo lỗi & hỗ trợ' },
 ];
 
@@ -29,12 +28,12 @@ export function Footer() {
               <DonixLogo size="md" />
             </Link>
             <p className="max-w-sm text-sm leading-relaxed text-muted-foreground">
-              Sàn giao dịch trung gian cho thuê bot tự động hóa. Kết nối chủ bot và khách thuê,
-              bảo hộ giao dịch và cấp license tự động.
+              Diễn đàn & chợ rao bán, cho thuê bot tự động hóa. Kết nối chủ bot và người mua,
+              liên hệ giao dịch trực tiếp.
             </p>
             <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
               <Shield className="h-4 w-4 text-brand" aria-hidden />
-              <span>Bảo hộ giao dịch trung gian</span>
+              <span>Cộng đồng bot tự động hóa Việt Nam</span>
             </div>
           </div>
 

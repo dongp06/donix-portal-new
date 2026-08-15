@@ -68,7 +68,8 @@ export const MOCK_BOTS: BotItem[] = [
       rating: 4.9,
       totalSales: 1420,
       isVerified: true,
-      joinedDate: '2024-03-15'
+      joinedDate: '2024-03-15',
+        contact: { zalo: '0987 654 321', telegram: '@devnguyen_pro' },
     },
     coverImage: 'https://images.unsplash.com/photo-1531746790731-6c087fecd65a?w=800&auto=format&fit=crop&q=80',
     gallery: [
@@ -112,7 +113,8 @@ export const MOCK_BOTS: BotItem[] = [
       rating: 4.8,
       totalSales: 980,
       isVerified: true,
-      joinedDate: '2024-01-10'
+      joinedDate: '2024-01-10',
+        contact: { zalo: '0912 345 678', telegram: '@cyberbot_studio' },
     },
     coverImage: 'https://images.unsplash.com/photo-1611746872915-64382b5c76da?w=800&auto=format&fit=crop&q=80',
     gallery: [
@@ -156,7 +158,8 @@ export const MOCK_BOTS: BotItem[] = [
       rating: 4.95,
       totalSales: 2150,
       isVerified: true,
-      joinedDate: '2023-11-05'
+      joinedDate: '2023-11-05',
+        contact: { telegram: '@vn_crypto_tech', phone: '0933 222 111' },
     },
     coverImage: 'https://images.unsplash.com/photo-1614680376593-902f749f7edc?w=800&auto=format&fit=crop&q=80',
     gallery: [
@@ -200,7 +203,8 @@ export const MOCK_BOTS: BotItem[] = [
       rating: 4.75,
       totalSales: 740,
       isVerified: false,
-      joinedDate: '2024-05-20'
+      joinedDate: '2024-05-20',
+        contact: { zalo: '0977 888 999' },
     },
     coverImage: 'https://images.unsplash.com/photo-1577563908411-5077b6dc7624?w=800&auto=format&fit=crop&q=80',
     gallery: [
@@ -244,7 +248,8 @@ export const MOCK_BOTS: BotItem[] = [
       rating: 4.9,
       totalSales: 1420,
       isVerified: true,
-      joinedDate: '2024-03-15'
+      joinedDate: '2024-03-15',
+        contact: { zalo: '0987 654 321', telegram: '@devnguyen_pro' },
     },
     coverImage: 'https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?w=800&auto=format&fit=crop&q=80',
     gallery: [

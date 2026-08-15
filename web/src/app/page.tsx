@@ -5,13 +5,11 @@ import Link from 'next/link';
 import { useRole } from '../context/RoleContext';
 import { BotItem } from '@shared/types';
 import { BotCard } from '../components/bot/BotCard';
-import { RentalModal } from '../components/modals/RentalModal';
-import { DepositModal } from '../components/modals/DepositModal';
+import { ContactModal } from '../components/modals/ContactModal';
 import {
   Bot,
   Zap,
   ShieldCheck,
-  TrendingUp,
   Search,
   Key,
   Users,
@@ -26,11 +24,10 @@ import {
 import { cn } from '@/lib/utils';
 
 export default function HomePage() {
-  const { bots, role, toggleRole } = useRole();
+  const { bots } = useRole();
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
-  const [selectedBotForRent, setSelectedBotForRent] = useState<BotItem | null>(null);
-  const [isDepositOpen, setIsDepositOpen] = useState<boolean>(false);
+  const [selectedBotForContact, setSelectedBotForContact] = useState<BotItem | null>(null);
 
   const categories = [
     { id: 'all', name: 'Tất cả bot', icon: Sparkles },
@@ -64,7 +61,7 @@ export default function HomePage() {
         <div className="relative mx-auto max-w-7xl px-4 pb-16 pt-14 text-center sm:px-6 sm:pb-20 lg:px-8">
           <div className="inline-flex items-center gap-2 rounded-full border border-brand/30 bg-brand/5 px-3.5 py-1.5 text-xs font-semibold text-brand">
             <Sparkles className="h-3.5 w-3.5" aria-hidden />
-            Sàn trung gian & cộng đồng cho thuê bot tự động hóa
+            Diễn đàn & chợ rao bán, cho thuê bot tự động hóa
           </div>
 
           <h1 className="text-display mx-auto mt-6 max-w-4xl text-balance">
@@ -72,8 +69,8 @@ export default function HomePage() {
           </h1>
 
           <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-muted-foreground">
-            Kết nối chủ bot và khách thuê trên một sàn trung gian. Tự động cấp license,
-            giữ tiền trung gian đến khi bot hoạt động ổn định.
+            Nơi chủ bot đăng tin rao bán, cho thuê và cộng đồng trao đổi. Người mua liên hệ
+            trực tiếp người bán, giao dịch tự thỏa thuận.
           </p>
 
           {/* Search */}
@@ -157,7 +154,7 @@ export default function HomePage() {
         {filteredBots.length > 0 ? (
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {filteredBots.map((bot) => (
-              <BotCard key={bot.id} bot={bot} onRentClick={(b) => setSelectedBotForRent(b)} />
+              <BotCard key={bot.id} bot={bot} onContactClick={(b) => setSelectedBotForContact(b)} />
             ))}
           </div>
         ) : (
@@ -193,9 +190,9 @@ export default function HomePage() {
               </div>
               <ul className="mb-7 space-y-2.5 text-sm text-muted-foreground">
                 {[
-                  'Thuê theo giờ, ngày hoặc tháng linh hoạt',
-                  'Nhận license key kích hoạt ngay sau thanh toán',
-                  'Tiền trung gian được giữ đến khi bot chạy ổn định',
+                  'Duyệt bot theo danh mục: Messenger, Telegram, Zalo, Discord',
+                  'Xem thông tin, đánh giá và giá tham khảo của từng bot',
+                  'Liên hệ trực tiếp người bán qua Zalo / Telegram để chốt',
                 ].map((item) => (
                   <li key={item} className="flex items-start gap-2.5">
                     <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-brand" aria-hidden />
@@ -225,9 +222,9 @@ export default function HomePage() {
               </div>
               <ul className="mb-7 space-y-2.5 text-sm text-muted-foreground">
                 {[
-                  'Miễn phí niêm yết bot ban đầu, không hoa hồng ẩn',
-                  'Tự động sinh và xác thực license key cho từng khách',
-                  'Rút doanh thu về ngân hàng / ví tức thì',
+                  'Miễn phí đăng tin rao bán, cho thuê bot',
+                  'Hiển thị thông tin liên hệ để khách chủ động nhắn tin',
+                  'Quản lý tất cả tin đăng của bạn trong một trang',
                 ].map((item) => (
                   <li key={item} className="flex items-start gap-2.5">
                     <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-brand" aria-hidden />
@@ -235,16 +232,13 @@ export default function HomePage() {
                   </li>
                 ))}
               </ul>
-              <button
-                type="button"
-                onClick={() => {
-                  if (role !== 'provider') toggleRole();
-                }}
+              <Link
+                href="/dashboard"
                 className="inline-flex w-full items-center justify-center gap-1.5 rounded-xl bg-brand px-4 py-2.5 text-sm font-semibold text-brand-foreground transition-colors hover:brightness-110"
               >
-                Bật chế độ cho thuê bot
+                Đăng tin bot cho thuê
                 <ArrowRight className="h-4 w-4" aria-hidden />
-              </button>
+              </Link>
             </div>
           </div>
         </div>
@@ -306,13 +300,11 @@ export default function HomePage() {
         </div>
       </section>
 
-      <RentalModal
-        bot={selectedBotForRent}
-        isOpen={!!selectedBotForRent}
-        onClose={() => setSelectedBotForRent(null)}
-        onOpenDeposit={() => setIsDepositOpen(true)}
+      <ContactModal
+        bot={selectedBotForContact}
+        isOpen={!!selectedBotForContact}
+        onClose={() => setSelectedBotForContact(null)}
       />
-      <DepositModal isOpen={isDepositOpen} onClose={() => setIsDepositOpen(false)} />
     </div>
   );
 }

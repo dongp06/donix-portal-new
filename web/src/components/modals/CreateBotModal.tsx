@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRole } from '../../context/RoleContext';
-import { BotCategorySlug, LicenseType } from '@shared/types';
+import { BotCategorySlug } from '@shared/types';
 import { Plus, X } from 'lucide-react';
 
 interface CreateBotModalProps {
@@ -19,7 +19,8 @@ export function CreateBotModal({ isOpen, onClose }: CreateBotModalProps) {
   const [hourly, setHourly] = useState<number>(5000);
   const [daily, setDaily] = useState<number>(30000);
   const [monthly, setMonthly] = useState<number>(350000);
-  const [licenseType, setLicenseType] = useState<LicenseType>('key');
+  const [licenseType] = useState<'key'>('key');
+  const [contact, setContact] = useState<string>('');
   const [features, setFeatures] = useState<string>(
     'Auto cày cấp 24/7\nThông báo Telegram\nHỗ trợ đa tài khoản',
   );
@@ -44,17 +45,20 @@ export function CreateBotModal({ isOpen, onClose }: CreateBotModalProps) {
               ? 'Bot Zalo OA & Zalo cá nhân'
               : 'Bot Instagram Direct (DM)';
 
-    addNewBot({
-      title,
-      tagline: tagline || 'Giải pháp tự động hóa thông minh',
-      description,
-      categorySlug,
-      categoryName: catName,
-      pricing: { hourly, daily, monthly },
-      licenseType,
-      features: features.split('\n').filter((f) => f.trim().length > 0),
-      coverImage,
-    });
+    addNewBot(
+      {
+        title,
+        tagline: tagline || 'Giải pháp tự động hóa thông minh',
+        description,
+        categorySlug,
+        categoryName: catName,
+        pricing: { hourly, daily, monthly },
+        licenseType,
+        features: features.split('\n').filter((f) => f.trim().length > 0),
+        coverImage,
+      },
+      contact.trim() || undefined,
+    );
 
     onClose();
   };
@@ -202,19 +206,17 @@ export function CreateBotModal({ isOpen, onClose }: CreateBotModalProps) {
 
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div>
-              <label htmlFor="bot-license" className={labelClass}>
-                Hình thức cấp phép (license)
+              <label htmlFor="bot-contact" className={labelClass}>
+                Liên hệ (Zalo / Telegram / SĐT)
               </label>
-              <select
-                id="bot-license"
-                value={licenseType}
-                onChange={(e) => setLicenseType(e.target.value as LicenseType)}
+              <input
+                id="bot-contact"
+                type="text"
+                value={contact}
+                onChange={(e) => setContact(e.target.value)}
+                placeholder="VD: 0987 654 321 hoặc @username"
                 className={inputClass}
-              >
-                <option value="key">Mã License Key (nhập vào phần mềm)</option>
-                <option value="web_portal">Trang Web Portal (đăng nhập cloud)</option>
-                <option value="api_access">REST API Token (cho developer)</option>
-              </select>
+              />
             </div>
             <div>
               <label htmlFor="bot-cover" className={labelClass}>

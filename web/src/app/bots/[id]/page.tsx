@@ -4,12 +4,11 @@ import React, { useState, use } from 'react';
 import Link from 'next/link';
 import { useRole } from '../../../context/RoleContext';
 import { BotItem } from '@shared/types';
-import { RentalModal } from '../../../components/modals/RentalModal';
-import { DepositModal } from '../../../components/modals/DepositModal';
+import { ContactModal } from '../../../components/modals/ContactModal';
 import {
   Star,
   ShieldCheck,
-  Key,
+  MessageCircle,
   CheckCircle2,
   Activity,
   Cpu,
@@ -23,8 +22,7 @@ export default function BotDetailPage({ params }: { params: Promise<{ id: string
   const { id } = use(params);
   const { bots } = useRole();
   const [activeTab, setActiveTab] = useState<'overview' | 'features' | 'reviews'>('overview');
-  const [isRentalOpen, setIsRentalOpen] = useState(false);
-  const [isDepositOpen, setIsDepositOpen] = useState(false);
+  const [isContactOpen, setIsContactOpen] = useState(false);
 
   const bot: BotItem | undefined = bots.find((b) => b.id === id || b.slug === id) || bots[0];
 
@@ -136,11 +134,11 @@ export default function BotDetailPage({ params }: { params: Promise<{ id: string
               </div>
               <button
                 type="button"
-                onClick={() => setIsRentalOpen(true)}
+                onClick={() => setIsContactOpen(true)}
                 className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-brand px-8 py-3 text-sm font-semibold text-brand-foreground transition-colors hover:brightness-110 sm:w-auto"
               >
-                <Key className="h-4 w-4" aria-hidden />
-                Thuê bot ngay
+                <MessageCircle className="h-4 w-4" aria-hidden />
+                Liên hệ người bán
               </button>
             </div>
           </div>
@@ -257,7 +255,7 @@ export default function BotDetailPage({ params }: { params: Promise<{ id: string
               </div>
               <button
                 type="button"
-                onClick={() => alert(`Đã gửi yêu cầu chat với ${bot.provider.name}`)}
+                onClick={() => setIsContactOpen(true)}
                 className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-background px-4 py-2.5 text-sm font-semibold transition-colors hover:border-brand/40 hover:text-foreground"
               >
                 <MessageSquare className="h-4 w-4" aria-hidden />
@@ -278,13 +276,7 @@ export default function BotDetailPage({ params }: { params: Promise<{ id: string
         </div>
       </div>
 
-      <RentalModal
-        bot={bot}
-        isOpen={isRentalOpen}
-        onClose={() => setIsRentalOpen(false)}
-        onOpenDeposit={() => setIsDepositOpen(true)}
-      />
-      <DepositModal isOpen={isDepositOpen} onClose={() => setIsDepositOpen(false)} />
+      <ContactModal bot={bot} isOpen={isContactOpen} onClose={() => setIsContactOpen(false)} />
     </div>
   );
 }

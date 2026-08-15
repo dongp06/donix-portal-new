@@ -3,12 +3,12 @@
 import React from 'react';
 import Link from 'next/link';
 import { BotItem } from '@shared/types';
-import { Star, Eye, ArrowRight } from 'lucide-react';
+import { Star, Eye, MessageCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface BotCardProps {
   bot: BotItem;
-  onRentClick: (bot: BotItem) => void;
+  onContactClick: (bot: BotItem) => void;
 }
 
 const statusMeta: Record<BotItem['status'], { label: string; dot: string }> = {
@@ -17,7 +17,7 @@ const statusMeta: Record<BotItem['status'], { label: string; dot: string }> = {
   offline: { label: 'Ngoại tuyến', dot: 'status-offline' },
 };
 
-export function BotCard({ bot, onRentClick }: BotCardProps) {
+export function BotCard({ bot, onContactClick }: BotCardProps) {
   const status = statusMeta[bot.status] ?? statusMeta.offline;
 
   return (
@@ -84,11 +84,11 @@ export function BotCard({ bot, onRentClick }: BotCardProps) {
             </Link>
             <button
               type="button"
-              onClick={() => onRentClick(bot)}
+              onClick={() => onContactClick(bot)}
               className="inline-flex items-center gap-1.5 rounded-lg bg-brand px-3.5 py-2 text-xs font-semibold text-brand-foreground transition-colors hover:brightness-110 active:scale-[0.98]"
             >
-              Thuê ngay
-              <ArrowRight className="h-3.5 w-3.5" aria-hidden />
+              <MessageCircle className="h-3.5 w-3.5" aria-hidden />
+              Liên hệ
             </button>
           </div>
         </div>

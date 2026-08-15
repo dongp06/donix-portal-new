@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useRole } from '../../context/RoleContext';
-import { ArrowRightLeft, Menu, X, Wallet, LayoutDashboard, LogOut } from 'lucide-react';
+import { Menu, X, LayoutDashboard, Plus } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,17 +19,15 @@ import { ThemeToggle } from '@/components/ThemeToggle';
 
 export function Navbar() {
   const pathname = usePathname();
-  const { role, toggleRole, user, wallet } = useRole();
+  const { user } = useRole();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const navLinks = [
     { href: '/', label: 'Trang chủ' },
-    { href: '/bots', label: 'Chợ bot thuê' },
+    { href: '/bots', label: 'Chợ bot' },
     { href: '/community', label: 'Cộng đồng' },
-    { href: '/dashboard', label: 'Bảng điều khiển' },
+    { href: '/dashboard', label: 'Tin đăng của tôi' },
   ];
-
-  const isProvider = role === 'provider';
 
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur-md">
@@ -66,21 +64,14 @@ export function Navbar() {
 
         {/* Right actions */}
         <div className="flex items-center gap-2">
-          {/* Role toggle — static, single accent */}
-          <button
-            type="button"
-            onClick={toggleRole}
-            title="Chuyển chế độ Khách thuê / Chủ bot"
-            className={cn(
-              'hidden items-center gap-2 rounded-xl border px-3 py-1.5 text-xs font-semibold transition-colors sm:flex',
-              isProvider
-                ? 'border-brand/40 bg-brand/10 text-brand hover:bg-brand/15'
-                : 'border-border bg-card text-muted-foreground hover:text-foreground',
-            )}
+          {/* Post a bot CTA */}
+          <Link
+            href="/dashboard"
+            className="hidden items-center gap-1.5 rounded-xl bg-brand px-3.5 py-2 text-xs font-semibold text-brand-foreground transition-colors hover:brightness-110 sm:inline-flex"
           >
-            <ArrowRightLeft className="h-3.5 w-3.5" aria-hidden />
-            <span>{isProvider ? 'Chủ bot (cho thuê)' : 'Khách thuê bot'}</span>
-          </button>
+            <Plus className="h-3.5 w-3.5" aria-hidden />
+            Đăng tin bot
+          </Link>
 
           <ThemeToggle />
 
@@ -106,27 +97,14 @@ export function Navbar() {
               <DropdownMenuContent align="end" className="w-56">
                 <DropdownMenuLabel className="flex flex-col gap-0.5">
                   <span className="text-sm font-semibold">{user.name}</span>
-                  <span className="text-xs font-normal text-muted-foreground">
-                    {wallet.balance.toLocaleString('vi-VN')} đ
-                  </span>
+                  <span className="text-xs font-normal text-muted-foreground">{user.email}</span>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
                   <Link href="/dashboard">
                     <LayoutDashboard className="mr-2 h-4 w-4" aria-hidden />
-                    Bảng điều khiển
+                    Tin đăng của tôi
                   </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/wallet">
-                    <Wallet className="mr-2 h-4 w-4" aria-hidden />
-                    Ví Donix
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem variant="destructive">
-                  <LogOut className="mr-2 h-4 w-4" aria-hidden />
-                  Đăng xuất
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -165,17 +143,14 @@ export function Navbar() {
                 {link.label}
               </Link>
             ))}
-            <button
-              type="button"
-              onClick={() => {
-                toggleRole();
-                setIsMobileMenuOpen(false);
-              }}
-              className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-brand"
+            <Link
+              href="/dashboard"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-brand"
             >
-              <ArrowRightLeft className="h-4 w-4" aria-hidden />
-              Chuyển sang {isProvider ? 'Khách thuê' : 'Chủ bot'}
-            </button>
+              <Plus className="h-4 w-4" aria-hidden />
+              Đăng tin bot
+            </Link>
           </div>
         </nav>
       )}
