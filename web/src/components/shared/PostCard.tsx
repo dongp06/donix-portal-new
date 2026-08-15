@@ -56,10 +56,10 @@ export function PostCard({ post, large = false, variant = 'grid' }: PostCardProp
         <Badge
           variant="outline"
           className={cn(
-            'absolute border-brand text-brand bg-background/90 backdrop-blur-sm font-black uppercase shadow-sm',
+            'absolute border-brand/30 text-brand bg-background/90 backdrop-blur-sm font-semibold',
             isList
               ? 'left-1.5 top-1.5 max-w-[calc(100%-0.75rem)] truncate border px-1.5 py-0 text-[9px] sm:left-2 sm:top-2 sm:text-[10px]'
-              : 'left-3 top-3 border-2 text-[10px]',
+              : 'left-3 top-3 text-[10px]',
           )}
         >
           {post.tagLine ?? post.categoryName}

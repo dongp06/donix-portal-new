@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { Button } from '@/components/ui/button';
+import { DonixLogo } from '@/components/brand/DonixLogo';
 
 export const metadata: Metadata = {
   title: 'Quản trị',
@@ -9,25 +11,19 @@ export const metadata: Metadata = {
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="mx-auto max-w-5xl px-4 py-8">
-      <header className="mb-8 flex flex-wrap items-center justify-between gap-4 border-b border-zinc-800 pb-6">
-        <div>
-          <p className="text-xs uppercase tracking-widest text-amber-500/90">Donix</p>
-          <h1 className="text-xl font-semibold text-white">Quản trị bài viết</h1>
+      <header className="mb-8 flex flex-wrap items-center justify-between gap-4 border-b border-border pb-6">
+        <div className="flex items-center gap-3">
+          <DonixLogo size="sm" />
+          <h1 className="text-xl font-semibold text-foreground">Quản trị bài viết</h1>
         </div>
-        <nav className="flex flex-wrap gap-3 text-sm">
-          <Link
-            href="/admin/posts"
-            className="rounded-md border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-zinc-200 hover:bg-zinc-800"
-          >
-            Danh sách
-          </Link>
-          <Link
-            href="/admin/posts/new"
-            className="rounded-md bg-amber-500 px-3 py-1.5 font-medium text-zinc-950 hover:bg-amber-400"
-          >
-            + Bài mới
-          </Link>
-          <Link href="/" className="text-zinc-500 hover:text-zinc-300">
+        <nav className="flex flex-wrap items-center gap-2 text-sm" aria-label="Điều hướng quản trị">
+          <Button asChild variant="outline" size="sm">
+            <Link href="/admin/posts">Danh sách</Link>
+          </Button>
+          <Button asChild size="sm">
+            <Link href="/admin/posts/new">+ Bài mới</Link>
+          </Button>
+          <Link href="/" className="px-2 text-muted-foreground transition-colors hover:text-foreground">
             ← Về site
           </Link>
         </nav>

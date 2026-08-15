@@ -9,15 +9,15 @@ export default {
     extend: {
       fontFamily: {
         sans: [
-          'var(--font-poppins)',
+          'var(--font-sans)',
           '-apple-system',
           'BlinkMacSystemFont',
           'Segoe UI',
           'Roboto',
           'sans-serif',
         ],
-        display: ['var(--font-poppins)', 'system-ui', 'sans-serif'],
-        'donix-logo': ['var(--font-donix-logo)', 'var(--font-poppins)', 'system-ui', 'sans-serif'],
+        display: ['var(--font-display)', 'system-ui', 'sans-serif'],
+        'donix-logo': ['var(--font-display)', 'system-ui', 'sans-serif'],
         mono: [
           'JetBrains Mono',
           'Fira Code',

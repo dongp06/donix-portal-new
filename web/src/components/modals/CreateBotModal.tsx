@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { useRole } from '../../context/RoleContext';
 import { BotCategorySlug, LicenseType } from '@shared/types';
-import { PlusCircle, Upload, X, CheckCircle } from 'lucide-react';
+import { Plus, X } from 'lucide-react';
 
 interface CreateBotModalProps {
   isOpen: boolean;
@@ -14,14 +14,18 @@ export function CreateBotModal({ isOpen, onClose }: CreateBotModalProps) {
   const { addNewBot } = useRole();
   const [title, setTitle] = useState('');
   const [tagline, setTagline] = useState('');
-  const [categorySlug, setCategorySlug] = useState<BotCategorySlug>('game');
+  const [categorySlug, setCategorySlug] = useState<BotCategorySlug>('messenger');
   const [description, setDescription] = useState('');
   const [hourly, setHourly] = useState<number>(5000);
   const [daily, setDaily] = useState<number>(30000);
   const [monthly, setMonthly] = useState<number>(350000);
   const [licenseType, setLicenseType] = useState<LicenseType>('key');
-  const [features, setFeatures] = useState<string>('Auto cày cấp 24/7\nThông báo Telegram\nHỗ trợ đa tài khoản');
-  const [coverImage, setCoverImage] = useState<string>('https://images.unsplash.com/photo-1542751371-adc38448a05e?w=800&auto=format&fit=crop&q=80');
+  const [features, setFeatures] = useState<string>(
+    'Auto cày cấp 24/7\nThông báo Telegram\nHỗ trợ đa tài khoản',
+  );
+  const [coverImage, setCoverImage] = useState<string>(
+    'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=800&auto=format&fit=crop&q=80',
+  );
 
   if (!isOpen) return null;
 
@@ -29,69 +33,90 @@ export function CreateBotModal({ isOpen, onClose }: CreateBotModalProps) {
     e.preventDefault();
     if (!title.trim()) return;
 
+    const catName =
+      categorySlug === 'messenger'
+        ? 'Bot Facebook Messenger'
+        : categorySlug === 'telegram'
+          ? 'Bot Telegram'
+          : categorySlug === 'discord'
+            ? 'Bot Discord'
+            : categorySlug === 'zalo'
+              ? 'Bot Zalo OA & Zalo cá nhân'
+              : 'Bot Instagram Direct (DM)';
+
     addNewBot({
       title,
       tagline: tagline || 'Giải pháp tự động hóa thông minh',
       description,
       categorySlug,
-      categoryName:
-        categorySlug === 'messenger'
-          ? 'Bot Facebook Messenger'
-          : categorySlug === 'telegram'
-          ? 'Bot Telegram'
-          : categorySlug === 'discord'
-          ? 'Bot Discord'
-          : categorySlug === 'zalo'
-          ? 'Bot Zalo OA & Zalo cá nhân'
-          : 'Bot Instagram Direct (DM)',
+      categoryName: catName,
       pricing: { hourly, daily, monthly },
       licenseType,
       features: features.split('\n').filter((f) => f.trim().length > 0),
-      coverImage
+      coverImage,
     });
 
     onClose();
   };
 
+  const inputClass =
+    'w-full rounded-xl border border-border bg-background px-3.5 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-brand/50 focus:outline-none focus:ring-2 focus:ring-brand/30';
+  const labelClass = 'mb-1 block text-xs font-semibold text-muted-foreground';
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 overflow-y-auto">
-      <div className="relative w-full max-w-2xl my-8 rounded-2xl bg-zinc-900 border border-zinc-800 p-6 shadow-2xl text-white">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-background/80 p-4 backdrop-blur-sm"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Đăng bot mới cho thuê"
+    >
+      <div className="relative my-8 w-full max-w-2xl rounded-2xl border border-border bg-card p-6 text-foreground shadow-2xl">
         <button
+          type="button"
           onClick={onClose}
-          className="absolute top-4 right-4 text-zinc-400 hover:text-white p-1 transition-colors"
+          className="absolute right-4 top-4 rounded-lg p-1 text-muted-foreground transition-colors hover:text-foreground"
+          aria-label="Đóng"
         >
-          <X className="w-5 h-5" />
+          <X className="h-5 w-5" />
         </button>
 
-        <div className="flex items-center gap-3 mb-6">
-          <div className="p-3 rounded-xl bg-cyan-500/20 text-cyan-400 border border-cyan-500/30">
-            <PlusCircle className="w-6 h-6" />
+        <div className="mb-6 flex items-center gap-3">
+          <div className="rounded-xl bg-brand/10 p-3 text-brand">
+            <Plus className="h-6 w-6" aria-hidden />
           </div>
           <div>
-            <h2 className="text-xl font-bold text-white">Đăng Bot Mới Cho Thuê</h2>
-            <p className="text-xs text-zinc-400">Kiếm thu nhập thụ động từ sản phẩm tự động hóa của bạn</p>
+            <h2 className="font-display text-xl font-bold">Đăng bot mới cho thuê</h2>
+            <p className="text-xs text-muted-foreground">
+              Kiếm thu nhập thụ động từ sản phẩm tự động hóa của bạn
+            </p>
           </div>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div>
-              <label className="block text-xs font-semibold text-zinc-400 mb-1">Tên Bot / Phần Mềm *</label>
+              <label htmlFor="bot-title" className={labelClass}>
+                Tên bot / phần mềm *
+              </label>
               <input
+                id="bot-title"
                 type="text"
                 required
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="VD: Auto Võ Lâm Truyền Kỳ HNX 2026"
-                className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-cyan-500"
+                className={inputClass}
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-zinc-400 mb-1">Danh Mục Bot *</label>
+              <label htmlFor="bot-category" className={labelClass}>
+                Danh mục
+              </label>
               <select
+                id="bot-category"
                 value={categorySlug}
                 onChange={(e) => setCategorySlug(e.target.value as BotCategorySlug)}
-                className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-cyan-500"
+                className={inputClass}
               >
                 <option value="messenger">Bot Facebook Messenger</option>
                 <option value="telegram">Bot Telegram</option>
@@ -103,109 +128,135 @@ export function CreateBotModal({ isOpen, onClose }: CreateBotModalProps) {
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-zinc-400 mb-1">Khẩu hiệu ngắn (Tagline)</label>
+            <label htmlFor="bot-tagline" className={labelClass}>
+              Khẩu hiệu ngắn (tagline)
+            </label>
             <input
+              id="bot-tagline"
               type="text"
               value={tagline}
               onChange={(e) => setTagline(e.target.value)}
-              placeholder="VD: Treo máy 24/7, tự né PK và làm nhiệm vụ dã tẩu"
-              className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-cyan-500"
+              placeholder="VD: Treo máy 24/7, tự né PK và làm nhiệm vụ"
+              className={inputClass}
             />
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-zinc-400 mb-1">Mô tả chi tiết tính năng & hướng dẫn</label>
+            <label htmlFor="bot-desc" className={labelClass}>
+              Mô tả chi tiết tính năng & hướng dẫn
+            </label>
             <textarea
+              id="bot-desc"
               rows={3}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Viết mô tả cách dùng, yêu cầu cấu hình..."
-              className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-cyan-500"
+              className={inputClass}
             />
           </div>
 
-          {/* Pricing settings */}
-          <div className="bg-zinc-950 p-4 rounded-xl border border-zinc-800/80 space-y-3">
-            <span className="block text-xs font-bold text-cyan-400 uppercase tracking-wider">Cấu hình giá cho thuê (VNĐ)</span>
+          {/* Pricing */}
+          <div className="space-y-3 rounded-xl border border-border bg-background p-4">
+            <span className="block text-xs font-bold uppercase tracking-wide text-brand">
+              Cấu hình giá cho thuê (VNĐ)
+            </span>
             <div className="grid grid-cols-3 gap-3">
               <div>
-                <label className="block text-[11px] text-zinc-400 mb-1">Giá Giờ (VNĐ)</label>
+                <label htmlFor="price-hourly" className="mb-1 block text-[11px] text-muted-foreground">
+                  Giá giờ
+                </label>
                 <input
+                  id="price-hourly"
                   type="number"
                   value={hourly}
                   onChange={(e) => setHourly(Number(e.target.value))}
-                  className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-2.5 py-1.5 text-xs text-white"
+                  className={inputClass}
                 />
               </div>
               <div>
-                <label className="block text-[11px] text-zinc-400 mb-1">Giá Ngày (VNĐ)</label>
+                <label htmlFor="price-daily" className="mb-1 block text-[11px] text-muted-foreground">
+                  Giá ngày
+                </label>
                 <input
+                  id="price-daily"
                   type="number"
                   value={daily}
                   onChange={(e) => setDaily(Number(e.target.value))}
-                  className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-2.5 py-1.5 text-xs text-white"
+                  className={inputClass}
                 />
               </div>
               <div>
-                <label className="block text-[11px] text-zinc-400 mb-1">Giá Tháng (VNĐ)</label>
+                <label htmlFor="price-monthly" className="mb-1 block text-[11px] text-muted-foreground">
+                  Giá tháng
+                </label>
                 <input
+                  id="price-monthly"
                   type="number"
                   value={monthly}
                   onChange={(e) => setMonthly(Number(e.target.value))}
-                  className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-2.5 py-1.5 text-xs text-white"
+                  className={inputClass}
                 />
               </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div>
-              <label className="block text-xs font-semibold text-zinc-400 mb-1">Hình thức cấp phép (License)</label>
+              <label htmlFor="bot-license" className={labelClass}>
+                Hình thức cấp phép (license)
+              </label>
               <select
+                id="bot-license"
                 value={licenseType}
                 onChange={(e) => setLicenseType(e.target.value as LicenseType)}
-                className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-cyan-500"
+                className={inputClass}
               >
-                <option value="key">Mã License Key (Nhập vào phần mềm)</option>
-                <option value="web_portal">Trang Web Portal (Đăng nhập Cloud)</option>
-                <option value="api_access">REST API Token (Cho Developer)</option>
+                <option value="key">Mã License Key (nhập vào phần mềm)</option>
+                <option value="web_portal">Trang Web Portal (đăng nhập cloud)</option>
+                <option value="api_access">REST API Token (cho developer)</option>
               </select>
             </div>
             <div>
-              <label className="block text-xs font-semibold text-zinc-400 mb-1">Link Ảnh Bìa Demo</label>
+              <label htmlFor="bot-cover" className={labelClass}>
+                Link ảnh bìa demo
+              </label>
               <input
+                id="bot-cover"
                 type="text"
                 value={coverImage}
                 onChange={(e) => setCoverImage(e.target.value)}
                 placeholder="https://..."
-                className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-cyan-500"
+                className={inputClass}
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-zinc-400 mb-1">Các tính năng nổi bật (Mỗi dòng 1 ý)</label>
+            <label htmlFor="bot-features" className={labelClass}>
+              Các tính năng nổi bật (mỗi dòng 1 ý)
+            </label>
             <textarea
+              id="bot-features"
               rows={3}
               value={features}
               onChange={(e) => setFeatures(e.target.value)}
-              className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-cyan-500 font-mono text-xs"
+              className={`${inputClass} font-mono text-xs`}
             />
           </div>
 
-          <div className="pt-2 flex gap-3">
+          <div className="flex gap-3 pt-2">
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 py-2.5 rounded-xl border border-zinc-800 bg-zinc-950 text-zinc-400 text-sm hover:text-white"
+              className="flex-1 rounded-xl border border-border bg-background py-2.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
             >
               Hủy
             </button>
             <button
               type="submit"
-              className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 font-semibold text-white text-sm shadow-lg shadow-cyan-500/20 hover:opacity-95"
+              className="flex-1 rounded-xl bg-brand py-2.5 text-sm font-semibold text-brand-foreground transition-colors hover:brightness-110"
             >
-              Đăng Bot Ngay
+              Đăng bot ngay
             </button>
           </div>
         </form>

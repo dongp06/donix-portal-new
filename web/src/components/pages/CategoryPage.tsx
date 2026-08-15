@@ -111,7 +111,7 @@ export function CategoryPage({ slug }: { slug: string }) {
               ))
             ) : (
               <div className="col-span-full py-24 text-center">
-                <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4">
+                <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
                   <Tag className="h-6 w-6 text-muted-foreground" />
                 </div>
                 <h3 className="text-lg font-semibold">Chưa có bài viết nào</h3>

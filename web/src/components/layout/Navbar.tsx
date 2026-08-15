@@ -4,148 +4,181 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useRole } from '../../context/RoleContext';
-import { Bot, ArrowRightLeft, Menu, X } from 'lucide-react';
+import { ArrowRightLeft, Menu, X, Wallet, LayoutDashboard, LogOut } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { cn } from '@/lib/utils';
+import { DonixLogo } from '@/components/brand/DonixLogo';
+import { ThemeToggle } from '@/components/ThemeToggle';
+
 export function Navbar() {
   const pathname = usePathname();
-  const { role, toggleRole, user } = useRole();
+  const { role, toggleRole, user, wallet } = useRole();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const navLinks = [
-    { href: '/', label: 'Trang Chủ' },
-    { href: '/bots', label: 'Chợ Bot Cho Thuê' },
-    { href: '/community', label: 'Diễn Đàn Cộng Đồng' },
-    { href: '/dashboard', label: 'Bảng Điều Khiển' }
+    { href: '/', label: 'Trang chủ' },
+    { href: '/bots', label: 'Chợ bot thuê' },
+    { href: '/community', label: 'Cộng đồng' },
+    { href: '/dashboard', label: 'Bảng điều khiển' },
   ];
 
+  const isProvider = role === 'provider';
+
   return (
-    <>
-      <header className="sticky top-0 z-40 w-full border-b border-zinc-800/80 bg-zinc-950/80 backdrop-blur-xl">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex h-16 items-center justify-between gap-4">
-            {/* Brand Logo */}
-            <div className="flex items-center gap-8">
-              <Link href="/" className="flex items-center gap-2.5 group">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 via-blue-600 to-violet-600 flex items-center justify-center shadow-lg shadow-cyan-500/20 group-hover:scale-105 transition-transform">
-                  <Bot className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <span className="text-lg font-black tracking-wider text-white">
-                    THUEBOT<span className="text-cyan-400">.SITE</span>
-                  </span>
-                  <span className="block text-[10px] text-zinc-400 tracking-widest font-semibold uppercase">
-                    Sàn Trung Gian & Cộng Đồng Bot Tự Động
-                  </span>
-                </div>
-              </Link>
+    <header className="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur-md">
+      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
+        {/* Brand */}
+        <div className="flex items-center gap-6">
+          <Link href="/" className="flex items-center gap-2.5" aria-label="Donix — về trang chủ">
+            <DonixLogo size="md" />
+          </Link>
 
-              {/* Desktop Nav links */}
-              <nav className="hidden md:flex items-center gap-1">
-                {navLinks.map((link) => {
-                  const isActive = pathname === link.href;
-                  return (
-                    <Link
-                      key={link.href}
-                      href={link.href}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
-                        isActive
-                          ? 'bg-zinc-800/90 text-cyan-400 border border-zinc-700/60 shadow-sm'
-                          : 'text-zinc-400 hover:text-white hover:bg-zinc-900/60'
-                      }`}
-                    >
-                      {link.label}
-                    </Link>
-                  );
-                })}
-              </nav>
-            </div>
-
-            {/* Right Actions */}
-            <div className="flex items-center gap-3">
-              {/* Role Toggle Button (Khách Thuê vs Nhà Cung Cấp) */}
-              <button
-                onClick={toggleRole}
-                className={`relative hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all shadow-md ${
-                  role === 'provider'
-                    ? 'border-violet-500/50 bg-violet-500/10 text-violet-300 hover:bg-violet-500/20 shadow-violet-500/10'
-                    : 'border-cyan-500/50 bg-cyan-500/10 text-cyan-300 hover:bg-cyan-500/20 shadow-cyan-500/10'
-                }`}
-                title="Bấm để chuyển chế độ xem giữa Người Thuê Bot và Người Cho Thuê Bot"
-              >
-                <ArrowRightLeft className="w-3.5 h-3.5" />
-                <span>
-                  {role === 'provider' ? 'Chế độ: Cho Thuê (Chủ Bot)' : 'Chế độ: Khách Thuê Bot'}
-                </span>
-                <span className="relative flex h-2 w-2">
-                  <span
-                    className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${
-                      role === 'provider' ? 'bg-violet-400' : 'bg-cyan-400'
-                    }`}
-                  ></span>
-                  <span
-                    className={`relative inline-flex rounded-full h-2 w-2 ${
-                      role === 'provider' ? 'bg-violet-500' : 'bg-cyan-500'
-                    }`}
-                  ></span>
-                </span>
-              </button>
-
-              {/* User profile dropdown avatar */}
-              <div className="hidden lg:flex items-center gap-2 border-l border-zinc-800 pl-3">
-                <img
-                  src={user.avatar}
-                  alt={user.name}
-                  className="w-8 h-8 rounded-full border border-zinc-700 object-cover"
-                />
-                <div className="text-left text-[11px]">
-                  <span className="block font-semibold text-white leading-tight">{user.name}</span>
-                  <span className="text-[10px] text-zinc-400">
-                    {role === 'provider' ? 'Nhà Cung Cấp' : 'Khách Thuê'}
-                  </span>
-                </div>
-              </div>
-
-              {/* Mobile menu button */}
-              <button
-                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className="md:hidden p-2 rounded-xl border border-zinc-800 text-zinc-400 hover:text-white"
-              >
-                {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-              </button>
-            </div>
-          </div>
+          {/* Desktop nav */}
+          <nav className="hidden items-center gap-1 md:flex" aria-label="Điều hướng chính">
+            {navLinks.map((link) => {
+              const active =
+                link.href === '/' ? pathname === '/' : pathname.startsWith(link.href);
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  aria-current={active ? 'page' : undefined}
+                  className={cn(
+                    'rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+                    active
+                      ? 'bg-muted text-foreground'
+                      : 'text-muted-foreground hover:bg-muted/60 hover:text-foreground',
+                  )}
+                >
+                  {link.label}
+                </Link>
+              );
+            })}
+          </nav>
         </div>
 
-        {/* Mobile Navigation Drawer */}
-        {isMobileMenuOpen && (
-          <div className="md:hidden border-b border-zinc-800 bg-zinc-950 p-4 space-y-3">
+        {/* Right actions */}
+        <div className="flex items-center gap-2">
+          {/* Role toggle — static, single accent */}
+          <button
+            type="button"
+            onClick={toggleRole}
+            title="Chuyển chế độ Khách thuê / Chủ bot"
+            className={cn(
+              'hidden items-center gap-2 rounded-xl border px-3 py-1.5 text-xs font-semibold transition-colors sm:flex',
+              isProvider
+                ? 'border-brand/40 bg-brand/10 text-brand hover:bg-brand/15'
+                : 'border-border bg-card text-muted-foreground hover:text-foreground',
+            )}
+          >
+            <ArrowRightLeft className="h-3.5 w-3.5" aria-hidden />
+            <span>{isProvider ? 'Chủ bot (cho thuê)' : 'Khách thuê bot'}</span>
+          </button>
+
+          <ThemeToggle />
+
+          {/* User menu */}
+          <div className="hidden md:block">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  type="button"
+                  className="flex items-center gap-2 rounded-full border border-border p-0.5 pr-2 transition-colors hover:bg-muted"
+                  aria-label="Menu tài khoản"
+                >
+                  <img
+                    src={user.avatar}
+                    alt={user.name}
+                    className="h-7 w-7 rounded-full border border-border object-cover"
+                  />
+                  <span className="hidden max-w-[8rem] truncate text-xs font-semibold lg:block">
+                    {user.name}
+                  </span>
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel className="flex flex-col gap-0.5">
+                  <span className="text-sm font-semibold">{user.name}</span>
+                  <span className="text-xs font-normal text-muted-foreground">
+                    {wallet.balance.toLocaleString('vi-VN')} đ
+                  </span>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link href="/dashboard">
+                    <LayoutDashboard className="mr-2 h-4 w-4" aria-hidden />
+                    Bảng điều khiển
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/wallet">
+                    <Wallet className="mr-2 h-4 w-4" aria-hidden />
+                    Ví Donix
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem variant="destructive">
+                  <LogOut className="mr-2 h-4 w-4" aria-hidden />
+                  Đăng xuất
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+
+          {/* Mobile menu button */}
+          <button
+            type="button"
+            className="rounded-lg p-2 text-muted-foreground hover:bg-muted hover:text-foreground md:hidden"
+            onClick={() => setIsMobileMenuOpen((v) => !v)}
+            aria-expanded={isMobileMenuOpen}
+            aria-controls="mobile-nav"
+            aria-label={isMobileMenuOpen ? 'Đóng menu' : 'Mở menu'}
+          >
+            {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </button>
+        </div>
+      </div>
+
+      {/* Mobile nav */}
+      {isMobileMenuOpen && (
+        <nav id="mobile-nav" className="border-t border-border bg-background md:hidden">
+          <div className="space-y-1 px-4 py-3">
+            {navLinks.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                onClick={() => setIsMobileMenuOpen(false)}
+                className={cn(
+                  'block rounded-lg px-3 py-2 text-sm font-medium',
+                  pathname === link.href
+                    ? 'bg-muted text-foreground'
+                    : 'text-muted-foreground',
+                )}
+              >
+                {link.label}
+              </Link>
+            ))}
             <button
+              type="button"
               onClick={() => {
                 toggleRole();
                 setIsMobileMenuOpen(false);
               }}
-              className={`w-full py-2.5 px-3 rounded-xl border text-xs font-bold flex items-center justify-between ${
-                role === 'provider' ? 'border-violet-500/50 bg-violet-500/10 text-violet-300' : 'border-cyan-500/50 bg-cyan-500/10 text-cyan-300'
-              }`}
+              className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-brand"
             >
-              <span>Chuyển chế độ: {role === 'provider' ? 'Cho Thuê Bot' : 'Khách Thuê Bot'}</span>
-              <ArrowRightLeft className="w-4 h-4" />
+              <ArrowRightLeft className="h-4 w-4" aria-hidden />
+              Chuyển sang {isProvider ? 'Khách thuê' : 'Chủ bot'}
             </button>
-
-            <div className="space-y-1">
-              {navLinks.map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="block px-3 py-2 rounded-xl text-sm font-semibold text-zinc-300 hover:bg-zinc-900"
-                >
-                  {link.label}
-                </Link>
-              ))}
-            </div>
           </div>
-        )}
-      </header>
-    </>
+        </nav>
+      )}
+    </header>
   );
 }

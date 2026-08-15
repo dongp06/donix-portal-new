@@ -6,39 +6,41 @@ import { BotRental, BotItem } from '@shared/types';
 import { CreateBotModal } from '../../components/modals/CreateBotModal';
 import { DepositModal } from '../../components/modals/DepositModal';
 import {
-  LayoutDashboard,
   Key,
   Building2,
-  Activity,
-  PlusCircle,
+  Plus,
   DollarSign,
   Copy,
   ExternalLink,
   RefreshCw,
-  Power,
-  ShieldCheck,
-  Zap,
-  Clock,
-  ArrowUpRight,
   TrendingUp,
-  Users
+  Users,
+  Zap,
+  LayoutDashboard,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
 
 export default function DashboardPage() {
   const { role, setRole, rentals, bots, wallet, user, renewRental } = useRole();
-  const [activeTab, setActiveTab] = useState<'renter' | 'provider'>(role === 'provider' ? 'provider' : 'renter');
+  const [activeTab, setActiveTab] = useState<'renter' | 'provider'>(
+    role === 'provider' ? 'provider' : 'renter',
+  );
   const [isCreateBotOpen, setIsCreateBotOpen] = useState(false);
   const [isDepositOpen, setIsDepositOpen] = useState(false);
 
   const renterRentals = rentals.filter((r) => r.renterId === user.id);
-  const providerBots = bots.filter((b) => b.provider.id === user.id || b.provider.name === 'DevNguyen_Pro');
-
-  const totalEarnings = providerBots.reduce((sum, b) => sum + b.pricing.monthly * b.activeRentals, 0);
+  const providerBots = bots.filter(
+    (b) => b.provider.id === user.id || b.provider.name === 'DevNguyen_Pro',
+  );
+  const totalEarnings = providerBots.reduce(
+    (sum, b) => sum + b.pricing.monthly * b.activeRentals,
+    0,
+  );
 
   const handleCopyKey = (key: string) => {
     navigator.clipboard.writeText(key);
-    toast.success('Đã sao chép License Key vào khay nhớ tạm!');
+    toast.success('Đã sao chép license key');
   };
 
   const handleRenew = (rentalId: string) => {
@@ -46,239 +48,237 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-white py-10 px-4 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-7xl space-y-8">
-        {/* Top Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-800 pb-6">
+    <div className="min-h-screen bg-background text-foreground">
+      <div className="mx-auto max-w-7xl space-y-8 px-4 py-10 sm:px-6 lg:px-8">
+        {/* Header */}
+        <div className="flex flex-col gap-4 border-b border-border pb-6 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <div className="flex items-center gap-2 text-xs font-bold text-cyan-400 uppercase tracking-widest mb-1">
-              <LayoutDashboard className="w-4 h-4" /> Bảng Điều Khiển Donix
-            </div>
-            <h1 className="text-3xl font-black text-white">Quản Lý Hoạt Động & Giao Dịch</h1>
+            <p className="eyebrow">Bảng điều khiển</p>
+            <h1 className="mt-2 font-display text-3xl font-bold tracking-tight">
+              Quản lý hoạt động & giao dịch
+            </h1>
           </div>
 
-          {/* Mode Switcher Tabs */}
-          <div className="flex p-1 rounded-2xl bg-zinc-900 border border-zinc-800">
+          {/* Mode switch */}
+          <div className="flex rounded-xl border border-border bg-card p-1" role="tablist" aria-label="Chế độ xem">
             <button
+              type="button"
+              role="tab"
+              aria-selected={activeTab === 'renter'}
               onClick={() => {
                 setActiveTab('renter');
                 if (role !== 'renter') setRole('renter');
               }}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+              className={cn(
+                'flex items-center gap-2 rounded-lg px-4 py-2 text-xs font-semibold transition-colors',
                 activeTab === 'renter'
-                  ? 'bg-cyan-500 text-black shadow-lg shadow-cyan-500/20'
-                  : 'text-zinc-400 hover:text-white'
-              }`}
+                  ? 'bg-brand text-brand-foreground'
+                  : 'text-muted-foreground hover:text-foreground',
+              )}
             >
-              <Key className="w-4 h-4" />
-              Khách Thuê Bot ({renterRentals.length})
+              <Key className="h-4 w-4" aria-hidden />
+              Khách thuê ({renterRentals.length})
             </button>
             <button
+              type="button"
+              role="tab"
+              aria-selected={activeTab === 'provider'}
               onClick={() => {
                 setActiveTab('provider');
                 if (role !== 'provider') setRole('provider');
               }}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+              className={cn(
+                'flex items-center gap-2 rounded-lg px-4 py-2 text-xs font-semibold transition-colors',
                 activeTab === 'provider'
-                  ? 'bg-violet-600 text-white shadow-lg shadow-violet-500/20'
-                  : 'text-zinc-400 hover:text-white'
-              }`}
+                  ? 'bg-brand text-brand-foreground'
+                  : 'text-muted-foreground hover:text-foreground',
+              )}
             >
-              <Building2 className="w-4 h-4" />
-              Cho Thuê Bot ({providerBots.length})
+              <Building2 className="h-4 w-4" aria-hidden />
+              Chủ bot ({providerBots.length})
             </button>
           </div>
         </div>
 
-        {/* VIEW 1: KHÁCH THUÊ BOT */}
+        {/* VIEW: RENTER */}
         {activeTab === 'renter' && (
           <div className="space-y-8">
             <div className="flex items-center justify-between">
-              <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                <Zap className="w-5 h-5 text-cyan-400" /> Danh Sách Bot Đang Thuê & Kích Hoạt
+              <h2 className="flex items-center gap-2 font-display text-xl font-bold">
+                <Zap className="h-5 w-5 text-brand" aria-hidden />
+                Bot đang thuê & kích hoạt
               </h2>
             </div>
 
             {renterRentals.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
                 {renterRentals.map((item) => (
-                  <div
-                    key={item.id}
-                    className="p-6 rounded-2xl bg-zinc-900 border border-zinc-800 hover:border-cyan-500/40 transition-all space-y-4 shadow-xl"
-                  >
-                    <div className="flex items-center justify-between border-b border-zinc-800/80 pb-3">
+                  <div key={item.id} className="space-y-4 rounded-2xl border border-border bg-card p-6">
+                    <div className="flex items-center justify-between border-b border-border pb-3">
                       <div className="flex items-center gap-3">
                         <img
                           src={item.botCover}
                           alt={item.botTitle}
-                          className="w-12 h-12 rounded-xl object-cover border border-zinc-700"
+                          className="h-12 w-12 rounded-xl border border-border object-cover"
                         />
                         <div>
-                          <span className="text-[10px] uppercase font-bold text-cyan-400 tracking-wider">
+                          <span className="text-[11px] font-semibold uppercase tracking-wide text-brand">
                             {item.botCategory}
                           </span>
-                          <h3 className="text-sm font-bold text-white line-clamp-1">{item.botTitle}</h3>
+                          <h3 className="line-clamp-1 text-sm font-semibold">{item.botTitle}</h3>
                         </div>
                       </div>
-
-                      <span className="px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[11px] font-bold">
-                        Đang Chạy
+                      <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 text-[11px] font-bold text-emerald-500">
+                        Đang chạy
                       </span>
                     </div>
 
-                    {/* License Key Box */}
-                    <div className="p-3 rounded-xl bg-zinc-950 border border-zinc-800 space-y-1">
-                      <span className="text-[10px] text-zinc-500 uppercase font-bold tracking-wider">Mã License Key:</span>
-                      <div className="flex items-center justify-between">
-                        <span className="font-mono text-cyan-400 font-bold text-xs">{item.licenseKey}</span>
+                    {/* License key */}
+                    <div className="space-y-1 rounded-xl border border-border bg-background p-3">
+                      <span className="block text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                        Mã license key
+                      </span>
+                      <div className="flex items-center justify-between gap-2 rounded-lg bg-muted p-2 font-mono text-sm text-brand">
+                        <span className="truncate">{item.licenseKey}</span>
                         <button
+                          type="button"
                           onClick={() => handleCopyKey(item.licenseKey)}
-                          className="p-1.5 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs"
-                          title="Sao chép key"
+                          className="shrink-0 rounded bg-brand/10 px-2 py-1 text-[11px] font-sans font-semibold text-brand transition-colors hover:bg-brand/20"
+                          aria-label="Sao chép license key"
                         >
-                          <Copy className="w-3.5 h-3.5" />
+                          <Copy className="h-3.5 w-3.5" aria-hidden />
                         </button>
                       </div>
                     </div>
 
-                    {/* Dates & Auto Renew */}
-                    <div className="grid grid-cols-2 gap-2 text-xs text-zinc-400">
+                    <div className="flex items-center justify-between text-xs">
                       <div>
-                        <span className="block text-[10px] text-zinc-500">Ngày thuê:</span>
-                        <span>{item.startDate}</span>
-                      </div>
-                      <div>
-                        <span className="block text-[10px] text-zinc-500">Hạn sử dụng đến:</span>
-                        <span className="text-amber-400 font-semibold">{item.endDate}</span>
+                        <span className="block text-[11px] text-muted-foreground">Hạn sử dụng đến</span>
+                        <span className="font-semibold text-foreground">{item.endDate}</span>
                       </div>
                     </div>
 
-                    {/* Action buttons */}
                     <div className="flex gap-3 pt-2">
                       {item.accessUrl && (
                         <a
                           href={item.accessUrl}
                           target="_blank"
                           rel="noreferrer"
-                          className="flex-1 py-2 px-3 rounded-xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 font-semibold text-xs text-center hover:bg-cyan-500/20 flex items-center justify-center gap-1"
+                          className="inline-flex flex-1 items-center justify-center gap-1 rounded-xl border border-brand/30 bg-brand/10 px-3 py-2 text-xs font-semibold text-brand transition-colors hover:bg-brand/15"
                         >
-                          <ExternalLink className="w-3.5 h-3.5" /> Vào Trang Treo Bot
+                          <ExternalLink className="h-3.5 w-3.5" aria-hidden />
+                          Vào trang treo bot
                         </a>
                       )}
                       <button
+                        type="button"
                         onClick={() => handleRenew(item.id)}
-                        className="flex-1 py-2 px-3 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-200 font-semibold text-xs text-center flex items-center justify-center gap-1"
+                        className="inline-flex flex-1 items-center justify-center gap-1 rounded-xl border border-border bg-background px-3 py-2 text-xs font-semibold transition-colors hover:border-brand/40 hover:text-foreground"
                       >
-                        <RefreshCw className="w-3.5 h-3.5" /> Gia Hạn Thuê
+                        <RefreshCw className="h-3.5 w-3.5" aria-hidden />
+                        Gia hạn thuê
                       </button>
                     </div>
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="p-12 rounded-2xl bg-zinc-900/40 border border-zinc-800 text-center">
-                <p className="text-zinc-400 text-sm">Bạn chưa thuê bot nào. Hãy ghé Chợ Bot để chọn bot phù hợp!</p>
+              <div className="rounded-2xl border border-border bg-card p-12 text-center">
+                <p className="text-sm text-muted-foreground">
+                  Bạn chưa thuê bot nào. Hãy ghé chợ bot để chọn bot phù hợp.
+                </p>
               </div>
             )}
           </div>
         )}
 
-        {/* VIEW 2: NHÀ CUNG CẤP CHO THUÊ BOT */}
+        {/* VIEW: PROVIDER */}
         {activeTab === 'provider' && (
           <div className="space-y-8">
-            {/* Overview Stats */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="p-5 rounded-2xl bg-zinc-900 border border-zinc-800">
-                <div className="flex items-center justify-between mb-2 text-zinc-400">
-                  <span className="text-xs font-semibold">Tổng Bot Đã Đăng</span>
-                  <Building2 className="w-4 h-4 text-violet-400" />
-                </div>
-                <span className="text-2xl font-black text-white">{providerBots.length} Bot</span>
-              </div>
-
-              <div className="p-5 rounded-2xl bg-zinc-900 border border-zinc-800">
-                <div className="flex items-center justify-between mb-2 text-zinc-400">
-                  <span className="text-xs font-semibold">Khách Đang Thuê Active</span>
-                  <Users className="w-4 h-4 text-cyan-400" />
-                </div>
-                <span className="text-2xl font-black text-cyan-400">148 Khách</span>
-              </div>
-
-              <div className="p-5 rounded-2xl bg-zinc-900 border border-zinc-800">
-                <div className="flex items-center justify-between mb-2 text-zinc-400">
-                  <span className="text-xs font-semibold">Doanh Thu Uớc Tính / Tháng</span>
-                  <TrendingUp className="w-4 h-4 text-emerald-400" />
-                </div>
-                <span className="text-2xl font-black text-emerald-400">
-                  {totalEarnings.toLocaleString('vi-VN')} đ
-                </span>
-              </div>
-
-              <div className="p-5 rounded-2xl bg-zinc-900 border border-zinc-800">
-                <div className="flex items-center justify-between mb-2 text-zinc-400">
-                  <span className="text-xs font-semibold">Số Dư Chờ Rút Về Ví</span>
-                  <DollarSign className="w-4 h-4 text-amber-400" />
-                </div>
-                <span className="text-2xl font-black text-amber-400">2,100,000 đ</span>
-              </div>
+            {/* Stats */}
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {[
+                { label: 'Tổng bot đã đăng', value: `${providerBots.length} Bot`, icon: Building2 },
+                { label: 'Khách đang thuê active', value: '148 Khách', icon: Users },
+                { label: 'Doanh thu ước tính / tháng', value: `${totalEarnings.toLocaleString('vi-VN')} đ`, icon: TrendingUp },
+                { label: 'Số dư chờ rút về ví', value: '2.100.000 đ', icon: DollarSign },
+              ].map((stat) => {
+                const Icon = stat.icon;
+                return (
+                  <div key={stat.label} className="rounded-2xl border border-border bg-card p-5">
+                    <div className="mb-2 flex items-center justify-between text-muted-foreground">
+                      <span className="text-xs font-semibold">{stat.label}</span>
+                      <Icon className="h-4 w-4 text-brand" aria-hidden />
+                    </div>
+                    <span className="font-display text-2xl font-bold tracking-tight">{stat.value}</span>
+                  </div>
+                );
+              })}
             </div>
 
-            {/* Provider Actions */}
+            {/* Actions */}
             <div className="flex flex-wrap items-center justify-between gap-4">
-              <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                <Building2 className="w-5 h-5 text-violet-400" /> Danh Sách Bot Đã Đăng Cho Thuê
+              <h2 className="flex items-center gap-2 font-display text-xl font-bold">
+                <Building2 className="h-5 w-5 text-brand" aria-hidden />
+                Danh sách bot đã đăng cho thuê
               </h2>
 
               <div className="flex gap-3">
                 <button
-                  onClick={() => alert('Đã gửi yêu cầu rút 2.100.000 VNĐ về tài khoản ngân hàng của bạn!')}
-                  className="px-4 py-2 rounded-xl bg-amber-500/20 text-amber-300 border border-amber-500/30 text-xs font-bold hover:bg-amber-500/30 transition-colors"
+                  type="button"
+                  onClick={() => alert('Đã gửi yêu cầu rút 2.100.000 VNĐ về tài khoản ngân hàng của bạn')}
+                  className="inline-flex items-center rounded-xl border border-border bg-background px-4 py-2 text-xs font-semibold transition-colors hover:border-brand/40 hover:text-foreground"
                 >
-                  Rút Doanh Thu Về Ví Ngân Hàng
+                  Rút doanh thu về ví
                 </button>
                 <button
+                  type="button"
                   onClick={() => setIsCreateBotOpen(true)}
-                  className="px-4 py-2 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 text-white text-xs font-bold shadow-lg shadow-violet-500/20 hover:opacity-95 transition-opacity flex items-center gap-1.5"
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-brand px-4 py-2 text-xs font-semibold text-brand-foreground transition-colors hover:brightness-110"
                 >
-                  <PlusCircle className="w-4 h-4" /> Đăng Bot Mới Cho Thuê
+                  <Plus className="h-4 w-4" aria-hidden />
+                  Đăng bot mới cho thuê
                 </button>
               </div>
             </div>
 
-            {/* Provider Bots Table */}
-            <div className="overflow-x-auto rounded-2xl border border-zinc-800 bg-zinc-900/80">
-              <table className="w-full text-left text-xs">
-                <thead className="bg-zinc-950 text-zinc-400 font-semibold border-b border-zinc-800 uppercase tracking-wider">
+            {/* Provider bots table */}
+            <div className="overflow-x-auto rounded-2xl border border-border bg-card">
+              <table className="w-full text-left text-sm">
+                <thead className="border-b border-border bg-muted/40 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                   <tr>
-                    <th className="p-4">Tên Bot / Phần Mềm</th>
-                    <th className="p-4">Danh Mục</th>
-                    <th className="p-4">Giá Ngày / Tháng</th>
-                    <th className="p-4">Lượt Thuê Active</th>
-                    <th className="p-4">Trạng Thái</th>
-                    <th className="p-4 text-right">Thao Tác</th>
+                    <th className="p-4">Tên bot / phần mềm</th>
+                    <th className="p-4">Danh mục</th>
+                    <th className="p-4">Giá</th>
+                    <th className="p-4">Khách active</th>
+                    <th className="p-4">Trạng thái</th>
+                    <th className="p-4 text-right">Thao tác</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-zinc-800 text-zinc-300">
+                <tbody className="divide-y divide-border">
                   {providerBots.map((b) => (
-                    <tr key={b.id} className="hover:bg-zinc-800/40">
-                      <td className="p-4 font-bold text-white flex items-center gap-3">
-                        <img src={b.coverImage} alt={b.title} className="w-10 h-10 rounded-lg object-cover" />
-                        <span>{b.title}</span>
-                      </td>
-                      <td className="p-4 text-cyan-400 font-medium">{b.categoryName}</td>
+                    <tr key={b.id} className="transition-colors hover:bg-muted/40">
                       <td className="p-4 font-semibold">
+                        <div className="flex items-center gap-3">
+                          <img src={b.coverImage} alt={b.title} className="h-10 w-10 rounded-lg object-cover" />
+                          <span className="line-clamp-1">{b.title}</span>
+                        </div>
+                      </td>
+                      <td className="p-4 text-muted-foreground">{b.categoryName}</td>
+                      <td className="p-4">
                         {b.pricing.daily.toLocaleString('vi-VN')} đ / {b.pricing.monthly.toLocaleString('vi-VN')} đ
                       </td>
-                      <td className="p-4 font-bold text-emerald-400">{b.activeRentals} Khách</td>
+                      <td className="p-4 font-bold text-emerald-500">{b.activeRentals} Khách</td>
                       <td className="p-4">
-                        <span className="px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[10px] font-bold">
+                        <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 text-[11px] font-bold text-emerald-500">
                           ONLINE 24/7
                         </span>
                       </td>
                       <td className="p-4 text-right">
                         <button
+                          type="button"
                           onClick={() => toast.success(`Đã cập nhật cấu hình cho ${b.title}`)}
-                          className="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-200 font-semibold text-xs"
+                          className="rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-semibold transition-colors hover:border-brand/40 hover:text-foreground"
                         >
                           Cấu hình
                         </button>

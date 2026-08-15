@@ -31,7 +31,7 @@ export function Sidebar() {
       <section>
         <div className="flex items-center gap-2 mb-4">
           <FolderOpen className="h-4 w-4 text-brand" />
-          <h3 className="font-bold text-lg uppercase tracking-wide text-foreground">Chuyên mục</h3>
+          <h3 className="text-lg font-bold text-foreground">Chuyên mục</h3>
         </div>
         <div className="grid gap-2">
           {MOCK_CATEGORIES.map((cat) => {
@@ -42,10 +42,10 @@ export function Sidebar() {
                 key={cat.id}
                 href={href}
                 className={cn(
-                  'group flex items-center justify-between p-3 rounded-xl bg-card border transition-all duration-200',
+                  'group flex items-center justify-between p-3 rounded-xl bg-card border transition-colors',
                   active
-                    ? 'border-brand shadow-[0_0_16px_hsl(var(--brand)/0.25)] bg-brand/5'
-                    : 'border-border hover:border-brand/60 hover:shadow-[0_0_14px_hsl(var(--brand)/0.2)] hover:bg-brand/[0.04]',
+                    ? 'border-brand/50 bg-brand/5'
+                    : 'border-border hover:border-brand/40 hover:bg-muted/50',
                 )}
               >
                 <span

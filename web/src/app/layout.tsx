@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Space_Grotesk, Poppins } from 'next/font/google';
+import { Space_Grotesk, Manrope } from 'next/font/google';
 import './globals.css';
 import { AppShell } from '@/components/layout/AppShell';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
@@ -7,16 +7,16 @@ import { RootJsonLd } from '@/components/seo/RootJsonLd';
 import { Providers } from './providers';
 import { SITE_NAME, getDefaultDescription, getSiteUrl } from '@/lib/site';
 
-const poppins = Poppins({
+const manrope = Manrope({
   subsets: ['latin', 'latin-ext'],
-  weight: ['400', '600', '700'],
-  variable: '--font-poppins',
+  weight: ['400', '500', '600', '700', '800'],
+  variable: '--font-sans',
 });
 
 const spaceGrotesk = Space_Grotesk({
   subsets: ['latin', 'latin-ext'],
-  weight: ['600', '700'],
-  variable: '--font-donix-logo',
+  weight: ['500', '600', '700'],
+  variable: '--font-display',
 });
 
 const defaultDesc = getDefaultDescription();
@@ -24,7 +24,7 @@ const defaultDesc = getDefaultDescription();
 export const metadata: Metadata = {
   metadataBase: new URL(getSiteUrl()),
   title: {
-    default: `${SITE_NAME} — Chia sẻ tài nguyên & tool`,
+    default: `${SITE_NAME} — Chợ bot thuê & tài nguyên tự động hóa`,
     template: `%s | ${SITE_NAME}`,
   },
   description: defaultDesc,
@@ -47,7 +47,7 @@ export const metadata: Metadata = {
     type: 'website',
     locale: 'vi_VN',
     siteName: SITE_NAME,
-    title: `${SITE_NAME} — Chia sẻ tài nguyên & tool`,
+    title: `${SITE_NAME} — Chợ bot thuê & tài nguyên tự động hóa`,
     description: defaultDesc,
     url: '/',
     images: [
@@ -61,7 +61,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: `${SITE_NAME} — Chia sẻ tài nguyên & tool`,
+    title: `${SITE_NAME} — Chợ bot thuê & tài nguyên tự động hóa`,
     description: defaultDesc,
     images: ['/logo.png'],
   },
@@ -78,8 +78,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="vi" suppressHydrationWarning data-scroll-behavior="smooth">
-      <body className={`${poppins.variable} ${spaceGrotesk.variable} font-sans antialiased`}>
+    <html lang="vi" suppressHydrationWarning>
+      <body className={`${manrope.variable} ${spaceGrotesk.variable} font-sans antialiased`}>
         <RootJsonLd />
         <Providers>
           <ErrorBoundary>

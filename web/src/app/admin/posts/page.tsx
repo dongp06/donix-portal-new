@@ -38,7 +38,7 @@ export default function AdminPostsPage() {
   }
 
   if (posts === null) {
-    return <p className="text-zinc-400">Đang tải…</p>;
+    return <p className="text-muted-foreground">Đang tải…</p>;
   }
 
   if (error) {
@@ -54,23 +54,23 @@ export default function AdminPostsPage() {
 
   return (
     <div className="space-y-4">
-      <p className="text-sm text-zinc-400">{posts.length} bài viết (lưu trong bộ nhớ API — khởi động lại sẽ reset về mock).</p>
-      <ul className="divide-y divide-zinc-800 rounded-lg border border-zinc-800 bg-zinc-900/40">
+      <p className="text-sm text-muted-foreground">{posts.length} bài viết (lưu trong bộ nhớ API — khởi động lại sẽ reset về mock).</p>
+      <ul className="divide-y divide-border rounded-lg border border-border bg-card">
         {posts.map((p) => (
           <li key={p.id} className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
             <div className="min-w-0 flex-1">
               <Link
                 href={`/admin/posts/${p.id}`}
-                className="font-medium text-white hover:text-amber-400"
+                className="font-medium text-foreground hover:text-brand"
               >
                 {p.title}
               </Link>
-              <p className="truncate text-xs text-zinc-500">
+              <p className="truncate text-xs text-muted-foreground">
                 /{p.slug} · {p.categoryName} · {p.date}
               </p>
             </div>
             <div className="flex shrink-0 gap-2">
-              <Button asChild size="sm" variant="outline" className="border-zinc-600 bg-zinc-950 text-zinc-200">
+              <Button asChild size="sm" variant="outline" className="border-border bg-background text-foreground">
                 <Link href={`/posts/${p.slug}`} target="_blank" rel="noreferrer">
                   Xem
                 </Link>

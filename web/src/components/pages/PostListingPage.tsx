@@ -30,11 +30,12 @@ export function PostListingPage({
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
       <header className="mb-10 flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
         <div className="space-y-2">
-          <h1 className="border-l-4 border-brand pl-4 text-3xl font-display font-extrabold md:text-4xl">
+          <p className="eyebrow">Bài viết</p>
+          <h1 className="font-display text-3xl font-bold tracking-tight md:text-4xl">
             {title}
           </h1>
           {description ? (
-            <p className="max-w-2xl pl-5 text-muted-foreground">{description}</p>
+            <p className="max-w-2xl text-muted-foreground">{description}</p>
           ) : null}
         </div>
         <div

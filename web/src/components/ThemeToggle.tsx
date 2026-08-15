@@ -11,7 +11,7 @@ interface ThemeToggleProps {
 }
 
 export function ThemeToggle({
-  className = "absolute top-4 right-4",
+  className = "",
 }: ThemeToggleProps) {
   const [mounted, setMounted] = useState(false);
   const { resolvedTheme, setTheme } = useTheme();
