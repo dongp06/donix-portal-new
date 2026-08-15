@@ -1,0 +1,237 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "git status",
+			"type": "shell",
+			"command": "git status --short && git log --oneline -5",
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "git status",
+			"type": "shell",
+			"command": "git status --short; git log --oneline -5",
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "git status",
+			"type": "shell",
+			"command": "git status --short; git log --oneline -5",
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "git-status-check",
+			"type": "shell",
+			"command": "git status --short; git log --oneline -5",
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "git-diff-stat",
+			"type": "shell",
+			"command": "git diff --stat",
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "git-diff-small",
+			"type": "shell",
+			"command": "git diff api/src/prisma/prisma.service.ts api/src/bots/bots.service.ts web/src/app/community/page.tsx web/src/components/layout/Sidebar.tsx web/src/components/pages/PostPage.tsx",
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "git-diff-posts",
+			"type": "shell",
+			"command": "git diff api/src/posts/posts.service.ts",
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "prisma-generate-check",
+			"type": "shell",
+			"command": "cd api && npx prisma generate",
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "prisma-generate",
+			"type": "shell",
+			"command": "cd api; npx prisma generate",
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "check-node-processes",
+			"type": "shell",
+			"command": "Get-Process node -ErrorAction SilentlyContinue | Select-Object Id,ProcessName,Path | Format-Table -AutoSize",
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "find-api-watchers",
+			"type": "shell",
+			"command": "Get-CimInstance Win32_Process -Filter \"Name='node.exe'\" | Where-Object { $_.CommandLine -match 'nest|prisma|webthuebot|api' } | Select-Object ProcessId,CommandLine | Format-List",
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "find-api-watchers2",
+			"type": "shell",
+			"command": "Get-CimInstance Win32_Process -Filter \"Name = 'node.exe'\" | Where-Object { $_.CommandLine -match 'nest|prisma|webthuebot|api' } | Select-Object ProcessId,CommandLine | Format-List",
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "find-api-watchers3",
+			"type": "shell",
+			"command": "$procs = Get-Process node -ErrorAction SilentlyContinue; foreach ($p in $procs) { $cl = (Get-CimInstance Win32_Process -Filter ('ProcessId = ' + $p.Id)).CommandLine; if ($cl -match 'nest|prisma|webthuebot|api') { Write-Output ($p.Id.ToString() + ' ' + $cl) } }",
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "stop-project-dev",
+			"type": "shell",
+			"command": "$ids = @(624,14824,15496,17620,22156,22404,25016,26264,28724,31780,32456,33668,35288); foreach ($id in $ids) { Stop-Process -Id $id -Force -ErrorAction SilentlyContinue }; Write-Output 'done'",
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "prisma-generate-2",
+			"type": "shell",
+			"command": "cd api; npx prisma generate",
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "prisma-migrate-status",
+			"type": "shell",
+			"command": "cd api; npx prisma migrate status",
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "api-build",
+			"type": "shell",
+			"command": "cd api; npm run build",
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "web-build",
+			"type": "shell",
+			"command": "cd web; npx tsc --noEmit",
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "web-tsc-retry",
+			"type": "shell",
+			"command": "cd web; npx tsc --noEmit",
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "seed-db",
+			"type": "shell",
+			"command": "cd api; npx prisma db seed",
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "grep-useRole",
+			"type": "shell",
+			"command": "cd web; Get-ChildItem -Recurse -Include *.tsx,*.ts src | Select-String -Pattern 'useRole' | Select-Object -First 50 | ForEach-Object { $_.Path + ':' + $_.LineNumber }",
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "list-web-app-dirs",
+			"type": "shell",
+			"command": "Get-ChildItem -Recurse -Directory web/src/app | Select-Object -ExpandProperty FullName",
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "grep-hardcoded-colors",
+			"type": "shell",
+			"command": "cd web; Get-ChildItem -Recurse -Include *.tsx src | Select-String -Pattern 'zinc-|#111113|#121214|#9CA3AF|#252528' | Group-Object Path | ForEach-Object { $_.Name + '  (' + $_.Count + ')' }",
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "admin-zinc-grep",
+			"type": "shell",
+			"command": "cd web; Get-ChildItem -Recurse -Include *.tsx src/app/admin,src/components/admin | Select-String -Pattern 'zinc-' | Select-Object -First 30 | ForEach-Object { $_.Path + ':' + $_.LineNumber + ' ' + $_.Line.Trim() }",
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "grep-import-useRole-v2",
+			"type": "shell",
+			"command": "cd web; Get-ChildItem -Recurse -Include *.tsx src | Select-String -Pattern \"import.*RoleContext|useRole\\(\" | ForEach-Object { $_.Path + ':' + $_.LineNumber + ' ' + $_.Line.Trim() }",
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "grep-import-useRole-v3",
+			"type": "shell",
+			"command": "cd web; Get-ChildItem -Recurse -Include *.tsx src | Select-String -Pattern 'RoleContext|useRole\\(' | ForEach-Object { $_.Path + ':' + $_.LineNumber + ' ' + $_.Line.Trim() }",
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "check-errors-all",
+			"type": "shell",
+			"command": "cd web; npx tsc --noEmit",
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "restart-dev",
+			"type": "shell",
+			"command": "cd web; Start-Process -FilePath npm -ArgumentList 'run','dev' -WorkingDirectory 'D:\\webthuebot\\web' -NoNewWindow",
+			"isBackground": true,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "start-web-dev-background",
+			"type": "shell",
+			"command": "cd web; npm run dev",
+			"isBackground": true,
+			"problemMatcher": [],
+			"group": "build"
+		}
+	]
+}

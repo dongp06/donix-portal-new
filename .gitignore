@@ -55,3 +55,6 @@ coverage/
 # Claude agent cache
 .agent/
 .claude/
+
+# Local file uploads
+uploads/

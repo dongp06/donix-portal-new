@@ -5,6 +5,7 @@ import { FilesModule } from './files/files.module';
 import { HealthModule } from './health/health.module';
 import { PostsModule } from './posts/posts.module';
 import { PrismaModule } from './prisma/prisma.module';
+import { AuthModule } from './auth/auth.module';
 import { BotsModule } from './bots/bots.module';
 import { RentalsModule } from './rentals/rentals.module';
 import { ProviderModule } from './provider/provider.module';
@@ -15,6 +16,7 @@ import { StatsModule } from './stats/stats.module';
 @Module({
   imports: [
     PrismaModule,
+    AuthModule,
     CacheModule,
     HealthModule,
     ClientErrorsModule,
