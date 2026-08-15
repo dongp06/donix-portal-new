@@ -58,3 +58,8 @@ coverage/
 
 # Local file uploads
 uploads/
+
+# Compiled shared/ (build artifacts, not source)
+shared/*.js
+shared/*.js.map
+shared/*.d.ts
