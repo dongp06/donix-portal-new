@@ -46,7 +46,7 @@ export default function CommunityPage() {
       authorName: 'Trần Minh Tuấn',
       authorAvatar:
         'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop&q=80',
-      authorRole: 'Khách thuê',
+      authorRole: 'Khách Thuê',
       category: newCategory,
       upvotes: 1,
       commentsCount: 0,

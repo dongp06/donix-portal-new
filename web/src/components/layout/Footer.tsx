@@ -13,7 +13,7 @@ const exploreLinks = [
 ];
 
 const supportLinks = [
-  { href: '/dashboard', label: 'Tin đăng của tôi' },
+  { href: '/profile', label: 'Trang cá nhân' },
   { href: '/community', label: 'Báo lỗi & hỗ trợ' },
 ];
 

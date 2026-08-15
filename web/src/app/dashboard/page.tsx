@@ -11,7 +11,7 @@ export default function DashboardPage() {
   const { bots, user } = useRole();
   const [isCreateBotOpen, setIsCreateBotOpen] = useState(false);
 
-  // Tin đăng của người dùng hiện tại (demo: khớp theo tên hoặc id nhà cung cấp)
+  // Bot của người dùng hiện tại (demo: khớp theo tên hoặc id nhà cung cấp)
   const myBots = bots.filter(
     (b) => b.provider.id === user.id || b.provider.name === 'DevNguyen_Pro',
   );
@@ -22,12 +22,12 @@ export default function DashboardPage() {
         {/* Header */}
         <div className="flex flex-col gap-4 border-b border-border pb-6 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="eyebrow">Tin đăng của tôi</p>
+            <p className="eyebrow">Đăng bot</p>
             <h1 className="mt-2 font-display text-3xl font-bold tracking-tight">
-              Quản lý bot rao bán & cho thuê
+              Quản lý bot cho thuê
             </h1>
             <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-              Đăng tin bot của bạn lên chợ. Người mua sẽ liên hệ trực tiếp qua thông tin bạn cung cấp.
+              Đăng bot của bạn lên chợ. Người mua sẽ liên hệ trực tiếp qua thông tin bạn cung cấp.
             </p>
           </div>
 
@@ -37,14 +37,14 @@ export default function DashboardPage() {
             className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-brand px-4 py-2.5 text-sm font-semibold text-brand-foreground transition-colors hover:brightness-110"
           >
             <Plus className="h-4 w-4" aria-hidden />
-            Đăng tin bot mới
+            Đăng bot mới
           </button>
         </div>
 
         {/* Summary */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           {[
-            { label: 'Tin đang đăng', value: `${myBots.length}` },
+            { label: 'Bot đang đăng', value: `${myBots.length}` },
             { label: 'Tổng lượt xem', value: myBots.reduce((s, b) => s + b.totalRentals, 0).toLocaleString('vi-VN') },
             { label: 'Đánh giá trung bình', value: myBots.length ? (myBots.reduce((s, b) => s + b.rating, 0) / myBots.length).toFixed(1) : '—' },
           ].map((s) => (
@@ -59,7 +59,7 @@ export default function DashboardPage() {
         <div className="space-y-4">
           <h2 className="flex items-center gap-2 font-display text-xl font-bold">
             <Building2 className="h-5 w-5 text-brand" aria-hidden />
-            Danh sách tin đăng
+            Danh sách bot đã đăng
           </h2>
 
           {myBots.length > 0 ? (
@@ -117,7 +117,7 @@ export default function DashboardPage() {
           ) : (
             <div className="space-y-3 rounded-2xl border border-border bg-card p-12 text-center">
               <p className="text-sm text-muted-foreground">
-                Bạn chưa đăng tin bot nào. Đăng tin đầu tiên để tiếp cận người mua.
+                Bạn chưa đăng bot nào. Đăng bot đầu tiên để tiếp cận người mua.
               </p>
               <button
                 type="button"
@@ -125,7 +125,7 @@ export default function DashboardPage() {
                 className="inline-flex items-center gap-1.5 text-xs font-semibold text-brand underline"
               >
                 <Plus className="h-3.5 w-3.5" aria-hidden />
-                Đăng tin bot mới
+                Đăng bot mới
               </button>
             </div>
           )}

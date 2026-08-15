@@ -122,13 +122,14 @@ export default function BotDetailPage({ params }: { params: Promise<{ id: string
             {/* Price + CTA */}
             <div className="flex flex-col items-start justify-between gap-4 rounded-xl border border-brand/30 bg-background p-4 sm:flex-row sm:items-center">
               <div>
-                <span className="block text-xs text-muted-foreground">Bảng giá niêm yết</span>
+                <span className="block text-xs text-muted-foreground">Giá cho thuê</span>
                 <div className="mt-0.5 flex items-baseline gap-3">
                   <span className="text-2xl font-bold text-foreground">
-                    {bot.pricing.daily.toLocaleString('vi-VN')} đ<span className="text-sm font-normal text-muted-foreground">/ngày</span>
-                  </span>
-                  <span className="text-xs text-muted-foreground">
-                    hoặc {bot.pricing.monthly.toLocaleString('vi-VN')} đ/tháng
+                    {bot.pricing.hourly > 0
+                      ? `${bot.pricing.hourly.toLocaleString('vi-VN')} đ/giờ`
+                      : bot.pricing.daily > 0
+                        ? `${bot.pricing.daily.toLocaleString('vi-VN')} đ/ngày`
+                        : `${bot.pricing.monthly.toLocaleString('vi-VN')} đ/tháng`}
                   </span>
                 </div>
               </div>

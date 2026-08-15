@@ -17,6 +17,8 @@ export function ContactModal({ bot, isOpen, onClose }: ContactModalProps) {
   const contact = bot.provider.contact ?? {};
   const channels = [
     contact.zalo && { icon: MessageCircle, label: 'Zalo', value: contact.zalo },
+    contact.messenger && { icon: MessageCircle, label: 'Messenger', value: contact.messenger },
+    contact.facebook && { icon: MessageCircle, label: 'Facebook', value: contact.facebook },
     contact.telegram && { icon: Send, label: 'Telegram', value: contact.telegram },
     contact.phone && { icon: Phone, label: 'Điện thoại', value: contact.phone },
   ].filter(Boolean) as { icon: typeof Phone; label: string; value: string }[];
@@ -28,12 +30,12 @@ export function ContactModal({ bot, isOpen, onClose }: ContactModalProps) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 p-4 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-background/80 p-4 backdrop-blur-sm"
       role="dialog"
       aria-modal="true"
       aria-label={`Liên hệ người bán ${bot.provider.name}`}
     >
-      <div className="relative w-full max-w-md rounded-2xl border border-border bg-card p-6 text-foreground shadow-2xl">
+      <div className="relative my-auto max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl border border-border bg-card p-6 text-foreground shadow-2xl">
         <button
           type="button"
           onClick={onClose}

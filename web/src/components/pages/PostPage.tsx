@@ -16,7 +16,7 @@ import { Button } from '@/components/ui/button';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { api } from '@/lib/api-client';
 import type { Post } from '@shared/types';
-import { MOCK_CATEGORIES } from '@shared/mock-data';
+import { MOCK_BLOG_CATEGORIES } from '@shared/mock-data';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
 import { PostResourceDownloads } from '@/components/post/PostResourceDownloads';
@@ -71,7 +71,7 @@ export function PostPage({
   });
 
   const categorySlug =
-    post && MOCK_CATEGORIES.find((c) => c.id === post.categoryId)?.slug;
+    post && MOCK_BLOG_CATEGORIES.find((c) => c.id === post.categoryId)?.slug;
 
   if (isLoading) {
     return (

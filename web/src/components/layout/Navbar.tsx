@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useRole } from '../../context/RoleContext';
-import { Menu, X, LayoutDashboard, Plus } from 'lucide-react';
+import { Menu, X, LayoutDashboard, Plus, LogOut, UserRound } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,14 +19,16 @@ import { ThemeToggle } from '@/components/ThemeToggle';
 
 export function Navbar() {
   const pathname = usePathname();
-  const { user } = useRole();
+  const { user, isAuthenticated, logout } = useRole();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const navLinks = [
     { href: '/', label: 'Trang chủ' },
     { href: '/bots', label: 'Chợ bot' },
     { href: '/community', label: 'Cộng đồng' },
-    { href: '/dashboard', label: 'Tin đăng của tôi' },
+    ...(user.role === 'provider'
+      ? [{ href: '/dashboard', label: 'Đăng bot' }]
+      : []),
   ];
 
   return (
@@ -75,6 +77,16 @@ export function Navbar() {
 
           <ThemeToggle />
 
+          {/* Auth: đăng nhập / đăng xuất */}
+          {isAuthenticated === false ? (
+            <Link
+              href="/register"
+              className="hidden items-center gap-1.5 rounded-xl border border-brand/40 px-3.5 py-2 text-xs font-semibold text-brand transition-colors hover:bg-brand/10 sm:inline-flex"
+            >
+              Đăng nhập / Đăng ký
+            </Link>
+          ) : null}
+
           {/* User menu */}
           <div className="hidden md:block">
             <DropdownMenu>
@@ -100,12 +112,31 @@ export function Navbar() {
                   <span className="text-xs font-normal text-muted-foreground">{user.email}</span>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <Link href="/dashboard">
-                    <LayoutDashboard className="mr-2 h-4 w-4" aria-hidden />
-                    Tin đăng của tôi
-                  </Link>
-                </DropdownMenuItem>
+                {user.role === 'provider' ? (
+                  <DropdownMenuItem asChild>
+                    <Link href="/dashboard">
+                      <LayoutDashboard className="mr-2 h-4 w-4" aria-hidden />
+                      Đăng bot
+                    </Link>
+                  </DropdownMenuItem>
+                ) : (
+                  <DropdownMenuItem asChild>
+                    <Link href="/profile">
+                      <UserRound className="mr-2 h-4 w-4" aria-hidden />
+                      Trang cá nhân
+                    </Link>
+                  </DropdownMenuItem>
+                )}
+                {isAuthenticated === true && (
+                  <DropdownMenuItem
+                    onSelect={() => {
+                      void logout();
+                    }}
+                  >
+                    <LogOut className="mr-2 h-4 w-4" aria-hidden />
+                    Đăng xuất
+                  </DropdownMenuItem>
+                )}
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
@@ -143,14 +174,37 @@ export function Navbar() {
                 {link.label}
               </Link>
             ))}
-            <Link
-              href="/dashboard"
-              onClick={() => setIsMobileMenuOpen(false)}
-              className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-brand"
-            >
-              <Plus className="h-4 w-4" aria-hidden />
-              Đăng tin bot
-            </Link>
+            {user.role === 'provider' && (
+              <Link
+                href="/dashboard"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-brand"
+              >
+                <Plus className="h-4 w-4" aria-hidden />
+                Đăng tin bot
+              </Link>
+            )}
+            {isAuthenticated === true ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setIsMobileMenuOpen(false);
+                  void logout();
+                }}
+                className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-medium text-brand"
+              >
+                <LogOut className="h-4 w-4" aria-hidden />
+                Đăng xuất
+              </button>
+            ) : (
+              <Link
+                href="/register"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-brand"
+              >
+                Đăng nhập / Đăng ký
+              </Link>
+            )}
           </div>
         </nav>
       )}

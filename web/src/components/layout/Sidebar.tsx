@@ -7,7 +7,7 @@ import { Search, TrendingUp, FolderOpen } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { MOCK_CATEGORIES, MOCK_BOTS } from '@shared/mock-data';
+import { MOCK_BLOG_CATEGORIES, MOCK_BOTS } from '@shared/mock-data';
 import { cn } from '@/lib/utils';
 import { formatViewCount } from '@/lib/format';
 
@@ -34,7 +34,7 @@ export function Sidebar() {
           <h3 className="text-lg font-bold text-foreground">Chuyên mục</h3>
         </div>
         <div className="grid gap-2">
-          {MOCK_CATEGORIES.map((cat) => {
+          {MOCK_BLOG_CATEGORIES.map((cat) => {
             const href = `/category/${cat.slug}`;
             const active = pathname === href;
             return (
