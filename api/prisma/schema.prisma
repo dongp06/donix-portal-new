@@ -7,6 +7,20 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model User {
+  id         String  @id
+  googleId   String? @unique
+  name       String
+  email      String  @unique
+  avatar     String
+  role       String  @default("renter")
+  isVerified Boolean @default(false)
+  walletBalance Int   @default(0)
+  bio        String?
+  joinedDate String
+  contact    String?
+}
+
 model Category {
   id       String  @id
   slug     String  @unique
@@ -39,4 +53,61 @@ model Post {
   @@index([categoryId])
   @@index([date])
   @@index([isPinned])
+}
+
+model Bot {
+  id            String   @id
+  slug          String   @unique
+  title         String
+  tagline       String
+  description   String
+  categorySlug  String
+  categoryName  String
+  providerId    String
+  providerName  String
+  providerAvatar String
+  providerRating Float    @default(0)
+  providerSales Int      @default(0)
+  providerVerified Boolean @default(false)
+  providerJoinedDate String
+  contactZalo   String?
+  contactTelegram String?
+  contactPhone  String?
+  contactMessenger String?
+  contactFacebook String?
+  coverImage    String
+  gallery       String   @default("[]")
+  features      String   @default("[]")
+  priceHourly   Int      @default(0)
+  priceDaily    Int      @default(0)
+  priceMonthly  Int      @default(0)
+  status        String   @default("online")
+  totalRentals  Int      @default(0)
+  activeRentals Int      @default(0)
+  rating        Float    @default(5)
+  reviewCount   Int      @default(0)
+  tags          String   @default("[]")
+  licenseType   String   @default("key")
+  version       String   @default("v1.0.0")
+  systemReqs    String   @default("")
+  updatedAt     String
+
+  @@index([categorySlug])
+  @@index([providerId])
+}
+
+model ForumPost {
+  id           String @id
+  title        String
+  excerpt      String
+  content      String
+  authorName   String
+  authorAvatar String
+  authorRole   String @default("Khách thuê")
+  category     String
+  upvotes      Int    @default(0)
+  commentsCount Int   @default(0)
+  createdAt    String
+  tags         String @default("[]")
+  isPinned     Boolean @default(false)
 }
