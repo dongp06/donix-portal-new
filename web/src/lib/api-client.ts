@@ -46,7 +46,9 @@ export type UploadResult = {
 export async function apiUploadAttachment(file: File): Promise<UploadResult> {
   const body = new FormData();
   body.append('file', file);
-  const res = await fetch('/api/admin/files/upload', {
+  // Admin post editor uploads tới endpoint công khai /api/files/upload
+  // (AdminFilesController đã bị thay bằng FilesUploadController chung cho cả user lẫn admin)
+  const res = await fetch('/api/files/upload', {
     method: 'POST',
     headers: adminKeyHeader(),
     body,
