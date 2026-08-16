@@ -18,10 +18,16 @@ model User {
   bio        String?
   joinedDate String
   contact    String?
+  tier        String  @default("new")
+  trustScore  Int     @default(0)
+  trustScoreUpdatedAt String?
   forumPosts ForumPost[]
   comments   Comment[]
   reactions  Reaction[]
   reviews    BotReview[]
+  sellerProfile  SellerProfile?
+  verifications  TrustVerification[]
+  trustEvents    TrustEvent[]
 }
 
 model Category {
@@ -92,6 +98,7 @@ model Bot {
   version       String   @default("v1.0.0")
   systemReqs    String   @default("")
   updatedAt     String
+  sellerSlug    String   @default("")
   reviews       BotReview[]
 
   @@index([categorySlug])
@@ -165,4 +172,44 @@ model Reaction {
 
   @@unique([targetType, targetId, userId, emoji])
   @@index([targetType, targetId])
+}
+
+model SellerProfile {
+  id                  String   @id
+  userId              String   @unique
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  shopName            String
+  slug                String   @unique
+  bio                 String?
+  avatar              String?
+  banner              String?
+  contact             String   @default("{}")
+  profileCompleteness Int      @default(0)
+  updatedAt           String
+}
+
+model TrustVerification {
+  id          String  @id
+  userId      String
+  user        User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status      String
+  note        String?
+  submittedAt String
+  reviewedAt  String?
+  reviewedBy  String?
+  expiresAt   String?
+
+  @@index([userId])
+  @@index([status])
+}
+
+model TrustEvent {
+  id        String @id
+  userId    String
+  user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String
+  detail    String @default("{}")
+  createdAt String
+
+  @@index([userId])
 }

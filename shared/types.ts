@@ -46,6 +46,8 @@ export interface BotSellerInfo {
   totalSales: number;
   /** Điểm uy tín 0-100 (tính từ rating, VD rating 4.9 → 98) */
   reputation?: number;
+  /** Bậc seller */
+  tier?: SellerTier;
   isVerified: boolean;
   joinedDate: string;
   contact?: BotContactInfo;
@@ -195,7 +197,57 @@ export interface Post {
   relatedSlugs?: string[];
 }
 
-/** Hồ sơ seller công khai — GET /api/sellers/:id */
+/** Loại sự kiện trong lịch sử uy tín của seller */
+export type SellerTrustEventType =
+  | 'joined'
+  | 'tier_changed'
+  | 'verification_submitted'
+  | 'verification_approved'
+  | 'verification_rejected'
+  | 'verification_expired'
+  | 'verification_revoked';
+
+/** Sự kiện trong lịch sử uy tín */
+export interface SellerTrustEvent {
+  id: string;
+  type: SellerTrustEventType;
+  detail?: Record<string, unknown>;
+  createdAt: string;
+}
+
+/** Một dòng trong checklist điều kiện xác minh Trust Seller */
+export interface TrustChecklistItem {
+  key: string;
+  label: string;
+  passed: boolean;
+  /** Giá trị hiện tại của tiêu chí (VD "32 ngày", "6 đánh giá") */
+  current?: string;
+  /** Giá trị cần đạt (VD "30 ngày", "5 đánh giá") */
+  required?: string;
+}
+
+/** Trạng thái verification hiện tại của seller */
+export interface TrustStatus {
+  status: 'none' | 'pending' | 'approved' | 'under_review' | 'rejected' | 'expired';
+  submittedAt?: string;
+  reviewedAt?: string;
+  expiresAt?: string;
+  note?: string;
+  /** true nếu đang chờ hồ sơ của admin (có thể hủy) */
+  canCancel: boolean;
+}
+
+/** Trust Score hiện tại + breakdown theo component */
+export interface TrustScoreInfo {
+  score: number;
+  breakdown: { key: string; label: string; weight: number; value: number; score: number }[];
+  updatedAt?: string;
+}
+
+/** Tier của seller */
+export type SellerTier = 'new' | 'active' | 'trusted' | 'top';
+
+/** Hồ sơ seller công khai — GET /api/sellers/:identifier */
 export interface SellerProfileUser {
   id: string;
   name: string;
@@ -205,16 +257,20 @@ export interface SellerProfileUser {
   bio?: string;
   joinedDate: string;
   contact?: BotContactInfo;
-  /** Rating cao nhất trong các bot của seller */
-  rating: number;
   /** Điểm uy tín 0-100 */
-  reputation?: number;
-  /** Tổng giao dịch cộng dồn từ các bot */
-  sales: number;
+  trustScore?: number;
+  /** Bậc seller */
+  tier?: SellerTier;
+  /** Slug profile seller */
+  slug?: string;
+  /** Ngày duyệt xác minh gần nhất (ISO) */
+  verifiedAt?: string;
 }
 
 export interface SellerProfile {
   user: SellerProfileUser;
   bots: BotItem[];
   posts: ForumPost[];
+  /** Lịch sử uy tín (timeline) */
+  trustEvents?: SellerTrustEvent[];
 }
