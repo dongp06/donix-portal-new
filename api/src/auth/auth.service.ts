@@ -92,7 +92,7 @@ export class AuthService {
           name,
           avatar,
           ...(selectedRole && user.role === 'buyer' && selectedRole === 'seller'
-            ? { role: 'seller', isVerified: true }
+            ? { role: 'seller' }
             : {}),
         },
       });
@@ -144,7 +144,7 @@ export class AuthService {
     }
     const updated = await this.prisma.user.update({
       where: { email },
-      data: { role: 'seller', isVerified: true },
+      data: { role: 'seller' },
     });
     return this.toAuthUser(updated);
   }

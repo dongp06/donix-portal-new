@@ -4,6 +4,7 @@ import { BotsService } from './bots.service.js';
 import { AuthService } from '../auth/auth.service.js';
 import { requireUser, getCurrentUser } from '../auth/current-user.js';
 import { PrismaService } from '../prisma/prisma.service.js';
+import { TrustService } from '../trust/trust.service.js';
 
 @Controller('bots')
 export class BotsController {
@@ -11,6 +12,7 @@ export class BotsController {
     private readonly botsService: BotsService,
     private readonly auth: AuthService,
     private readonly prisma: PrismaService,
+    private readonly trust: TrustService,
   ) {}
 
   @Get('categories')
@@ -107,6 +109,12 @@ export class BotsController {
       isVerified: user.isVerified,
       contact,
     });
+
+    // Snapshot trust hiện tại lên bot vừa tạo để sellerVerified/sellerName/sellerAvatar khớp
+    if (user.role === 'seller') {
+      await this.trust.syncBotSnapshots(user.id);
+    }
+
     return { success: true, data: newBot };
   }
 
