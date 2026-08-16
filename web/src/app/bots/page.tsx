@@ -36,7 +36,7 @@ export default function BotsCatalogPage() {
       return matchCat && matchStatus && matchSearch;
     })
     .sort((a, b) => {
-      if (sortOption === 'popular') return b.seller.totalSales - a.seller.totalSales;
+      if (sortOption === 'popular') return b.views - a.views;
       if (sortOption === 'rating') return b.rating - a.rating;
       if (sortOption === 'price_asc') return a.pricing.daily - b.pricing.daily;
       if (sortOption === 'price_desc') return b.pricing.daily - a.pricing.daily;
@@ -91,7 +91,7 @@ export default function BotsCatalogPage() {
             </select>
 
             <select value={sortOption} onChange={(e) => setSortOption(e.target.value)} className={selectClass} aria-label="Sắp xếp">
-              <option value="popular">Nổi bật (nhiều giao dịch)</option>
+              <option value="popular">Nổi bật (nhiều lượt xem)</option>
               <option value="rating">Đánh giá cao nhất</option>
               <option value="price_asc">Giá tăng dần</option>
               <option value="price_desc">Giá giảm dần</option>

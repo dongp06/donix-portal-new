@@ -25,6 +25,7 @@ function userToOut(u: User, rating: number, sales: number) {
     joinedDate: u.joinedDate,
     contact: safeParse<Record<string, string>>(u.contact),
     rating,
+    reputation: Math.round(rating * 20),
     sales,
   };
 }

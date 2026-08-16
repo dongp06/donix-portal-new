@@ -37,7 +37,7 @@ export default function BotDetailPage({ params }: { params: Promise<{ id: string
   const tabs = [
     { id: 'overview', label: 'Tổng quan & hướng dẫn' },
     { id: 'features', label: 'Danh sách tính năng' },
-    { id: 'reviews', label: `Đánh giá (${bot.reviews?.length || 0})` },
+    { id: 'reviews', label: `Đánh giá (${bot.reviewCount ?? 0})` },
   ] as const;
 
   return (
@@ -106,7 +106,7 @@ export default function BotDetailPage({ params }: { params: Promise<{ id: string
                 </span>
                 <span className="inline-flex items-center gap-1.5 text-muted-foreground">
                   <Activity className="h-4 w-4 text-brand" aria-hidden />
-                  <strong className="font-semibold text-foreground">{bot.seller.totalSales.toLocaleString('vi-VN')}</strong> giao dịch
+                  <strong className="font-semibold text-foreground">{bot.views.toLocaleString('vi-VN')}</strong> lượt xem
                 </span>
               </div>
             </div>
@@ -211,7 +211,7 @@ export default function BotDetailPage({ params }: { params: Promise<{ id: string
                   <div className="flex items-center gap-1 text-xs text-muted-foreground">
                     <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" aria-hidden />
                     <span className="font-medium text-foreground">{bot.seller.rating} / 5.0</span>
-                    <span>({bot.seller.totalSales} giao dịch)</span>
+                    <span>· Điểm uy tín {bot.seller.reputation ?? Math.round(bot.seller.rating * 20)}</span>
                   </div>
                 </div>
               </Link>

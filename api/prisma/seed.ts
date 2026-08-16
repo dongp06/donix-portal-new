@@ -49,6 +49,7 @@ function toBotData(b: (typeof MOCK_BOTS)[number]) {
     status: b.status,
     rating: b.rating,
     reviewCount: b.reviewCount,
+    views: b.views ?? 0,
     tags: JSON.stringify(b.tags),
     version: b.version,
     systemReqs: b.systemReqs,
@@ -273,38 +274,47 @@ async function main() {
       },
     });
 
-    // Bot reviews (kèm ảnh)
-    await prisma.botReview.create({
-      data: {
-        id: `seed-rv-${botId}-1`,
-        botId,
-        userId: SEED_AUTHORS[0].id,
-        rating: 5,
-        comment: 'Bot chạy mượt, đúng như mô tả. Hỗ trợ nhanh, giao diện dễ dùng.',
-        images: JSON.stringify([
-          'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&auto=format&fit=crop&q=80',
-        ]),
-        createdAt: '2026-08-05',
-      },
-    });
-    await prisma.botReview.create({
-      data: {
-        id: `seed-rv-${botId}-2`,
-        botId,
-        userId: SEED_AUTHORS[2].id,
-        rating: 4,
-        comment: 'Ổn định, chỉ mong thêm báo cáo tự động. Ngoài ra rất đáng tiền.',
-        images: JSON.stringify([]),
-        createdAt: '2026-08-06',
-      },
-    });
+    // Bot reviews (kèm ảnh) — seed 2 review cho mỗi bot để tab "Đánh giá" không trống
+    // Nội dung xoay vòng theo chỉ số bot để mỗi bot có review riêng.
+    const REVIEW_COMMENTS = [
+      'Bot chạy mượt, đúng như mô tả. Hỗ trợ nhanh, giao diện dễ dùng.',
+      'Ổn định, chỉ mong thêm báo cáo tự động. Ngoài ra rất đáng tiền.',
+      'Tốt lắm, mình dùng từ hôm mua tới giờ chưa gặp lỗi. Nhân viên hỗ trợ nhiệt tình.',
+      'Cài đặt hơi mất thời gian lúc đầu nhưng xong là ổn định, mua thêm rẻ.',
+    ];
+    for (const [bi, b] of MOCK_BOTS.entries()) {
+      const authorIdx = bi % SEED_AUTHORS.length;
+      for (const ri of [0, 1]) {
+        await prisma.botReview.upsert({
+          where: { id: `seed-rv-${b.id}-${ri + 1}` },
+          create: {
+            id: `seed-rv-${b.id}-${ri + 1}`,
+            botId: b.id,
+            userId: SEED_AUTHORS[(authorIdx + ri) % SEED_AUTHORS.length].id,
+            rating: ri === 0 ? 5 : 4,
+            comment: REVIEW_COMMENTS[(bi + ri) % REVIEW_COMMENTS.length],
+            images: JSON.stringify(
+              ri === 0 ? ['https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&auto=format&fit=crop&q=80'] : [],
+            ),
+            createdAt: '2026-08-05',
+          },
+          update: {},
+        });
+      }
+    }
 
-    // Cập nhật rating/reviewCount cho bot theo reviews vừa tạo
-    const avg = await prisma.botReview.aggregate({ where: { botId }, _avg: { rating: true }, _count: true });
-    await prisma.bot.update({
-      where: { id: botId },
-      data: { rating: avg._avg.rating ?? 5, reviewCount: avg._count },
-    });
+    // Cập nhật rating/reviewCount cho TẤT CẢ bot theo review thật (không còn số ảo 110-180)
+    for (const b of MOCK_BOTS) {
+      const agg = await prisma.botReview.aggregate({
+        where: { botId: b.id },
+        _avg: { rating: true },
+        _count: true,
+      });
+      await prisma.bot.update({
+        where: { id: b.id },
+        data: { rating: agg._avg.rating ?? 5, reviewCount: agg._count },
+      });
+    }
   }
 
   // eslint-disable-next-line no-console

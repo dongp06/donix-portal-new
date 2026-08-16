@@ -44,6 +44,8 @@ export interface BotSellerInfo {
   avatar: string;
   rating: number;
   totalSales: number;
+  /** Điểm uy tín 0-100 (tính từ rating, VD rating 4.9 → 98) */
+  reputation?: number;
   isVerified: boolean;
   joinedDate: string;
   contact?: BotContactInfo;
@@ -112,6 +114,8 @@ export interface BotItem {
   status: BotStatus;
   rating: number;
   reviewCount: number;
+  /** Lượt xem bot */
+  views: number;
   tags: string[];
   version: string;
   systemReqs: string;
@@ -203,6 +207,8 @@ export interface SellerProfileUser {
   contact?: BotContactInfo;
   /** Rating cao nhất trong các bot của seller */
   rating: number;
+  /** Điểm uy tín 0-100 */
+  reputation?: number;
   /** Tổng giao dịch cộng dồn từ các bot */
   sales: number;
 }

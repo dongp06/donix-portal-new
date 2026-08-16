@@ -18,6 +18,7 @@ export interface BotItemOut {
     name: string;
     avatar: string;
     rating: number;
+    reputation: number;
     totalSales: number;
     isVerified: boolean;
     joinedDate: string;
@@ -36,6 +37,7 @@ export interface BotItemOut {
   status: string;
   rating: number;
   reviewCount: number;
+  views: number;
   tags: string[];
   version: string;
   systemReqs: string;
@@ -73,6 +75,7 @@ export function toOut(b: Bot): BotItemOut {
       name: b.sellerName,
       avatar: b.sellerAvatar,
       rating: b.sellerRating,
+      reputation: Math.round(b.sellerRating * 20),
       totalSales: b.sellerSales,
       isVerified: b.sellerVerified,
       joinedDate: b.sellerJoinedDate,
@@ -85,6 +88,7 @@ export function toOut(b: Bot): BotItemOut {
     status: b.status,
     rating: b.rating,
     reviewCount: b.reviewCount,
+    views: b.views,
     tags: safeParse<string[]>(b.tags),
     version: b.version,
     systemReqs: b.systemReqs,
@@ -199,6 +203,7 @@ export class BotsService {
         status: botData.status || 'online',
         rating: 5.0,
         reviewCount: 0,
+        views: 0,
         tags: JSON.stringify(botData.tags ?? []),
         version: botData.version || 'v1.0.0',
         systemReqs: botData.systemReqs || 'Windows 10/11 64-bit',

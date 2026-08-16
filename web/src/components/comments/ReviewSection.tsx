@@ -172,8 +172,8 @@ export function ReviewSection({ botId }: ReviewSectionProps) {
     }
   };
 
-  const renderStars = (value: number, onChange?: (n: number) => void, size = 'h-5 w-5') => (
-    <div className="flex items-center gap-0.5" role={onChange ? 'radiogroup' : undefined} aria-label="Số sao">
+  const renderStars = (value: number, onChange?: (n: number) => void, size = 'h-6 w-6') => (
+    <div className="flex items-center gap-1" role={onChange ? 'radiogroup' : undefined} aria-label="Số sao đánh giá">
       {[1, 2, 3, 4, 5].map((n) => (
         <button
           key={n}
@@ -181,9 +181,19 @@ export function ReviewSection({ botId }: ReviewSectionProps) {
           disabled={!onChange}
           onClick={() => onChange?.(n)}
           aria-label={`${n} sao`}
-          className={cn(!onChange && 'cursor-default', onChange && 'transition-transform hover:scale-110')}
+          title={`${n} sao`}
+          className={cn(
+            'cursor-pointer p-0.5 transition-transform',
+            onChange ? 'hover:scale-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand/50' : 'cursor-default',
+          )}
         >
-          <Star className={cn(size, n <= value ? 'fill-amber-400 text-amber-400' : 'text-muted')} aria-hidden />
+          <Star
+            className={cn(
+              size,
+              n <= value ? 'fill-amber-400 text-amber-400' : 'text-zinc-400',
+            )}
+            aria-hidden
+          />
         </button>
       ))}
     </div>
@@ -197,8 +207,9 @@ export function ReviewSection({ botId }: ReviewSectionProps) {
       {/* Form viết review */}
       {isAuthenticated === true ? (
         <form onSubmit={submitReview} className="space-y-3 rounded-2xl border border-border bg-card p-5">
-          <div className="flex items-center justify-between">
-            <h4 className="text-sm font-semibold text-foreground">Đánh giá bot này</h4>
+          <h4 className="text-sm font-semibold text-foreground">Đánh giá bot này</h4>
+          <div className="flex flex-wrap items-center gap-3 rounded-xl border border-brand/20 bg-brand/5 px-3 py-2.5">
+            <span className="text-xs font-medium text-muted-foreground">Điểm của bạn:</span>
             {renderStars(rating, setRating)}
           </div>
           <textarea
@@ -242,7 +253,7 @@ export function ReviewSection({ botId }: ReviewSectionProps) {
           <div className="flex justify-end">
             <button
               type="submit"
-              disabled={submitting || !rating}
+              disabled={submitting}
               className="inline-flex items-center gap-1.5 rounded-lg bg-brand px-4 py-2 text-xs font-semibold text-brand-foreground transition-colors hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {submitting ? 'Đang gửi…' : 'Gửi đánh giá'}

@@ -62,7 +62,7 @@ export function ContactModal({ bot, isOpen, onClose }: ContactModalProps) {
             <div className="flex items-center gap-1 text-xs text-muted-foreground">
               <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" aria-hidden />
               <span className="font-medium text-foreground">{bot.seller.rating}</span>
-              <span>· {bot.seller.totalSales} giao dịch</span>
+              <span>· Điểm uy tín {bot.seller.reputation ?? Math.round(bot.seller.rating * 20)}</span>
             </div>
           </div>
         </div>

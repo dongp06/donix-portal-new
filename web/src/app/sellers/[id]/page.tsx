@@ -132,7 +132,7 @@ export default function SellerProfilePage({ params }: { params: Promise<{ id: st
                 </span>
                 <span className="inline-flex items-center gap-1.5">
                   <Bot className="h-3.5 w-3.5" aria-hidden />
-                  {seller.sales.toLocaleString('vi-VN')} giao dịch
+                  Điểm uy tín {seller.reputation ?? Math.round(seller.rating * 20)}
                 </span>
                 <span className="inline-flex items-center gap-1.5">
                   <CalendarDays className="h-3.5 w-3.5" aria-hidden />

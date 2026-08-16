@@ -72,7 +72,7 @@ export function BotCard({ bot, onContactClick }: BotCardProps) {
             <span className="text-foreground">{bot.rating.toFixed(1)}</span>
             <span>({bot.reviewCount})</span>
           </span>
-          <span>{bot.seller.totalSales.toLocaleString('vi-VN')} giao dịch</span>
+          <span>{bot.views.toLocaleString('vi-VN')} lượt xem</span>
         </div>
 
         {/* Pricing & CTA */}

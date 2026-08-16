@@ -87,6 +87,7 @@ model Bot {
   status        String   @default("online")
   rating        Float    @default(5)
   reviewCount   Int      @default(0)
+  views         Int      @default(0)
   tags          String   @default("[]")
   version       String   @default("v1.0.0")
   systemReqs    String   @default("")
