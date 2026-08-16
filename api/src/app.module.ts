@@ -11,6 +11,7 @@ import { CommunityModule } from './community/community.module.js';
 import { SellersModule } from './sellers/sellers.module.js';
 import { UsersModule } from './users/users.module.js';
 import { CommentsModule } from './comments/comments.module.js';
+import { TrustModule } from './trust/trust.module.js';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { CommentsModule } from './comments/comments.module.js';
     SellersModule,
     UsersModule,
     CommentsModule,
+    TrustModule,
   ],
 })
 export class AppModule {}
