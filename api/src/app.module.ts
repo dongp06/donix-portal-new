@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { ScheduleModule } from '@nestjs/schedule';
 import { CacheModule } from './cache/cache.module.js';
 import { ClientErrorsModule } from './client-errors/client-errors.module.js';
 import { FilesModule } from './files/files.module.js';
@@ -28,6 +29,7 @@ import { TrustModule } from './trust/trust.module.js';
     UsersModule,
     CommentsModule,
     TrustModule,
+    ScheduleModule.forRoot(),
   ],
 })
 export class AppModule {}

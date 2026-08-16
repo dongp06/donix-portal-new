@@ -1,5 +1,6 @@
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
+import { TrustService } from '../trust/trust.service.js';
 import { MOCK_CATEGORIES } from '../data/mock-data.js';
 import { BotCategory } from '../data/types.js';
 import type { Bot } from '../../prisma/generated/prisma/client.js';
@@ -98,7 +99,10 @@ export function toOut(b: Bot): BotItemOut {
 
 @Injectable()
 export class BotsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly trust: TrustService,
+  ) {}
 
   getCategories(): BotCategory[] {
     return MOCK_CATEGORIES;
@@ -405,7 +409,7 @@ export class BotsService {
     return true;
   }
 
-  /** Tính lại rating = AVG(rating), reviewCount = COUNT */
+  /** Tính lại rating = AVG(rating), reviewCount = COUNT; sau đó recalc trust cho seller */
   private async recalcBotRating(botId: string) {
     const agg = await this.prisma.botReview.aggregate({
       where: { botId },
@@ -419,5 +423,10 @@ export class BotsService {
         reviewCount: agg._count,
       },
     });
+    const bot = await this.prisma.bot.findUnique({
+      where: { id: botId },
+      select: { sellerId: true },
+    });
+    if (bot) await this.trust.applyReview(bot.sellerId);
   }
 }
