@@ -160,10 +160,10 @@ export class TrustService {
       const ranked = await this.prisma.user.findMany({
         where: { role: 'seller', tier: 'trusted' },
         orderBy: { trustScore: 'desc' },
-        select: { trustScore: true },
+        select: { id: true, trustScore: true },
         take: TOP_RANK_LIMIT + 1,
       });
-      const myRank = ranked.findIndex((r) => r.trustScore === score);
+      const myRank = ranked.findIndex((r) => r.id === userId);
       if (myRank >= 0 && myRank < TOP_RANK_LIMIT) return 'top';
     }
     return 'trusted';
@@ -345,7 +345,11 @@ export class TrustService {
     if (body.bio !== undefined) data.bio = body.bio === '' ? null : String(body.bio);
     if (body.avatar !== undefined) data.avatar = body.avatar === '' ? null : String(body.avatar);
     if (body.banner !== undefined) data.banner = body.banner === '' ? null : String(body.banner);
-    if (body.contact && typeof body.contact === 'object') data.contact = JSON.stringify(body.contact);
+    if (body.contact === null) {
+      data.contact = '{}';
+    } else if (body.contact && typeof body.contact === 'object') {
+      data.contact = JSON.stringify(body.contact);
+    }
     const updated = await this.prisma.sellerProfile.update({ where: { userId }, data });
     const parsedContact = updated.contact ? (JSON.parse(updated.contact) as Record<string, string>) : {};
     const completeness = await this.computeProfileCompleteness({

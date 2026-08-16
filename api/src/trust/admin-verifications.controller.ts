@@ -115,6 +115,9 @@ export class AdminVerificationsController {
       });
       await this.trust.recompute(v.userId);
     } else {
+      if (v.status !== 'pending' && v.status !== 'under_review') {
+        throw new BadRequestException('Hồ sơ không ở trạng thái xử lý.');
+      }
       await this.prisma.trustVerification.update({
         where: { id },
         data: {

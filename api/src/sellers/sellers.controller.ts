@@ -5,11 +5,11 @@ import { SellersService } from './sellers.service.js';
 export class SellersController {
   constructor(private readonly sellersService: SellersService) {}
 
-  @Get(':id')
-  async getProfile(@Param('id') id: string) {
+  @Get(':identifier')
+  async getProfile(@Param('identifier') identifier: string) {
     return {
       success: true,
-      data: await this.sellersService.getProfile(id),
+      data: await this.sellersService.getProfile(identifier),
     };
   }
 }

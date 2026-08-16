@@ -17,7 +17,7 @@ export class ReviewsComponent implements ScoreComponent {
   constructor(private readonly prisma: PrismaService) {}
   async compute(userId: string): Promise<number> {
     const agg = await this.prisma.botReview.aggregate({
-      where: { user: { id: userId }, bot: { sellerId: userId } },
+      where: { bot: { sellerId: userId } },
       _avg: { rating: true },
       _count: true,
     });
