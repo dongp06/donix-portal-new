@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { use } from 'react';
+import { useRouter } from 'next/navigation';
 import { useRole } from '../../../context/RoleContext';
 import { BotItem, ForumPost, SellerProfile } from '@shared/types';
 import { BotCard } from '../../../components/bot/BotCard';
@@ -46,9 +47,11 @@ function formatDate(iso: string): string {
 
 export default function SellerProfilePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = use(params);
+  const router = useRouter();
   const { user, isAuthenticated, updateProfile } = useRole();
   const [profile, setProfile] = useState<SellerProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [redirecting, setRedirecting] = useState(false);
   const [notFound, setNotFound] = useState(false);
   const [tab, setTab] = useState<'bots' | 'posts'>('bots');
   const [isEditOpen, setIsEditOpen] = useState(false);
@@ -62,13 +65,18 @@ export default function SellerProfilePage({ params }: { params: Promise<{ slug: 
         setNotFound(true);
         return;
       }
-      setProfile(json.data as SellerProfile);
+      const nextProfile = json.data as SellerProfile;
+      setProfile(nextProfile);
+      if (nextProfile.user.slug && nextProfile.user.slug !== slug) {
+        setRedirecting(true);
+        router.replace(`/sellers/${encodeURIComponent(nextProfile.user.slug)}`);
+      }
     } catch {
       setNotFound(true);
     } finally {
       setLoading(false);
     }
-  }, [slug]);
+  }, [router, slug]);
 
   useEffect(() => {
     void load();
@@ -79,7 +87,7 @@ export default function SellerProfilePage({ params }: { params: Promise<{ slug: 
     toast.success(`Đã sao chép ${label}`);
   };
 
-  if (loading) {
+  if (loading || redirecting) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center bg-background text-foreground">
         <p className="text-sm text-muted-foreground">Đang tải hồ sơ…</p>
