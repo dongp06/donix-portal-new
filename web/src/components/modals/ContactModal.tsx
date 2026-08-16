@@ -14,7 +14,7 @@ interface ContactModalProps {
 export function ContactModal({ bot, isOpen, onClose }: ContactModalProps) {
   if (!isOpen || !bot) return null;
 
-  const contact = bot.provider.contact ?? {};
+  const contact = bot.seller.contact ?? {};
   const channels = [
     contact.zalo && { icon: MessageCircle, label: 'Zalo', value: contact.zalo },
     contact.messenger && { icon: MessageCircle, label: 'Messenger', value: contact.messenger },
@@ -33,7 +33,7 @@ export function ContactModal({ bot, isOpen, onClose }: ContactModalProps) {
       className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-background/80 p-4 backdrop-blur-sm"
       role="dialog"
       aria-modal="true"
-      aria-label={`Liên hệ người bán ${bot.provider.name}`}
+      aria-label={`Liên hệ người bán ${bot.seller.name}`}
     >
       <div className="relative my-auto max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl border border-border bg-card p-6 text-foreground shadow-2xl">
         <button
@@ -48,21 +48,21 @@ export function ContactModal({ bot, isOpen, onClose }: ContactModalProps) {
         {/* Seller header */}
         <div className="mb-5 flex items-center gap-3 border-b border-border pb-4">
           <img
-            src={bot.provider.avatar}
-            alt={bot.provider.name}
+            src={bot.seller.avatar}
+            alt={bot.seller.name}
             className="h-12 w-12 rounded-full border border-border object-cover"
           />
           <div>
             <div className="flex items-center gap-1 font-semibold">
-              {bot.provider.name}
-              {bot.provider.isVerified && (
+              {bot.seller.name}
+              {bot.seller.isVerified && (
                 <ShieldCheck className="h-4 w-4 text-brand" aria-label="Đã xác thực" />
               )}
             </div>
             <div className="flex items-center gap-1 text-xs text-muted-foreground">
               <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" aria-hidden />
-              <span className="font-medium text-foreground">{bot.provider.rating}</span>
-              <span>· {bot.provider.totalSales} giao dịch</span>
+              <span className="font-medium text-foreground">{bot.seller.rating}</span>
+              <span>· {bot.seller.totalSales} giao dịch</span>
             </div>
           </div>
         </div>

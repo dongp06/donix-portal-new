@@ -14,11 +14,10 @@ import {
   CheckCircle2,
   Plus,
 } from 'lucide-react';
-import { toast } from 'sonner';
 
 const ROLE_LABEL: Record<string, string> = {
-  renter: 'Người thuê bot',
-  provider: 'Nhà cung cấp bot',
+  buyer: 'Người mua bot',
+  seller: 'Người bán bot',
   admin: 'Quản trị viên',
 };
 
@@ -57,10 +56,8 @@ export default function ProfilePage() {
     );
   }
 
-  const isProvider = user.role === 'provider';
-  const myBots = bots.filter(
-    (b) => b.provider.id === user.id || b.provider.name === 'DevNguyen_Pro',
-  );
+  const isSeller = user.role === 'seller';
+  const myBots = bots.filter((b) => b.seller.id === user.id);
   const joinDate = new Date(user.joinedDate + 'T00:00:00');
   const joinLabel = Number.isNaN(joinDate.getTime())
     ? user.joinedDate
@@ -92,7 +89,7 @@ export default function ProfilePage() {
             </h1>
             <p className="mt-1 text-sm text-muted-foreground">{user.email}</p>
           </div>
-          {isProvider && (
+          {isSeller && (
             <Link
               href="/dashboard"
               className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-brand/40 px-4 py-2.5 text-sm font-semibold text-brand transition-colors hover:bg-brand/10"
@@ -116,7 +113,7 @@ export default function ProfilePage() {
                 <span className="rounded-full border border-brand/30 bg-brand/10 px-2.5 py-1 text-xs font-semibold text-brand">
                   {ROLE_LABEL[user.role] ?? user.role}
                 </span>
-                {user.isVerifiedProvider && (
+                {user.isVerifiedSeller && (
                   <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 text-xs font-semibold text-emerald-500">
                     <ShieldCheck className="h-3.5 w-3.5" aria-hidden />
                     Đã xác thực
@@ -156,7 +153,7 @@ export default function ProfilePage() {
         {/* Stats */}
         <div
           className={`grid gap-4 ${
-            isProvider ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1'
+            isSeller ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1'
           }`}
         >
           <div className="rounded-2xl border border-border bg-card p-5">
@@ -165,11 +162,11 @@ export default function ProfilePage() {
               Tài khoản
             </span>
             <div className="mt-1 font-display text-2xl font-bold tracking-tight">
-              {user.isVerifiedProvider ? 'Đã xác thực' : 'Cơ bản'}
+              {user.isVerifiedSeller ? 'Đã xác thực' : 'Cơ bản'}
             </div>
           </div>
 
-          {isProvider && (
+          {isSeller && (
             <div className="flex items-center justify-between gap-4 rounded-2xl border border-border bg-card p-5">
               <div>
                 <span className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
@@ -191,21 +188,21 @@ export default function ProfilePage() {
           )}
         </div>
 
-        {/* Provider CTA */}
-        {!isProvider && (
+        {/* Seller CTA */}
+        {!isSeller && (
           <div className="space-y-4 rounded-2xl border border-border bg-card p-6">
             <h2 className="font-display text-lg font-bold tracking-tight">
-              Bạn muốn cho thuê bot?
+              Bạn muốn bán bot?
             </h2>
             <p className="text-sm text-muted-foreground">
-              Chuyển sang tài khoản Nhà cung cấp để đăng bot lên chợ, quản lý tin đăng
+              Chuyển sang tài khoản Người bán để đăng bot lên chợ, quản lý tin đăng
               và nhận liên hệ trực tiếp từ người mua.
             </p>
             <Link
               href="/register"
               className="inline-flex items-center gap-1.5 rounded-xl bg-brand px-4 py-2.5 text-sm font-semibold text-brand-foreground transition-colors hover:brightness-110"
             >
-              Chuyển sang vai trò nhà cung cấp
+              Chuyển sang vai trò người bán
               <ArrowRight className="h-4 w-4" aria-hidden />
             </Link>
           </div>

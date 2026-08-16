@@ -36,7 +36,7 @@ export default function BotsCatalogPage() {
       return matchCat && matchStatus && matchSearch;
     })
     .sort((a, b) => {
-      if (sortOption === 'popular') return b.totalRentals - a.totalRentals;
+      if (sortOption === 'popular') return b.seller.totalSales - a.seller.totalSales;
       if (sortOption === 'rating') return b.rating - a.rating;
       if (sortOption === 'price_asc') return a.pricing.daily - b.pricing.daily;
       if (sortOption === 'price_desc') return b.pricing.daily - a.pricing.daily;
@@ -53,10 +53,10 @@ export default function BotsCatalogPage() {
         <div className="mb-8">
           <p className="eyebrow">Chợ bot tự động hóa</p>
           <h1 className="mt-2 font-display text-3xl font-bold tracking-tight md:text-4xl">
-            Danh sách bot cho thuê ({filteredBots.length})
+            Danh sách bot ({filteredBots.length})
           </h1>
           <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">
-            Lựa chọn bot phù hợp cho công việc, game hoặc đầu tư. Thuê linh hoạt theo giờ, ngày, tháng.
+            Lựa chọn bot phù hợp cho công việc, game hoặc đầu tư. Liên hệ trực tiếp người bán qua giá tham khảo theo giờ, ngày, tháng.
           </p>
         </div>
 
@@ -91,7 +91,7 @@ export default function BotsCatalogPage() {
             </select>
 
             <select value={sortOption} onChange={(e) => setSortOption(e.target.value)} className={selectClass} aria-label="Sắp xếp">
-              <option value="popular">Nổi bật (nhiều lượt thuê)</option>
+              <option value="popular">Nổi bật (nhiều giao dịch)</option>
               <option value="rating">Đánh giá cao nhất</option>
               <option value="price_asc">Giá tăng dần</option>
               <option value="price_desc">Giá giảm dần</option>

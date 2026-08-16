@@ -30,7 +30,7 @@ declare global {
 
 type Props = {
   /** Vai trò mặc định khi tạo tài khoản mới (gửi kèm lên backend) */
-  role?: 'renter' | 'provider';
+  role?: 'buyer' | 'seller';
   className?: string;
 };
 
@@ -65,7 +65,7 @@ export function GoogleLoginButton({ role, className }: Props) {
               credentials: 'include',
               body: JSON.stringify({
                 idToken: resp.credential,
-                role: role === 'provider' ? 'provider' : 'renter',
+                role: role === 'seller' ? 'seller' : 'buyer',
               }),
             });
             const json = await res.json();
@@ -75,7 +75,7 @@ export function GoogleLoginButton({ role, className }: Props) {
             // update user trong context
             const { data } = json;
             window.location.href =
-              data.role === 'provider' ? '/dashboard' : '/profile';
+              data.role === 'seller' ? '/dashboard' : '/profile';
           } catch (e) {
             console.error(e);
             alert(e instanceof Error ? e.message : 'Đăng nhập Google thất bại');

@@ -14,7 +14,6 @@ import {
   Cpu,
   ArrowLeft,
   MessageSquare,
-  Zap,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -82,10 +81,6 @@ export default function BotDetailPage({ params }: { params: Promise<{ id: string
                 <span>
                   Phiên bản: <strong className="font-semibold text-foreground">{bot.version}</strong>
                 </span>
-                <span aria-hidden>•</span>
-                <span>
-                  License: <strong className="font-semibold text-foreground capitalize">{bot.licenseType}</strong>
-                </span>
               </div>
               <h1 className="font-display text-2xl font-bold tracking-tight sm:text-3xl">{bot.title}</h1>
               <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{bot.tagline}</p>
@@ -110,11 +105,7 @@ export default function BotDetailPage({ params }: { params: Promise<{ id: string
                 </span>
                 <span className="inline-flex items-center gap-1.5 text-muted-foreground">
                   <Activity className="h-4 w-4 text-brand" aria-hidden />
-                  <strong className="font-semibold text-foreground">{bot.totalRentals}</strong> lượt thuê
-                </span>
-                <span className="inline-flex items-center gap-1.5 text-muted-foreground">
-                  <Zap className="h-4 w-4 text-brand" aria-hidden />
-                  <strong className="font-semibold text-foreground">{bot.activeRentals}</strong> người đang dùng
+                  <strong className="font-semibold text-foreground">{bot.seller.totalSales.toLocaleString('vi-VN')}</strong> giao dịch
                 </span>
               </div>
             </div>
@@ -122,7 +113,7 @@ export default function BotDetailPage({ params }: { params: Promise<{ id: string
             {/* Price + CTA */}
             <div className="flex flex-col items-start justify-between gap-4 rounded-xl border border-brand/30 bg-background p-4 sm:flex-row sm:items-center">
               <div>
-                <span className="block text-xs text-muted-foreground">Giá cho thuê</span>
+                <span className="block text-xs text-muted-foreground">Giá tham khảo</span>
                 <div className="mt-0.5 flex items-baseline gap-3">
                   <span className="text-2xl font-bold text-foreground">
                     {bot.pricing.hourly > 0
@@ -220,7 +211,7 @@ export default function BotDetailPage({ params }: { params: Promise<{ id: string
             )}
           </div>
 
-          {/* Provider sidebar */}
+          {/* Seller sidebar */}
           <aside className="space-y-6">
             <div className="space-y-4 rounded-2xl border border-border bg-card p-6">
               <span className="block text-xs font-semibold uppercase tracking-wide text-muted-foreground">
@@ -228,27 +219,27 @@ export default function BotDetailPage({ params }: { params: Promise<{ id: string
               </span>
               <div className="flex items-center gap-3">
                 <img
-                  src={bot.provider.avatar}
-                  alt={bot.provider.name}
+                  src={bot.seller.avatar}
+                  alt={bot.seller.name}
                   className="h-11 w-11 rounded-full border border-border object-cover"
                 />
                 <div>
                   <div className="flex items-center gap-1 text-sm font-semibold">
-                    {bot.provider.name}
-                    {bot.provider.isVerified && (
+                    {bot.seller.name}
+                    {bot.seller.isVerified && (
                       <ShieldCheck className="h-4 w-4 text-brand" aria-label="Đã xác thực" />
                     )}
                   </div>
                   <div className="flex items-center gap-1 text-xs text-muted-foreground">
                     <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" aria-hidden />
-                    <span className="font-medium text-foreground">{bot.provider.rating} / 5.0</span>
-                    <span>({bot.provider.totalSales} giao dịch)</span>
+                    <span className="font-medium text-foreground">{bot.seller.rating} / 5.0</span>
+                    <span>({bot.seller.totalSales} giao dịch)</span>
                   </div>
                 </div>
               </div>
               <div className="space-y-1.5 border-t border-border pt-4 text-xs text-muted-foreground">
                 <p>
-                  Tham gia: <strong className="font-semibold text-foreground">{bot.provider.joinedDate}</strong>
+                  Tham gia: <strong className="font-semibold text-foreground">{bot.seller.joinedDate}</strong>
                 </p>
                 <p>
                   Hỗ trợ kỹ thuật: <strong className="font-semibold text-emerald-500">dưới 15 phút</strong>

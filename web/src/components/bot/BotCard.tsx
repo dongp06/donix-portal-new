@@ -58,13 +58,13 @@ export function BotCard({ bot, onContactClick }: BotCardProps) {
             <span className="text-foreground">{bot.rating.toFixed(1)}</span>
             <span>({bot.reviewCount})</span>
           </span>
-          <span>{bot.totalRentals} lượt thuê</span>
+          <span>{bot.seller.totalSales.toLocaleString('vi-VN')} giao dịch</span>
         </div>
 
         {/* Pricing & CTA */}
         <div className="mt-4 flex items-center justify-between border-t border-border pt-4">
           <div>
-            <span className="block text-[11px] text-muted-foreground">Giá cho thuê</span>
+            <span className="block text-[11px] text-muted-foreground">Giá tham khảo</span>
             <div className="text-base font-bold text-foreground">
               {bot.pricing.hourly > 0
                 ? `${bot.pricing.hourly.toLocaleString('vi-VN')} đ/giờ`

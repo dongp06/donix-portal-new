@@ -11,7 +11,6 @@ import {
   Zap,
   ShieldCheck,
   Search,
-  Key,
   Users,
   Cpu,
   ArrowRight,
@@ -19,7 +18,6 @@ import {
   MessageSquare,
   CheckCircle2,
   Building2,
-  DollarSign,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -61,15 +59,15 @@ export default function HomePage() {
         <div className="relative mx-auto max-w-7xl px-4 pb-16 pt-14 text-center sm:px-6 sm:pb-20 lg:px-8">
           <div className="inline-flex items-center gap-2 rounded-full border border-brand/30 bg-brand/5 px-3.5 py-1.5 text-xs font-semibold text-brand">
             <Sparkles className="h-3.5 w-3.5" aria-hidden />
-            Diễn đàn & chợ rao bán, cho thuê bot tự động hóa
+            Diễn đàn & chợ rao bán bot tự động hóa
           </div>
 
           <h1 className="text-display mx-auto mt-6 max-w-4xl text-balance">
-            Cho thuê bot tự động, giao dịch an toàn 24/7
+            Mua bán bot tự động, giao dịch an toàn 24/7
           </h1>
 
           <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-muted-foreground">
-            Nơi chủ bot đăng tin rao bán, cho thuê và cộng đồng trao đổi. Người mua liên hệ
+            Nơi chủ bot đăng tin rao bán và cộng đồng trao đổi. Người mua liên hệ
             trực tiếp người bán, giao dịch tự thỏa thuận.
           </p>
 
@@ -90,9 +88,9 @@ export default function HomePage() {
           <dl className="mx-auto mt-10 grid max-w-4xl grid-cols-2 gap-4 md:grid-cols-4">
             {[
               { label: 'Bot đang hoạt động', value: '105+', icon: Cpu },
-              { label: 'Lượt thuê thành công', value: '8.490+', icon: Zap },
+              { label: 'Giao dịch kết nối', value: '8.490+', icon: Zap },
               { label: 'Chủ bot đăng bán', value: '32+', icon: Users },
-              { label: 'Tổng doanh thu chi trả', value: '145 tr VNĐ', icon: DollarSign },
+              { label: 'Bài thảo luận', value: '1.200+', icon: MessageSquare },
             ].map((stat) => {
               const Icon = stat.icon;
               return (
@@ -169,7 +167,7 @@ export default function HomePage() {
         <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
           <div className="mx-auto mb-12 max-w-2xl text-center">
             <h2 className="font-display text-2xl font-bold tracking-tight md:text-3xl">
-              Một sàn, hai chiều: thuê bot & cho thuê bot
+              Một sàn, hai chiều: mua bot & bán bot
             </h2>
             <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
               Dù bạn cần bot chạy tự động hay muốn kinh doanh bot, Donix đều có giải pháp.
@@ -177,14 +175,14 @@ export default function HomePage() {
           </div>
 
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-            {/* Khách thuê */}
+            {/* Người mua */}
             <div className="rounded-2xl border border-border bg-card p-7">
               <div className="mb-5 flex items-center gap-3">
                 <div className="rounded-xl bg-brand/10 p-2.5 text-brand">
-                  <Key className="h-5 w-5" aria-hidden />
+                  <Search className="h-5 w-5" aria-hidden />
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold">Khách thuê bot</h3>
+                  <h3 className="text-lg font-semibold">Người mua bot</h3>
                   <p className="text-xs text-muted-foreground">Dành cho người cần tự động hóa</p>
                 </div>
               </div>
@@ -216,13 +214,13 @@ export default function HomePage() {
                   <Building2 className="h-5 w-5" aria-hidden />
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold">Chủ bot / developer</h3>
-                  <p className="text-xs text-muted-foreground">Dành cho người đăng bán cho thuê</p>
+                  <h3 className="text-lg font-semibold">Người bán bot / developer</h3>
+                  <p className="text-xs text-muted-foreground">Dành cho người đăng bán bot</p>
                 </div>
               </div>
               <ul className="mb-7 space-y-2.5 text-sm text-muted-foreground">
                 {[
-                  'Miễn phí đăng tin rao bán, cho thuê bot',
+                  'Miễn phí đăng tin rao bán bot',
                   'Hiển thị thông tin liên hệ để khách chủ động nhắn tin',
                   'Quản lý tất cả tin đăng của bạn trong một trang',
                 ].map((item) => (
@@ -236,7 +234,7 @@ export default function HomePage() {
                 href="/dashboard"
                 className="inline-flex w-full items-center justify-center gap-1.5 rounded-xl bg-brand px-4 py-2.5 text-sm font-semibold text-brand-foreground transition-colors hover:brightness-110"
               >
-                Đăng tin bot cho thuê
+                Đăng tin bot bán
                 <ArrowRight className="h-4 w-4" aria-hidden />
               </Link>
             </div>
@@ -268,7 +266,7 @@ export default function HomePage() {
               replies: 15,
             },
             {
-              title: '[Yêu cầu làm bot] Cần thuê bot tự động crawl tin tuyển dụng IT',
+              title: '[Yêu cầu làm bot] Cần đặt bot tự động crawl tin tuyển dụng IT',
               author: 'MinhTu_Game99',
               category: 'Yêu cầu làm bot',
               replies: 8,

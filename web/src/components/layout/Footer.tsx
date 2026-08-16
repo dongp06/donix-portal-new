@@ -6,7 +6,7 @@ import { Shield, Zap, MessageSquare, Server } from 'lucide-react';
 import { DonixLogo } from '@/components/brand/DonixLogo';
 
 const exploreLinks = [
-  { href: '/bots', label: 'Chợ bot cho thuê' },
+  { href: '/bots', label: 'Chợ bot' },
   { href: '/bai-moi', label: 'Bài viết mới' },
   { href: '/bai-ghim', label: 'Bài ghim nổi bật' },
   { href: '/community', label: 'Cộng đồng' },
@@ -28,7 +28,7 @@ export function Footer() {
               <DonixLogo size="md" />
             </Link>
             <p className="max-w-sm text-sm leading-relaxed text-muted-foreground">
-              Diễn đàn & chợ rao bán, cho thuê bot tự động hóa. Kết nối chủ bot và người mua,
+              Diễn đàn & chợ rao bán bot tự động hóa. Kết nối người bán bot và người mua,
               liên hệ giao dịch trực tiếp.
             </p>
             <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">

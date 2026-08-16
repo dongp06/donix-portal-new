@@ -9,7 +9,7 @@ import { CheckCircle2, UserRound, Bot, ShieldCheck } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 type RoleOption = {
-  value: 'renter' | 'provider';
+  value: 'buyer' | 'seller';
   label: string;
   desc: string;
   icon: React.ElementType;
@@ -17,15 +17,15 @@ type RoleOption = {
 
 const ROLE_OPTIONS: RoleOption[] = [
   {
-    value: 'renter',
-    label: 'Người thuê bot',
-    desc: 'Tìm & thuê bot phù hợp với công việc, chạy ngay không cần đăng ký nhà cung cấp.',
+    value: 'buyer',
+    label: 'Người mua bot',
+    desc: 'Tìm & liên hệ mua bot phù hợp với công việc, không cần đăng ký phức tạp.',
     icon: UserRound,
   },
   {
-    value: 'provider',
-    label: 'Người cho thuê bot',
-    desc: 'Đăng bot lên chợ, nhận đơn thuê và quản lý tin đăng của mình.',
+    value: 'seller',
+    label: 'Người bán bot',
+    desc: 'Đăng bot lên chợ, nhận liên hệ từ người mua và quản lý tin đăng của mình.',
     icon: Bot,
   },
 ];
@@ -33,7 +33,7 @@ const ROLE_OPTIONS: RoleOption[] = [
 export default function RegisterPage() {
   const router = useRouter();
   const { isAuthenticated } = useRole();
-  const [role, setRole] = useState<'renter' | 'provider'>('renter');
+  const [role, setRole] = useState<'buyer' | 'seller'>('buyer');
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-background text-foreground">
@@ -136,7 +136,7 @@ export default function RegisterPage() {
               Bạn đã đăng nhập.{' '}
               <button
                 type="button"
-                onClick={() => router.push(role === 'provider' ? '/dashboard' : '/profile')}
+                onClick={() => router.push(role === 'seller' ? '/dashboard' : '/profile')}
                 className="font-bold underline"
               >
                 Tiếp tục

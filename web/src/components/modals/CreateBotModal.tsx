@@ -16,9 +16,8 @@ export function CreateBotModal({ isOpen, onClose }: CreateBotModalProps) {
   const [title, setTitle] = useState('');
   const [categorySlug, setCategorySlug] = useState<BotCategorySlug>('messenger');
   const [description, setDescription] = useState('');
-  const [rentUnit, setRentUnit] = useState<'hourly' | 'daily' | 'monthly'>('daily');
+  const [priceUnit, setPriceUnit] = useState<'hourly' | 'daily' | 'monthly'>('daily');
   const [price, setPrice] = useState<number>(30000);
-  const [licenseType] = useState<'key'>('key');
   // Liên hệ
   const [zalo, setZalo] = useState('');
   const [telegram, setTelegram] = useState('');
@@ -125,11 +124,10 @@ export function CreateBotModal({ isOpen, onClose }: CreateBotModalProps) {
         categorySlug,
         categoryName: catName,
         pricing: {
-          hourly: rentUnit === 'hourly' ? price : 0,
-          daily: rentUnit === 'daily' ? price : 0,
-          monthly: rentUnit === 'monthly' ? price : 0,
+          hourly: priceUnit === 'hourly' ? price : 0,
+          daily: priceUnit === 'daily' ? price : 0,
+          monthly: priceUnit === 'monthly' ? price : 0,
         },
-        licenseType,
         coverImage: thumbnail,
         gallery,
         features: features.split('\n').filter((f) => f.trim().length > 0),
@@ -141,7 +139,7 @@ export function CreateBotModal({ isOpen, onClose }: CreateBotModalProps) {
     // Reset form
     setTitle('');
     setDescription('');
-    setRentUnit('daily');
+    setPriceUnit('daily');
     setPrice(30000);
     setZalo('');
     setTelegram('');
@@ -162,7 +160,7 @@ export function CreateBotModal({ isOpen, onClose }: CreateBotModalProps) {
       className="fixed inset-0 z-50 flex justify-center overflow-y-auto bg-background/80 p-4 backdrop-blur-sm"
       role="dialog"
       aria-modal="true"
-      aria-label="Đăng bot mới cho thuê"
+      aria-label="Đăng bot mới"
     >
       <div className="relative my-auto max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-border bg-card p-6 text-foreground shadow-2xl">
         <button
@@ -179,9 +177,9 @@ export function CreateBotModal({ isOpen, onClose }: CreateBotModalProps) {
             <Plus className="h-6 w-6" aria-hidden />
           </div>
           <div>
-            <h2 className="font-display text-xl font-bold">Đăng bot mới cho thuê</h2>
+            <h2 className="font-display text-xl font-bold">Đăng bot mới</h2>
             <p className="text-xs text-muted-foreground">
-              Kiếm thu nhập thụ động từ sản phẩm tự động hóa của bạn
+              Đăng bán sản phẩm tự động hóa của bạn, người mua liên hệ trực tiếp
             </p>
           </div>
         </div>
@@ -238,17 +236,17 @@ export function CreateBotModal({ isOpen, onClose }: CreateBotModalProps) {
           {/* Pricing */}
           <div className="space-y-3 rounded-xl border border-border bg-background p-4">
             <span className="block text-xs font-bold uppercase tracking-wide text-brand">
-              Giá cho thuê (VNĐ)
+              Giá tham khảo (VNĐ)
             </span>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div>
-                <label htmlFor="rent-unit" className="mb-1 block text-[11px] text-muted-foreground">
-                  Phương thức cho thuê
+                <label htmlFor="price-unit" className="mb-1 block text-[11px] text-muted-foreground">
+                  Đơn vị giá
                 </label>
                 <select
-                  id="rent-unit"
-                  value={rentUnit}
-                  onChange={(e) => setRentUnit(e.target.value as 'hourly' | 'daily' | 'monthly')}
+                  id="price-unit"
+                  value={priceUnit}
+                  onChange={(e) => setPriceUnit(e.target.value as 'hourly' | 'daily' | 'monthly')}
                   className={inputClass}
                 >
                   <option value="hourly">Theo giờ</option>
@@ -271,12 +269,12 @@ export function CreateBotModal({ isOpen, onClose }: CreateBotModalProps) {
               </div>
             </div>
             <p className="text-[11px] text-muted-foreground">
-              {rentUnit === 'hourly'
-                ? 'Giá mỗi giờ thuê'
-                : rentUnit === 'daily'
-                  ? 'Giá mỗi ngày thuê'
-                  : 'Giá mỗi tháng thuê'}{' '}
-              — chỉ chọn 1 phương thức, người thuê sẽ thanh toán theo mức này.
+              {priceUnit === 'hourly'
+                ? 'Giá mỗi giờ'
+                : priceUnit === 'daily'
+                  ? 'Giá mỗi ngày'
+                  : 'Giá mỗi tháng'}{' '}
+              — giá chỉ mang tính tham khảo, người mua liên hệ trực tiếp để chốt.
             </p>
           </div>
 

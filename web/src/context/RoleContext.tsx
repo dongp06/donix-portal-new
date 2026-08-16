@@ -12,7 +12,6 @@ export interface ApiAuthUser {
   email: string;
   avatar: string;
   role: UserRole;
-  walletBalance: number;
   isVerified: boolean;
   bio: string | null;
   joinedDate: string;
@@ -26,8 +25,7 @@ function toUserProfile(u: ApiAuthUser): UserProfile {
     email: u.email,
     avatar: u.avatar,
     role: u.role,
-    walletBalance: u.walletBalance,
-    isVerifiedProvider: u.isVerified,
+    isVerifiedSeller: u.isVerified,
     bio: u.bio ?? undefined,
     joinedDate: u.joinedDate,
   };
@@ -104,7 +102,7 @@ export function RoleProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const registerUser = (info: { name: string; email: string; role: UserRole }) => {
-    const isProvider = info.role === 'provider';
+    const isSeller = info.role === 'seller';
     const newUser: UserProfile = {
       id: `usr-${Date.now()}`,
       name: info.name.trim() || 'Người dùng Donix',
@@ -112,15 +110,12 @@ export function RoleProvider({ children }: { children: React.ReactNode }) {
       avatar:
         'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80',
       role: info.role,
-      walletBalance: 0,
-      isVerifiedProvider: isProvider ? true : false,
-      bio: isProvider
-        ? 'Nhà cung cấp bot tại Donix'
-        : 'Khách thuê bot tại Donix',
+      isVerifiedSeller: isSeller,
+      bio: isSeller ? 'Người bán bot tại Donix' : 'Người mua bot tại Donix',
       joinedDate: new Date().toISOString().split('T')[0],
     };
     setUser(newUser);
-    toast.success(`Đã tạo tài khoản ${isProvider ? 'Nhà cung cấp' : 'Khách thuê'} thành công`);
+    toast.success(`Đã tạo tài khoản ${isSeller ? 'Người bán' : 'Người mua'} thành công`);
     return newUser;
   };
 
@@ -129,7 +124,7 @@ export function RoleProvider({ children }: { children: React.ReactNode }) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
-      body: JSON.stringify({ idToken: '__GOOGLE__', role: role === 'provider' ? 'provider' : 'renter' }),
+      body: JSON.stringify({ idToken: '__GOOGLE__', role: role === 'seller' ? 'seller' : 'buyer' }),
     });
     const json = await res.json();
     if (!res.ok || !json.success || !json.data) {
@@ -167,9 +162,8 @@ export function RoleProvider({ children }: { children: React.ReactNode }) {
       gallery: botData.gallery,
       features: botData.features,
       pricing: botData.pricing,
-      licenseType: botData.licenseType,
       tags: botData.tags,
-      provider: {
+      seller: {
         id: user.id,
         name: user.name,
         avatar: user.avatar,
@@ -217,11 +211,10 @@ export function RoleProvider({ children }: { children: React.ReactNode }) {
       features: botData.features,
       pricing: botData.pricing,
       status: botData.status,
-      licenseType: botData.licenseType,
       tags: botData.tags,
       version: botData.version,
       systemReqs: botData.systemReqs,
-      provider: {
+      seller: {
         contact: contact
           ? {
               zalo: contact.zalo?.trim() || undefined,

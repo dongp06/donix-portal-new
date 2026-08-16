@@ -1,64 +1,107 @@
 'use client';
 
-import React, { useState } from 'react';
-import { MOCK_FORUM_POSTS } from '@shared/mock-data';
-import { ForumPost } from '@shared/types';
-import { MessageSquare, ThumbsUp, Plus, Tag, X } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { ForumPost, ForumCategory } from '@shared/types';
+import { MessageSquare, ThumbsUp, Plus, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
+const CATEGORIES: ForumCategory[] = [
+  'Chia sẻ kinh nghiệm',
+  'Yêu cầu làm bot',
+  'Thảo luận Dev',
+  'Báo lỗi & Hỗ trợ',
+];
+
 export default function CommunityPage() {
-  const [posts, setPosts] = useState<ForumPost[]>([...MOCK_FORUM_POSTS]);
+  const [posts, setPosts] = useState<ForumPost[]>([]);
+  const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<string>('Tất cả');
   const [isNewPostOpen, setIsNewPostOpen] = useState<boolean>(false);
+  const [submitting, setSubmitting] = useState(false);
 
   const [newTitle, setNewTitle] = useState('');
-  const [newCategory, setNewCategory] = useState<any>('Chia sẻ kinh nghiệm');
+  const [newCategory, setNewCategory] = useState<ForumCategory>('Chia sẻ kinh nghiệm');
   const [newContent, setNewContent] = useState('');
   const [newTags, setNewTags] = useState('Bot Auto, Dev');
 
-  const categories = [
-    'Tất cả',
-    'Chia sẻ kinh nghiệm',
-    'Yêu cầu làm bot',
-    'Thảo luận Dev',
-    'Báo lỗi & Hỗ trợ',
-  ];
+  const categories = ['Tất cả', ...CATEGORIES];
+
+  // Load bài diễn đàn từ API
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch('/api/community/posts', { credentials: 'include' });
+        const json = await res.json();
+        if (!cancelled && json.success && Array.isArray(json.data)) {
+          setPosts(json.data as ForumPost[]);
+        }
+      } catch {
+        if (!cancelled) toast.error('Không tải được bài diễn đàn');
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const filteredPosts = posts.filter(
     (p) => selectedCategory === 'Tất cả' || p.category === selectedCategory,
   );
 
-  const handleUpvote = (postId: string) => {
-    setPosts(posts.map((p) => (p.id === postId ? { ...p, upvotes: p.upvotes + 1 } : p)));
-    toast.success('Đã upvote bài viết');
+  const handleUpvote = async (postId: string) => {
+    // Optimistic update, đồng bộ lại với server
+    setPosts((prev) => prev.map((p) => (p.id === postId ? { ...p, upvotes: p.upvotes + 1 } : p)));
+    try {
+      const res = await fetch(`/api/community/posts/${postId}/upvote`, {
+        method: 'POST',
+        credentials: 'include',
+      });
+      const json = await res.json();
+      if (!res.ok || !json.success) throw new Error(json.error || 'Upvote thất bại');
+      toast.success('Đã upvote bài viết');
+    } catch (e) {
+      setPosts((prev) => prev.map((p) => (p.id === postId ? { ...p, upvotes: p.upvotes - 1 } : p)));
+      toast.error(e instanceof Error ? e.message : 'Upvote thất bại');
+    }
   };
 
-  const handleCreatePost = (e: React.FormEvent) => {
+  const handleCreatePost = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newTitle.trim() || !newContent.trim()) return;
-
-    const created: ForumPost = {
-      id: `post-${Date.now()}`,
-      title: newTitle,
-      excerpt: newContent.slice(0, 120) + '...',
-      content: newContent,
-      authorName: 'Trần Minh Tuấn',
-      authorAvatar:
-        'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop&q=80',
-      authorRole: 'Khách Thuê',
-      category: newCategory,
-      upvotes: 1,
-      commentsCount: 0,
-      createdAt: new Date().toISOString().split('T')[0],
-      tags: newTags.split(',').map((t) => t.trim()),
-    };
-
-    setPosts([created, ...posts]);
-    setIsNewPostOpen(false);
-    setNewTitle('');
-    setNewContent('');
-    toast.success('Đăng bài viết mới thành công');
+    if (!newTitle.trim() || !newContent.trim() || submitting) return;
+    setSubmitting(true);
+    try {
+      const res = await fetch('/api/community/posts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          title: newTitle.trim(),
+          content: newContent.trim(),
+          category: newCategory,
+          tags: newTags
+            .split(',')
+            .map((t) => t.trim())
+            .filter(Boolean),
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok || !json.success || !json.data) {
+        throw new Error(json.error || 'Đăng bài thất bại');
+      }
+      setPosts((prev) => [json.data as ForumPost, ...prev]);
+      setIsNewPostOpen(false);
+      setNewTitle('');
+      setNewContent('');
+      toast.success('Đăng bài viết mới thành công');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Đăng bài thất bại');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const inputClass =
@@ -72,7 +115,7 @@ export default function CommunityPage() {
           <div>
             <p className="eyebrow">Diễn đàn thảo luận</p>
             <h1 className="mt-2 font-display text-3xl font-bold tracking-tight">
-              Cộng đồng lập trình & thuê bot
+              Cộng đồng lập trình & mua bán bot
             </h1>
             <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
               Chia sẻ bí quyết chạy bot an toàn, đăng yêu cầu làm bot mới hoặc cập nhật từ các developer.
@@ -90,7 +133,7 @@ export default function CommunityPage() {
         </div>
 
         {/* Category filter */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-2" role="tablist" aria-label="Lọc theo chủ đề">
+        <div className="flex items-center gap-2 overflow-x-auto pb-2" role="group" aria-label="Lọc theo chủ đề">
           {categories.map((cat) => (
             <button
               key={cat}
@@ -110,7 +153,15 @@ export default function CommunityPage() {
         </div>
 
         {/* Posts list */}
-        <div className="space-y-4">
+        <div className="space-y-4" aria-live="polite">
+          {loading && (
+            <p className="py-8 text-center text-sm text-muted-foreground">Đang tải bài viết…</p>
+          )}
+          {!loading && filteredPosts.length === 0 && (
+            <p className="py-8 text-center text-sm text-muted-foreground">
+              Chưa có bài viết nào ở chủ đề này. Hãy là người đầu tiên đăng bài!
+            </p>
+          )}
           {filteredPosts.map((post) => (
             <article
               key={post.id}
@@ -158,7 +209,7 @@ export default function CommunityPage() {
               <div className="flex items-center gap-3 border-t border-border pt-4 md:border-l md:border-t-0 md:pl-6 md:pt-0">
                 <button
                   type="button"
-                  onClick={() => handleUpvote(post.id)}
+                  onClick={() => void handleUpvote(post.id)}
                   className="flex min-w-[60px] flex-col items-center justify-center rounded-xl border border-border bg-background p-3 text-muted-foreground transition-colors hover:border-brand/40 hover:text-foreground"
                   aria-label={`Upvote bài "${post.title}"`}
                 >
@@ -178,7 +229,12 @@ export default function CommunityPage() {
       {/* New post modal */}
       {isNewPostOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 p-4 backdrop-blur-sm">
-          <div className="relative w-full max-w-xl space-y-4 rounded-2xl border border-border bg-card p-6 text-foreground shadow-2xl">
+          <div
+            className="relative w-full max-w-xl space-y-4 rounded-2xl border border-border bg-card p-6 text-foreground shadow-2xl"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Đăng bài thảo luận mới"
+          >
             <button
               type="button"
               onClick={() => setIsNewPostOpen(false)}
@@ -201,7 +257,7 @@ export default function CommunityPage() {
                   required
                   value={newTitle}
                   onChange={(e) => setNewTitle(e.target.value)}
-                  placeholder="VD: Cần thuê làm bot Auto TikTok Reup"
+                  placeholder="VD: Cần đặt làm bot Auto TikTok Reup"
                   className={inputClass}
                 />
               </div>
@@ -213,13 +269,14 @@ export default function CommunityPage() {
                 <select
                   id="post-category"
                   value={newCategory}
-                  onChange={(e) => setNewCategory(e.target.value as any)}
+                  onChange={(e) => setNewCategory(e.target.value as ForumCategory)}
                   className={inputClass}
                 >
-                  <option value="Chia sẻ kinh nghiệm">Chia sẻ kinh nghiệm</option>
-                  <option value="Yêu cầu làm bot">Yêu cầu làm bot</option>
-                  <option value="Thảo luận Dev">Thảo luận Dev</option>
-                  <option value="Báo lỗi & Hỗ trợ">Báo lỗi & Hỗ trợ</option>
+                  {CATEGORIES.map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
                 </select>
               </div>
 
@@ -261,9 +318,10 @@ export default function CommunityPage() {
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 rounded-xl bg-brand py-2.5 text-sm font-semibold text-brand-foreground transition-colors hover:brightness-110"
+                  disabled={submitting}
+                  className="flex-1 rounded-xl bg-brand py-2.5 text-sm font-semibold text-brand-foreground transition-colors hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  Đăng bài ngay
+                  {submitting ? 'Đang đăng…' : 'Đăng bài ngay'}
                 </button>
               </div>
             </form>

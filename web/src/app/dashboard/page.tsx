@@ -11,10 +11,8 @@ export default function DashboardPage() {
   const { bots, user } = useRole();
   const [isCreateBotOpen, setIsCreateBotOpen] = useState(false);
 
-  // Bot của người dùng hiện tại (demo: khớp theo tên hoặc id nhà cung cấp)
-  const myBots = bots.filter(
-    (b) => b.provider.id === user.id || b.provider.name === 'DevNguyen_Pro',
-  );
+  // Bot của người bán hiện tại
+  const myBots = bots.filter((b) => b.seller.id === user.id);
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -24,7 +22,7 @@ export default function DashboardPage() {
           <div>
             <p className="eyebrow">Đăng bot</p>
             <h1 className="mt-2 font-display text-3xl font-bold tracking-tight">
-              Quản lý bot cho thuê
+              Quản lý bot đang bán
             </h1>
             <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
               Đăng bot của bạn lên chợ. Người mua sẽ liên hệ trực tiếp qua thông tin bạn cung cấp.
@@ -45,8 +43,16 @@ export default function DashboardPage() {
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           {[
             { label: 'Bot đang đăng', value: `${myBots.length}` },
-            { label: 'Tổng lượt xem', value: myBots.reduce((s, b) => s + b.totalRentals, 0).toLocaleString('vi-VN') },
-            { label: 'Đánh giá trung bình', value: myBots.length ? (myBots.reduce((s, b) => s + b.rating, 0) / myBots.length).toFixed(1) : '—' },
+            {
+              label: 'Đánh giá trung bình',
+              value: myBots.length
+                ? (myBots.reduce((s, b) => s + b.rating, 0) / myBots.length).toFixed(1)
+                : '—',
+            },
+            {
+              label: 'Tổng lượt đánh giá',
+              value: myBots.reduce((s, b) => s + b.reviewCount, 0).toLocaleString('vi-VN'),
+            },
           ].map((s) => (
             <div key={s.label} className="rounded-2xl border border-border bg-card p-5">
               <span className="text-xs font-semibold text-muted-foreground">{s.label}</span>

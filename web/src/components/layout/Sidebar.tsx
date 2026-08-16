@@ -13,7 +13,7 @@ import { formatViewCount } from '@/lib/format';
 
 export function Sidebar() {
   const pathname = usePathname();
-  const popularPosts = [...MOCK_BOTS].sort((a, b) => b.totalRentals - a.totalRentals).slice(0, 4);
+  const popularPosts = [...MOCK_BOTS].sort((a, b) => b.seller.totalSales - a.seller.totalSales).slice(0, 4);
 
   return (
     <aside className="space-y-8 sticky top-28">
@@ -75,7 +75,7 @@ export function Sidebar() {
       <section>
         <div className="flex items-center gap-2 mb-4">
           <TrendingUp className="h-4 w-4 text-brand" />
-          <h3 className="font-bold text-lg">Bài viết phổ biến</h3>
+          <h3 className="font-bold text-lg">Bot phổ biến</h3>
         </div>
         <div className="space-y-4">
           {popularPosts.map((post) => (
@@ -92,7 +92,7 @@ export function Sidebar() {
                   {post.title}
                 </h4>
                 <div className="flex items-center gap-2 text-[10px] text-muted-foreground tabular-nums">
-                  <span>{formatViewCount(post.totalRentals)} lượt thuê</span>
+                  <span>{formatViewCount(post.seller.totalSales)} giao dịch</span>
                 </div>
               </div>
             </Link>

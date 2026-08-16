@@ -26,7 +26,7 @@ export function Navbar() {
     { href: '/', label: 'Trang chủ' },
     { href: '/bots', label: 'Chợ bot' },
     { href: '/community', label: 'Cộng đồng' },
-    ...(user.role === 'provider'
+    ...(user.role === 'seller'
       ? [{ href: '/dashboard', label: 'Đăng bot' }]
       : []),
   ];
@@ -112,7 +112,7 @@ export function Navbar() {
                   <span className="text-xs font-normal text-muted-foreground">{user.email}</span>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                {user.role === 'provider' ? (
+                {user.role === 'seller' ? (
                   <DropdownMenuItem asChild>
                     <Link href="/dashboard">
                       <LayoutDashboard className="mr-2 h-4 w-4" aria-hidden />
@@ -174,7 +174,7 @@ export function Navbar() {
                 {link.label}
               </Link>
             ))}
-            {user.role === 'provider' && (
+            {user.role === 'seller' && (
               <Link
                 href="/dashboard"
                 onClick={() => setIsMobileMenuOpen(false)}
