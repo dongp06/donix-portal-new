@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
-import { AdminPostsController } from './admin-posts.controller';
-import { CategoriesController } from '../categories/categories.controller';
-import { PostsController } from './posts.controller';
-import { PostsService } from './posts.service';
+import { AdminPostsController } from './admin-posts.controller.js';
+import { CategoriesController } from '../categories/categories.controller.js';
+import { PostsController } from './posts.controller.js';
+import { PostsService } from './posts.service.js';
 
 @Module({
   controllers: [PostsController, CategoriesController, AdminPostsController],

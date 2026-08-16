@@ -1,14 +1,18 @@
 import 'dotenv/config';
-import { PrismaClient } from '@prisma/client';
+import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3';
+import { PrismaClient } from './generated/prisma/client.js';
 import {
   MOCK_BLOG_CATEGORIES,
   MOCK_POSTS,
   MOCK_BOTS,
   MOCK_FORUM_POSTS,
   MOCK_USER,
-} from '../src/data/mock-data';
+} from '../src/data/mock-data.js';
+import { sqliteDbPath } from '../src/prisma/database.js';
 
-const prisma = new PrismaClient();
+const prisma = new PrismaClient({
+  adapter: new PrismaBetterSqlite3({ url: sqliteDbPath() }),
+});
 
 function toBotData(b: (typeof MOCK_BOTS)[number]) {
   return {
@@ -19,16 +23,18 @@ function toBotData(b: (typeof MOCK_BOTS)[number]) {
     description: b.description,
     categorySlug: b.categorySlug,
     categoryName: b.categoryName,
-    providerId: b.provider.id,
-    providerName: b.provider.name,
-    providerAvatar: b.provider.avatar,
-    providerRating: b.provider.rating,
-    providerSales: b.provider.totalSales,
-    providerVerified: b.provider.isVerified,
-    providerJoinedDate: b.provider.joinedDate,
-    contactZalo: b.provider.contact?.zalo ?? null,
-    contactTelegram: b.provider.contact?.telegram ?? null,
-    contactPhone: b.provider.contact?.phone ?? null,
+    sellerId: b.seller.id,
+    sellerName: b.seller.name,
+    sellerAvatar: b.seller.avatar,
+    sellerRating: b.seller.rating,
+    sellerSales: b.seller.totalSales,
+    sellerVerified: b.seller.isVerified,
+    sellerJoinedDate: b.seller.joinedDate,
+    contactZalo: b.seller.contact?.zalo ?? null,
+    contactTelegram: b.seller.contact?.telegram ?? null,
+    contactPhone: b.seller.contact?.phone ?? null,
+    contactMessenger: b.seller.contact?.messenger ?? null,
+    contactFacebook: b.seller.contact?.facebook ?? null,
     coverImage: b.coverImage,
     gallery: JSON.stringify(b.gallery),
     features: JSON.stringify(b.features),
@@ -36,12 +42,9 @@ function toBotData(b: (typeof MOCK_BOTS)[number]) {
     priceDaily: b.pricing.daily,
     priceMonthly: b.pricing.monthly,
     status: b.status,
-    totalRentals: b.totalRentals,
-    activeRentals: b.activeRentals,
     rating: b.rating,
     reviewCount: b.reviewCount,
     tags: JSON.stringify(b.tags),
-    licenseType: b.licenseType,
     version: b.version,
     systemReqs: b.systemReqs,
     updatedAt: b.updatedAt,
@@ -54,6 +57,7 @@ function toForumData(p: (typeof MOCK_FORUM_POSTS)[number]) {
     title: p.title,
     excerpt: p.excerpt,
     content: p.content,
+    authorId: null,
     authorName: p.authorName,
     authorAvatar: p.authorAvatar,
     authorRole: p.authorRole,
@@ -77,8 +81,7 @@ async function main() {
       email: MOCK_USER.email,
       avatar: MOCK_USER.avatar,
       role: MOCK_USER.role,
-      isVerified: MOCK_USER.isVerifiedProvider ?? false,
-      walletBalance: MOCK_USER.walletBalance ?? 0,
+      isVerified: MOCK_USER.isVerifiedSeller ?? false,
       bio: MOCK_USER.bio ?? null,
       joinedDate: MOCK_USER.joinedDate,
     },

@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
-import { BotsController } from './bots.controller';
-import { BotsService } from './bots.service';
+import { BotsController } from './bots.controller.js';
+import { BotsService } from './bots.service.js';
 
 @Module({
   controllers: [BotsController],

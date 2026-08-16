@@ -9,10 +9,10 @@ import {
   Put,
   UseGuards,
 } from '@nestjs/common';
-import { AdminGuard } from '../common/admin.guard';
-import { ok } from '../common/api-response';
-import type { CreatePostInput, UpdatePostInput } from './posts.service';
-import { PostsService } from './posts.service';
+import { AdminGuard } from '../common/admin.guard.js';
+import { ok } from '../common/api-response.js';
+import type { CreatePostInput, UpdatePostInput } from './posts.service.js';
+import { PostsService } from './posts.service.js';
 
 @Controller('admin/posts')
 @UseGuards(AdminGuard)

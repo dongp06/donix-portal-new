@@ -1,7 +1,7 @@
 import { Controller, Get, Param, Query, Res } from '@nestjs/common';
 import type { Response } from 'express';
-import { PostsService } from './posts.service';
-import { ok } from '../common/api-response';
+import { PostsService } from './posts.service.js';
+import { ok } from '../common/api-response.js';
 
 @Controller('posts')
 export class PostsController {

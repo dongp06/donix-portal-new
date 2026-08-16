@@ -1,7 +1,7 @@
 import { Controller, Get } from '@nestjs/common';
-import { ArticleCacheService } from '../cache/article-cache.service';
-import { ok } from '../common/api-response';
-import { PrismaService } from '../prisma/prisma.service';
+import { ArticleCacheService } from '../cache/article-cache.service.js';
+import { ok } from '../common/api-response.js';
+import { PrismaService } from '../prisma/prisma.service.js';
 
 @Controller('health')
 export class HealthController {

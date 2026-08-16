@@ -1,24 +1,24 @@
 generator client {
-  provider = "prisma-client-js"
+  provider = "prisma-client"
+  output   = "./generated/prisma"
 }
 
 datasource db {
   provider = "sqlite"
-  url      = env("DATABASE_URL")
 }
 
 model User {
-  id         String  @id
-  googleId   String? @unique
+  id         String      @id
+  googleId   String?     @unique
   name       String
-  email      String  @unique
+  email      String      @unique
   avatar     String
-  role       String  @default("renter")
-  isVerified Boolean @default(false)
-  walletBalance Int   @default(0)
+  role       String      @default("buyer")
+  isVerified Boolean     @default(false)
   bio        String?
   joinedDate String
   contact    String?
+  forumPosts ForumPost[]
 }
 
 model Category {
@@ -63,13 +63,13 @@ model Bot {
   description   String
   categorySlug  String
   categoryName  String
-  providerId    String
-  providerName  String
-  providerAvatar String
-  providerRating Float    @default(0)
-  providerSales Int      @default(0)
-  providerVerified Boolean @default(false)
-  providerJoinedDate String
+  sellerId      String
+  sellerName    String
+  sellerAvatar  String
+  sellerRating  Float    @default(0)
+  sellerSales   Int      @default(0)
+  sellerVerified Boolean @default(false)
+  sellerJoinedDate String
   contactZalo   String?
   contactTelegram String?
   contactPhone  String?
@@ -82,18 +82,15 @@ model Bot {
   priceDaily    Int      @default(0)
   priceMonthly  Int      @default(0)
   status        String   @default("online")
-  totalRentals  Int      @default(0)
-  activeRentals Int      @default(0)
   rating        Float    @default(5)
   reviewCount   Int      @default(0)
   tags          String   @default("[]")
-  licenseType   String   @default("key")
   version       String   @default("v1.0.0")
   systemReqs    String   @default("")
   updatedAt     String
 
   @@index([categorySlug])
-  @@index([providerId])
+  @@index([sellerId])
 }
 
 model ForumPost {
@@ -101,13 +98,18 @@ model ForumPost {
   title        String
   excerpt      String
   content      String
+  authorId     String?
+  author       User?  @relation(fields: [authorId], references: [id], onDelete: SetNull)
   authorName   String
   authorAvatar String
-  authorRole   String @default("Khách thuê")
+  authorRole   String @default("Người mua")
   category     String
   upvotes      Int    @default(0)
   commentsCount Int   @default(0)
   createdAt    String
   tags         String @default("[]")
   isPinned     Boolean @default(false)
+
+  @@index([authorId])
+  @@index([category])
 }

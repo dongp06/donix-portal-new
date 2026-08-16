@@ -8,8 +8,8 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import type { Request, Response } from 'express';
-import { AuthService, AuthUser } from './auth.service';
-import { ok, fail } from '../common/api-response';
+import { AuthService, AuthUser } from './auth.service.js';
+import { ok, fail } from '../common/api-response.js';
 
 export const AUTH_COOKIE = 'donix_token';
 
@@ -19,7 +19,7 @@ export class AuthController {
 
   @Post('google')
   async googleLogin(
-    @Body() body: { idToken: string; role?: 'renter' | 'provider' },
+    @Body() body: { idToken: string; role?: 'buyer' | 'seller' },
     @Res({ passthrough: true }) res: Response,
   ) {
     if (!body?.idToken) {

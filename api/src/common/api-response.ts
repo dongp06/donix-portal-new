@@ -1,4 +1,4 @@
-import type { ApiResponse as ApiBody } from '../data/types';
+import type { ApiResponse as ApiBody } from '../data/types.js';
 
 export function ok<T>(data: T): ApiBody<T> {
   return { success: true, data };

@@ -1,22 +1,21 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { OAuth2Client, TokenPayload } from 'google-auth-library';
 import { JwtService } from '@nestjs/jwt';
-import { PrismaService } from '../prisma/prisma.service';
+import { PrismaService } from '../prisma/prisma.service.js';
 
 export interface AuthUser {
   id: string;
   name: string;
   email: string;
   avatar: string;
-  role: 'renter' | 'provider' | 'admin';
-  walletBalance: number;
+  role: 'buyer' | 'seller' | 'admin';
   isVerified: boolean;
   bio: string | null;
   joinedDate: string;
   /** true nếu tài khoản vừa được tạo mới trong lần đăng nhập này */
   isNewUser: boolean;
   /** Vai trò mặc định người dùng chọn khi tạo tài khoản (được gửi từ client) */
-  selectedRole?: 'renter' | 'provider';
+  selectedRole?: 'buyer' | 'seller';
 }
 
 @Injectable()
@@ -48,7 +47,7 @@ export class AuthService {
 
   async authenticate(
     idToken: string,
-    selectedRole?: 'renter' | 'provider',
+    selectedRole?: 'buyer' | 'seller',
   ): Promise<AuthUser> {
     const payload = await this.verifyGoogleToken(idToken);
     const email = payload.email!;
@@ -68,10 +67,9 @@ export class AuthService {
           name,
           email,
           avatar,
-          role: selectedRole ?? 'renter',
+          role: selectedRole ?? 'buyer',
           isVerified: false,
-          walletBalance: 0,
-          bio: selectedRole === 'provider' ? 'Nhà cung cấp bot tại Donix' : 'Khách thuê bot tại Donix',
+          bio: selectedRole === 'seller' ? 'Người bán bot tại Donix' : 'Người mua bot tại Donix',
           joinedDate: new Date().toISOString().split('T')[0],
         },
       });
@@ -82,8 +80,8 @@ export class AuthService {
         data: {
           name,
           avatar,
-          ...(selectedRole && user.role === 'renter' && selectedRole === 'provider'
-            ? { role: 'provider', isVerified: true }
+          ...(selectedRole && user.role === 'buyer' && selectedRole === 'seller'
+            ? { role: 'seller', isVerified: true }
             : {}),
         },
       });
@@ -95,7 +93,6 @@ export class AuthService {
       email: user.email,
       avatar: user.avatar,
       role: user.role as AuthUser['role'],
-      walletBalance: user.walletBalance,
       isVerified: user.isVerified,
       bio: user.bio,
       joinedDate: user.joinedDate,
@@ -113,7 +110,6 @@ export class AuthService {
       email: user.email,
       avatar: user.avatar,
       role: user.role as AuthUser['role'],
-      walletBalance: user.walletBalance,
       isVerified: user.isVerified,
       bio: user.bio,
       joinedDate: user.joinedDate,

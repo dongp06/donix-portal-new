@@ -1,5 +1,5 @@
 import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
-import Redis from 'ioredis';
+import { Redis } from 'ioredis';
 
 const KEY_PREFIX = 'donix:article:';
 
@@ -19,7 +19,7 @@ export class ArticleCacheService implements OnModuleDestroy {
         maxRetriesPerRequest: 2,
         enableReadyCheck: true,
       });
-      this.redis.on('error', (err) => {
+      this.redis.on('error', (err: Error) => {
         this.log.warn(`Redis: ${String(err.message)} — fallback memory cache`);
       });
     } else {

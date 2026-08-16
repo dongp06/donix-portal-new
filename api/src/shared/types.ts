@@ -4,7 +4,7 @@ export interface ApiResponse<T = unknown> {
   error?: string;
 }
 
-export type UserRole = 'renter' | 'provider' | 'admin';
+export type UserRole = 'buyer' | 'seller' | 'admin';
 
 export interface UserProfile {
   id: string;
@@ -12,8 +12,7 @@ export interface UserProfile {
   email: string;
   avatar: string;
   role: UserRole;
-  walletBalance: number;
-  isVerifiedProvider?: boolean;
+  isVerifiedSeller?: boolean;
   bio?: string;
   joinedDate: string;
 }
@@ -29,7 +28,7 @@ export interface BotCategory {
   count: number;
 }
 
-export interface BotProviderInfo {
+export interface BotSellerInfo {
   id: string;
   name: string;
   avatar: string;
@@ -53,7 +52,6 @@ export interface BotPricing {
 }
 
 export type BotStatus = 'online' | 'maintenance' | 'offline';
-export type LicenseType = 'key' | 'web_portal' | 'api_access';
 
 export interface BotReview {
   id: string;
@@ -72,87 +70,43 @@ export interface BotItem {
   description: string;
   categorySlug: BotCategorySlug;
   categoryName: string;
-  provider: BotProviderInfo;
+  seller: BotSellerInfo;
   coverImage: string;
   gallery: string[];
   features: string[];
   pricing: BotPricing;
   status: BotStatus;
-  totalRentals: number;
-  activeRentals: number;
   rating: number;
   reviewCount: number;
   tags: string[];
-  licenseType: LicenseType;
   version: string;
   systemReqs: string;
   reviews?: BotReview[];
   updatedAt: string;
 }
 
-export type RentalStatus = 'active' | 'expired' | 'paused';
-export type RentalPlan = 'hourly' | 'daily' | 'monthly';
-
-export interface BotRental {
-  id: string;
-  botId: string;
-  botTitle: string;
-  botCover: string;
-  botCategory: string;
-  renterId: string;
-  renterName: string;
-  plan: RentalPlan;
-  duration: number; // e.g. 5 hours, 3 days, 1 month
-  totalCost: number;
-  licenseKey: string;
-  accessUrl?: string;
-  startDate: string;
-  endDate: string;
-  status: RentalStatus;
-  autoRenew: boolean;
-  providerId: string;
-  providerName: string;
-}
+export type ForumCategory =
+  | 'Chia sẻ kinh nghiệm'
+  | 'Yêu cầu làm bot'
+  | 'Thảo luận Dev'
+  | 'Báo lỗi & Hỗ trợ';
 
 export interface ForumPost {
   id: string;
   title: string;
   excerpt: string;
   content: string;
+  /** ID người đăng bài (nếu đăng khi đã đăng nhập) */
+  authorId?: string;
   authorName: string;
   authorAvatar: string;
-  authorRole: 'Khách Thuê' | 'Nhà Cung Cấp' | 'Admin';
-  category: 'Chia sẻ kinh nghiệm' | 'Yêu cầu làm bot' | 'Thảo luận Dev' | 'Báo lỗi & Hỗ trợ';
+  authorRole: 'Người mua' | 'Người bán' | 'Admin';
+  category: ForumCategory;
   upvotes: number;
   commentsCount: number;
   createdAt: string;
   tags: string[];
   isPinned?: boolean;
-}
-
-export interface ProviderStats {
-  totalBots: number;
-  activeTenants: number;
-  totalRevenue: number;
-  monthlyRevenue: number;
-  pendingPayout: number;
-  averageRating: number;
-  recentOrdersCount: number;
-}
-
-export interface WalletTransaction {
-  id: string;
-  type: 'deposit' | 'rental_payment' | 'payout' | 'rental_earning';
-  amount: number;
-  description: string;
-  timestamp: string;
-  status: 'completed' | 'pending' | 'failed';
-}
-
-export interface WalletInfo {
-  balance: number;
-  currency: string;
-  transactions: WalletTransaction[];
 }
 
 export interface PostAttachment {
@@ -197,12 +151,4 @@ export interface Post {
   attachments?: PostAttachment[];
   /** Slug các bài liên quan */
   relatedSlugs?: string[];
-}
-
-export interface PlatformStats {
-  totalActiveBots: number;
-  totalRentalsCompleted: number;
-  totalProviders: number;
-  totalPayouts: number;
-  systemUptimePercentage: number;
 }

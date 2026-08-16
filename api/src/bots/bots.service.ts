@@ -1,8 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
-import { MOCK_CATEGORIES } from '../data/mock-data';
-import { BotCategory } from '../data/types';
-import type { Bot } from '@prisma/client';
+import { PrismaService } from '../prisma/prisma.service.js';
+import { MOCK_CATEGORIES } from '../data/mock-data.js';
+import { BotCategory } from '../data/types.js';
+import type { Bot } from '../../prisma/generated/prisma/client.js';
 
 /** BotItem API shape (khớp shared/types.ts) */
 export interface BotItemOut {
@@ -13,7 +13,7 @@ export interface BotItemOut {
   description: string;
   categorySlug: string;
   categoryName: string;
-  provider: {
+  seller: {
     id: string;
     name: string;
     avatar: string;
@@ -34,12 +34,9 @@ export interface BotItemOut {
   features: string[];
   pricing: { hourly: number; daily: number; monthly: number };
   status: string;
-  totalRentals: number;
-  activeRentals: number;
   rating: number;
   reviewCount: number;
   tags: string[];
-  licenseType: string;
   version: string;
   systemReqs: string;
   updatedAt: string;
@@ -71,14 +68,14 @@ function toOut(b: Bot): BotItemOut {
     description: b.description,
     categorySlug: b.categorySlug,
     categoryName: b.categoryName,
-    provider: {
-      id: b.providerId,
-      name: b.providerName,
-      avatar: b.providerAvatar,
-      rating: b.providerRating,
-      totalSales: b.providerSales,
-      isVerified: b.providerVerified,
-      joinedDate: b.providerJoinedDate,
+    seller: {
+      id: b.sellerId,
+      name: b.sellerName,
+      avatar: b.sellerAvatar,
+      rating: b.sellerRating,
+      totalSales: b.sellerSales,
+      isVerified: b.sellerVerified,
+      joinedDate: b.sellerJoinedDate,
       ...(hasContact ? { contact } : {}),
     },
     coverImage: b.coverImage,
@@ -86,12 +83,9 @@ function toOut(b: Bot): BotItemOut {
     features: safeParse<string[]>(b.features),
     pricing: { hourly: b.priceHourly, daily: b.priceDaily, monthly: b.priceMonthly },
     status: b.status,
-    totalRentals: b.totalRentals,
-    activeRentals: b.activeRentals,
     rating: b.rating,
     reviewCount: b.reviewCount,
     tags: safeParse<string[]>(b.tags),
-    licenseType: b.licenseType,
     version: b.version,
     systemReqs: b.systemReqs,
     updatedAt: b.updatedAt,
@@ -131,15 +125,13 @@ export class BotsService {
     const rows = await this.prisma.bot.findMany({ where });
     let result = rows.map(toOut);
     if (query?.sort) {
-      if (query.sort === 'popular') {
-        result.sort((a, b) => b.totalRentals - a.totalRentals);
-      } else if (query.sort === 'rating') {
+      if (query.sort === 'rating') {
         result.sort((a, b) => b.rating - a.rating);
       } else if (query.sort === 'price_asc') {
         result.sort((a, b) => a.pricing.daily - b.pricing.daily);
       } else if (query.sort === 'price_desc') {
         result.sort((a, b) => b.pricing.daily - a.pricing.daily);
-      } else if (query.sort === 'newest') {
+      } else if (query.sort === 'newest' || query.sort === 'popular') {
         result.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
       }
     }
@@ -157,7 +149,7 @@ export class BotsService {
   }
 
   async create(botData: Partial<BotItemOut>): Promise<BotItemOut> {
-    const provider = botData.provider ?? {
+    const seller = botData.seller ?? {
       id: 'prov-01',
       name: 'DevNguyen_Pro',
       avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
@@ -169,7 +161,7 @@ export class BotsService {
     const coverImage =
       botData.coverImage ||
       'https://images.unsplash.com/photo-1518770660439-4636190af475?w=800&auto=format&fit=crop&q=80';
-    const c = provider.contact ?? {};
+    const c = seller.contact ?? {};
     const created = await this.prisma.bot.create({
       data: {
         id: `bot-${Date.now()}`,
@@ -181,13 +173,13 @@ export class BotsService {
         description: botData.description || '',
         categorySlug: botData.categorySlug || 'messenger',
         categoryName: botData.categoryName || 'Bot Facebook Messenger',
-        providerId: provider.id,
-        providerName: provider.name,
-        providerAvatar: provider.avatar,
-        providerRating: provider.rating,
-        providerSales: provider.totalSales,
-        providerVerified: provider.isVerified,
-        providerJoinedDate: provider.joinedDate,
+        sellerId: seller.id,
+        sellerName: seller.name,
+        sellerAvatar: seller.avatar,
+        sellerRating: seller.rating,
+        sellerSales: seller.totalSales,
+        sellerVerified: seller.isVerified,
+        sellerJoinedDate: seller.joinedDate,
         contactZalo: c.zalo ?? null,
         contactTelegram: c.telegram ?? null,
         contactPhone: c.phone ?? null,
@@ -200,12 +192,9 @@ export class BotsService {
         priceDaily: botData.pricing?.daily ?? 0,
         priceMonthly: botData.pricing?.monthly ?? 0,
         status: botData.status || 'online',
-        totalRentals: 0,
-        activeRentals: 0,
         rating: 5.0,
         reviewCount: 0,
         tags: JSON.stringify(botData.tags ?? []),
-        licenseType: botData.licenseType || 'key',
         version: botData.version || 'v1.0.0',
         systemReqs: botData.systemReqs || 'Windows 10/11 64-bit',
         updatedAt: new Date().toISOString().split('T')[0],
@@ -219,7 +208,7 @@ export class BotsService {
     if (!existing) {
       throw new NotFoundException(`Bot với ID '${id}' không tồn tại.`);
     }
-    const c = updateData.provider?.contact ?? {};
+    const c = updateData.seller?.contact ?? {};
     const data: Record<string, unknown> = {
       updatedAt: new Date().toISOString().split('T')[0],
     };
@@ -237,7 +226,6 @@ export class BotsService {
       data.priceMonthly = updateData.pricing.monthly;
     }
     if (updateData.status !== undefined) data.status = updateData.status;
-    if (updateData.licenseType !== undefined) data.licenseType = updateData.licenseType;
     if (updateData.tags !== undefined) data.tags = JSON.stringify(updateData.tags);
     if (updateData.version !== undefined) data.version = updateData.version;
     if (updateData.systemReqs !== undefined) data.systemReqs = updateData.systemReqs;

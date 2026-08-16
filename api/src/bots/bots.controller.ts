@@ -1,5 +1,5 @@
 import { Controller, Get, Post, Put, Delete, Param, Query, Body } from '@nestjs/common';
-import { BotsService } from './bots.service';
+import { BotsService } from './bots.service.js';
 
 @Controller('bots')
 export class BotsController {

@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { randomBytes } from 'crypto';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
 import { join } from 'path';
-import { MOCK_FILE_SEED } from '../data/mock-files';
+import { MOCK_FILE_SEED } from '../data/mock-files.js';
 
 export interface StoredFile {
   filename: string;

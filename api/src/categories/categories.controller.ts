@@ -1,6 +1,6 @@
 import { Controller, Get } from '@nestjs/common';
-import { PostsService } from '../posts/posts.service';
-import { ok } from '../common/api-response';
+import { PostsService } from '../posts/posts.service.js';
+import { ok } from '../common/api-response.js';
 
 @Controller('categories')
 export class CategoriesController {

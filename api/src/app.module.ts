@@ -1,17 +1,13 @@
 import { Module } from '@nestjs/common';
-import { CacheModule } from './cache/cache.module';
-import { ClientErrorsModule } from './client-errors/client-errors.module';
-import { FilesModule } from './files/files.module';
-import { HealthModule } from './health/health.module';
-import { PostsModule } from './posts/posts.module';
-import { PrismaModule } from './prisma/prisma.module';
-import { AuthModule } from './auth/auth.module';
-import { BotsModule } from './bots/bots.module';
-import { RentalsModule } from './rentals/rentals.module';
-import { ProviderModule } from './provider/provider.module';
-import { CommunityModule } from './community/community.module';
-import { WalletModule } from './wallet/wallet.module';
-import { StatsModule } from './stats/stats.module';
+import { CacheModule } from './cache/cache.module.js';
+import { ClientErrorsModule } from './client-errors/client-errors.module.js';
+import { FilesModule } from './files/files.module.js';
+import { HealthModule } from './health/health.module.js';
+import { PostsModule } from './posts/posts.module.js';
+import { PrismaModule } from './prisma/prisma.module.js';
+import { AuthModule } from './auth/auth.module.js';
+import { BotsModule } from './bots/bots.module.js';
+import { CommunityModule } from './community/community.module.js';
 
 @Module({
   imports: [
@@ -23,11 +19,7 @@ import { StatsModule } from './stats/stats.module';
     FilesModule,
     PostsModule,
     BotsModule,
-    RentalsModule,
-    ProviderModule,
     CommunityModule,
-    WalletModule,
-    StatsModule,
   ],
 })
 export class AppModule {}
