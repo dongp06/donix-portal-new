@@ -326,6 +326,43 @@ export class TrustService {
     return this.getStatus(userId);
   }
 
+  /** Cập nhật hồ sơ seller + tính lại profileCompleteness + recompute trust score */
+  async updateProfile(
+    userId: string,
+    body: {
+      shopName?: string;
+      bio?: string;
+      avatar?: string;
+      banner?: string;
+      contact?: Record<string, string>;
+    },
+  ) {
+    await this.getOrCreateProfile(userId);
+    const data: Record<string, unknown> = {
+      updatedAt: new Date().toISOString(),
+    };
+    if (body.shopName !== undefined) data.shopName = String(body.shopName);
+    if (body.bio !== undefined) data.bio = body.bio === '' ? null : String(body.bio);
+    if (body.avatar !== undefined) data.avatar = body.avatar === '' ? null : String(body.avatar);
+    if (body.banner !== undefined) data.banner = body.banner === '' ? null : String(body.banner);
+    if (body.contact && typeof body.contact === 'object') data.contact = JSON.stringify(body.contact);
+    const updated = await this.prisma.sellerProfile.update({ where: { userId }, data });
+    const parsedContact = updated.contact ? (JSON.parse(updated.contact) as Record<string, string>) : {};
+    const completeness = await this.computeProfileCompleteness({
+      shopName: updated.shopName,
+      bio: updated.bio,
+      avatar: updated.avatar,
+      banner: updated.banner,
+      contact: parsedContact,
+    });
+    await this.prisma.sellerProfile.update({
+      where: { userId },
+      data: { profileCompleteness: completeness },
+    });
+    await this.recompute(userId);
+    return this.prisma.sellerProfile.findUnique({ where: { userId } });
+  }
+
   async expireOverdue() {
     const now = new Date().toISOString();
     const overdue = await this.prisma.trustVerification.findMany({
