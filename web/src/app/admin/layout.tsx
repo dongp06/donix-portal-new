@@ -14,11 +14,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <header className="mb-8 flex flex-wrap items-center justify-between gap-4 border-b border-border pb-6">
         <div className="flex items-center gap-3">
           <DonixLogo size="sm" />
-          <h1 className="text-xl font-semibold text-foreground">Quản trị bài viết</h1>
+          <h1 className="text-xl font-semibold text-foreground">Quản trị</h1>
         </div>
         <nav className="flex flex-wrap items-center gap-2 text-sm" aria-label="Điều hướng quản trị">
           <Button asChild variant="outline" size="sm">
             <Link href="/admin/posts">Danh sách</Link>
+          </Button>
+          <Button asChild variant="outline" size="sm">
+            <Link href="/admin/verifications">Xác minh</Link>
           </Button>
           <Button asChild size="sm">
             <Link href="/admin/posts/new">+ Bài mới</Link>
