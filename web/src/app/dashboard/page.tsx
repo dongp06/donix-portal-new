@@ -1,15 +1,32 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useRole } from '../../context/RoleContext';
 import { CreateBotModal } from '../../components/modals/CreateBotModal';
 import { Plus, Building2, Eye, Pencil } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function DashboardPage() {
-  const { bots, user } = useRole();
+  const { bots, user, isAuthenticated } = useRole();
   const [isCreateBotOpen, setIsCreateBotOpen] = useState(false);
+  const router = useRouter();
+
+  // Chỉ seller mới được vào trang quản lý đăng bot
+  useEffect(() => {
+    if (isAuthenticated === true && user.role !== 'seller') {
+      router.replace('/bots');
+    }
+  }, [isAuthenticated, user.role, router]);
+
+  if (isAuthenticated !== true || user.role !== 'seller') {
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center bg-background text-foreground">
+        <p className="text-sm text-muted-foreground">Đang kiểm tra quyền truy cập…</p>
+      </div>
+    );
+  }
 
   // Bot của người bán hiện tại
   const myBots = bots.filter((b) => b.seller.id === user.id);

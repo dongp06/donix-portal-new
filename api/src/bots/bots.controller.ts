@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Delete, Param, Query, Body, Req } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Param, Query, Body, Req, ForbiddenException } from '@nestjs/common';
 import type { Request } from 'express';
 import { BotsService } from './bots.service.js';
 import { AuthService } from '../auth/auth.service.js';
@@ -39,16 +39,16 @@ export class BotsController {
   }
 
   /**
-   * Tạo bot — yêu cầu đăng nhập. Bot gắn với hồ sơ user thật.
-   * Buyer tạo bot được nâng lên seller (verified) giống luồng đăng nhập.
+   * Tạo bot — yêu cầu đăng nhập + vai trò người bán.
+   * Bot gắn với hồ sơ user thật. Buyer không được đăng bot.
    */
   @Post()
   async create(@Body() botData: any, @Req() req: Request) {
-    let user = await requireUser(req, this.auth);
+    const user = await requireUser(req, this.auth);
 
-    // Nâng buyer lên seller khi họ đăng bot đầu tiên
-    if (user.role === 'buyer') {
-      user = await this.auth.promoteToSeller(user.email);
+    // Chỉ người bán mới được đăng bot
+    if (user.role !== 'seller') {
+      throw new ForbiddenException('Bạn cần là người bán để đăng bot. Hãy chọn vai trò Người bán khi đăng ký.');
     }
 
     // Contact trong form tạo bot được ưu tiên; nếu không có thì lấy từ hồ sơ user

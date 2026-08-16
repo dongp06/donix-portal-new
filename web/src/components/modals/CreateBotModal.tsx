@@ -108,7 +108,7 @@ export function CreateBotModal({ isOpen, onClose }: CreateBotModalProps) {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) return;
 
@@ -117,38 +117,43 @@ export function CreateBotModal({ isOpen, onClose }: CreateBotModalProps) {
       return;
     }
 
-    addNewBot(
-      {
-        title,
-        description,
-        categorySlug,
-        categoryName: catName,
-        pricing: {
-          hourly: priceUnit === 'hourly' ? price : 0,
-          daily: priceUnit === 'daily' ? price : 0,
-          monthly: priceUnit === 'monthly' ? price : 0,
+    try {
+      await addNewBot(
+        {
+          title,
+          description,
+          categorySlug,
+          categoryName: catName,
+          pricing: {
+            hourly: priceUnit === 'hourly' ? price : 0,
+            daily: priceUnit === 'daily' ? price : 0,
+            monthly: priceUnit === 'monthly' ? price : 0,
+          },
+          coverImage: thumbnail,
+          gallery,
+          features: features.split('\n').filter((f) => f.trim().length > 0),
         },
-        coverImage: thumbnail,
-        gallery,
-        features: features.split('\n').filter((f) => f.trim().length > 0),
-      },
-      { zalo, telegram, phone, messenger, facebook },
-    );
+        { zalo, telegram, phone, messenger, facebook },
+      );
 
-    onClose();
-    // Reset form
-    setTitle('');
-    setDescription('');
-    setPriceUnit('daily');
-    setPrice(30000);
-    setZalo('');
-    setTelegram('');
-    setPhone('');
-    setMessenger('');
-    setFacebook('');
-    setThumbnail('');
-    setGallery([]);
-    setFeatures('Auto cày cấp 24/7\nThông báo Telegram\nHỗ trợ đa tài khoản');
+      onClose();
+      // Reset form
+      setTitle('');
+      setDescription('');
+      setPriceUnit('daily');
+      setPrice(30000);
+      setZalo('');
+      setTelegram('');
+      setPhone('');
+      setMessenger('');
+      setFacebook('');
+      setThumbnail('');
+      setGallery([]);
+      setFeatures('Auto cày cấp 24/7\nThông báo Telegram\nHỗ trợ đa tài khoản');
+    } catch (err) {
+      // Đăng không thành công (vd: 403 do không phải người bán) — giữ modal, hiện lỗi
+      toast.error(err instanceof Error ? err.message : 'Đăng bot thất bại');
+    }
   };
 
   const inputClass =
