@@ -19,6 +19,9 @@ model User {
   joinedDate String
   contact    String?
   forumPosts ForumPost[]
+  comments   Comment[]
+  reactions  Reaction[]
+  reviews    BotReview[]
 }
 
 model Category {
@@ -88,9 +91,25 @@ model Bot {
   version       String   @default("v1.0.0")
   systemReqs    String   @default("")
   updatedAt     String
+  reviews       BotReview[]
 
   @@index([categorySlug])
   @@index([sellerId])
+}
+
+model BotReview {
+  id        String @id
+  botId     String
+  bot       Bot    @relation(fields: [botId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  rating    Int
+  comment   String
+  images    String @default("[]")
+  createdAt String
+
+  @@index([botId])
+  @@index([userId])
 }
 
 model ForumPost {
@@ -112,4 +131,37 @@ model ForumPost {
 
   @@index([authorId])
   @@index([category])
+}
+
+model Comment {
+  id          String     @id
+  targetType  String
+  targetId    String
+  parentId    String?
+  parent      Comment?   @relation("CommentTree", fields: [parentId], references: [id], onDelete: Cascade)
+  replies     Comment[]  @relation("CommentTree")
+  authorId    String?
+  author      User?      @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  authorName  String
+  authorAvatar String
+  content     String
+  reactions   String     @default("[]")
+  createdAt   String
+
+  @@index([targetType, targetId])
+  @@index([parentId])
+  @@index([authorId])
+}
+
+model Reaction {
+  id         String @id
+  targetType String
+  targetId   String
+  userId     String
+  user       User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  emoji      String
+  createdAt  String
+
+  @@unique([targetType, targetId, userId, emoji])
+  @@index([targetType, targetId])
 }

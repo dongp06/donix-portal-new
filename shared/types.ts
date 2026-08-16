@@ -57,6 +57,32 @@ export interface BotPricing {
 
 export type BotStatus = 'online' | 'maintenance' | 'offline';
 
+/** Đối tượng được bình luận/reaction */
+export type CommentTargetType = 'post' | 'forum' | 'bot';
+
+export interface ReactionSummary {
+  emoji: string;
+  count: number;
+  reactedByMe: boolean;
+}
+
+/** Comment + reply (tree). Nested qua `replies` */
+export interface CommentItem {
+  id: string;
+  targetType: CommentTargetType;
+  targetId: string;
+  parentId?: string | null;
+  authorId?: string | null;
+  authorName: string;
+  authorAvatar: string;
+  content: string;
+  reactions: ReactionSummary[];
+  reactionCount: number;
+  isOwn: boolean;
+  createdAt: string;
+  replies: CommentItem[];
+}
+
 export interface BotReview {
   id: string;
   userName: string;
@@ -64,6 +90,10 @@ export interface BotReview {
   rating: number;
   date: string;
   comment: string;
+  /** Tối đa 5 ảnh kèm đánh giá */
+  images?: string[];
+  /** true nếu review này của người đang xem (cho phép sửa/xóa) */
+  isOwn?: boolean;
 }
 
 export interface BotItem {
@@ -111,6 +141,8 @@ export interface ForumPost {
   createdAt: string;
   tags: string[];
   isPinned?: boolean;
+  /** React emoji trên bài viết (tổng hợp từ Reaction) */
+  reactions?: ReactionSummary[];
   /** true nếu bài này là của người xem đang đăng nhập (cho nút sửa/xóa) */
   isOwn?: boolean;
 }

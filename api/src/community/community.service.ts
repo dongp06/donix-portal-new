@@ -39,6 +39,7 @@ export function toOut(p: ForumPost) {
     createdAt: p.createdAt,
     tags: safeParse<string[]>(p.tags),
     isPinned: p.isPinned,
+    reactions: [] as { emoji: string; count: number; reactedByMe: boolean }[],
   };
 }
 
@@ -91,10 +92,15 @@ export class CommunityService {
       where,
       orderBy: [{ isPinned: 'desc' }, { createdAt: 'desc' }],
     });
-    return rows.map((p) => ({
-      ...toOut(p),
-      isOwn: Boolean(viewerId && p.authorId === viewerId),
-    }));
+    const out = [];
+    for (const p of rows) {
+      out.push({
+        ...toOut(p),
+        isOwn: Boolean(viewerId && p.authorId === viewerId),
+        reactions: await this.reactionsForPost(p.id, viewerId ?? null),
+      });
+    }
+    return out;
   }
 
   async createPost(input: CreateForumPostInput) {
@@ -173,6 +179,65 @@ export class CommunityService {
       orderBy: [{ isPinned: 'desc' }, { createdAt: 'desc' }],
     });
     return rows.map(toOut);
+  }
+
+  /** Gom reactions theo emoji cho 1 bài + đánh dấu reactedByMe theo user */
+  private async reactionsForPost(postId: string, userId: string | null) {
+    const rows = await this.prisma.reaction.groupBy({
+      by: ['emoji'],
+      where: { targetType: 'forum', targetId: postId },
+      _count: { emoji: true },
+    });
+    const mine = userId
+      ? await this.prisma.reaction.findMany({
+          where: { targetType: 'forum', targetId: postId, userId },
+          select: { emoji: true },
+        })
+      : [];
+    const mySet = new Set(mine.map((r) => r.emoji));
+    return rows
+      .sort((a, b) => b._count.emoji - a._count.emoji)
+      .map((r) => ({
+        emoji: r.emoji,
+        count: r._count.emoji,
+        reactedByMe: mySet.has(r.emoji),
+      }));
+  }
+
+  /** Toggle react emoji trên bài diễn đàn — giữ nguyên upvote hiện tại */
+  async togglePostReaction(id: string, emoji: string, actor: { id: string }) {
+    const existing = await this.prisma.forumPost.findUnique({ where: { id } });
+    if (!existing) {
+      throw new NotFoundException('Bài viết không tồn tại.');
+    }
+    if (!['👍', '❤️', '😂', '😮', '😢', '😡'].includes(emoji)) {
+      throw new BadRequestException('Biểu tượng cảm xúc không hợp lệ.');
+    }
+    const found = await this.prisma.reaction.findUnique({
+      where: {
+        targetType_targetId_userId_emoji: {
+          targetType: 'forum',
+          targetId: id,
+          userId: actor.id,
+          emoji,
+        },
+      },
+    });
+    if (found) {
+      await this.prisma.reaction.delete({ where: { id: found.id } });
+    } else {
+      await this.prisma.reaction.create({
+        data: {
+          id: `rct-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+          targetType: 'forum',
+          targetId: id,
+          userId: actor.id,
+          emoji,
+          createdAt: new Date().toISOString().slice(0, 10),
+        },
+      });
+    }
+    return this.reactionsForPost(id, actor.id);
   }
 
   async upvotePost(id: string) {

@@ -5,13 +5,14 @@ import Link from 'next/link';
 import { useRole } from '../../../context/RoleContext';
 import { BotItem } from '@shared/types';
 import { ContactModal } from '../../../components/modals/ContactModal';
+import { ReviewSection } from '../../../components/comments/ReviewSection';
+import { CommentSection } from '../../../components/comments/CommentSection';
 import {
   Star,
   ShieldCheck,
   MessageCircle,
   CheckCircle2,
   Activity,
-  Cpu,
   ArrowLeft,
   MessageSquare,
 } from 'lucide-react';
@@ -164,10 +165,6 @@ export default function BotDetailPage({ params }: { params: Promise<{ id: string
               <div className="space-y-4 rounded-2xl border border-border bg-card p-6 text-sm leading-relaxed text-muted-foreground">
                 <h3 className="font-display text-base font-semibold text-foreground">Mô tả sản phẩm</h3>
                 <p>{bot.description}</p>
-                <h4 className="pt-2 font-semibold text-foreground">Yêu cầu hệ thống</h4>
-                <pre className="overflow-x-auto rounded-xl border border-border bg-background p-3 font-mono text-xs text-brand">
-                  {bot.systemReqs}
-                </pre>
               </div>
             )}
 
@@ -184,30 +181,7 @@ export default function BotDetailPage({ params }: { params: Promise<{ id: string
             )}
 
             {activeTab === 'reviews' && (
-              <div className="space-y-4 rounded-2xl border border-border bg-card p-6">
-                <h3 className="font-display text-base font-semibold text-foreground">Đánh giá từ người thuê</h3>
-                {bot.reviews && bot.reviews.length > 0 ? (
-                  bot.reviews.map((rev) => (
-                    <div key={rev.id} className="space-y-2 rounded-xl border border-border bg-background p-4">
-                      <div className="flex items-center justify-between text-xs">
-                        <div className="flex items-center gap-2">
-                          <img src={rev.userAvatar} alt={rev.userName} className="h-6 w-6 rounded-full object-cover" />
-                          <span className="font-semibold text-foreground">{rev.userName}</span>
-                        </div>
-                        <span className="text-muted-foreground">{rev.date}</span>
-                      </div>
-                      <div className="flex text-amber-400">
-                        {Array.from({ length: rev.rating }).map((_, i) => (
-                          <Star key={i} className="h-3.5 w-3.5 fill-amber-400" aria-hidden />
-                        ))}
-                      </div>
-                      <p className="text-sm text-muted-foreground">{rev.comment}</p>
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-sm text-muted-foreground">Chưa có đánh giá nào cho bot này.</p>
-                )}
-              </div>
+              <ReviewSection botId={bot.id} />
             )}
           </div>
 
@@ -258,18 +232,11 @@ export default function BotDetailPage({ params }: { params: Promise<{ id: string
                 Nhắn tin hỏi nhà cung cấp
               </button>
             </div>
-
-            {/* System reqs quick card */}
-            <div className="space-y-2 rounded-2xl border border-border bg-card p-6">
-              <span className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                <Cpu className="h-4 w-4 text-brand" aria-hidden /> Yêu cầu tối thiểu
-              </span>
-              <p className="text-xs leading-relaxed text-muted-foreground">
-                Win 7 / 10 / 11, RAM 4 GB, kết nối Internet ổn định. Chi tiết tại tab tổng quan.
-              </p>
-            </div>
           </aside>
         </div>
+
+        {/* Bình luận dưới chi tiết bot */}
+        <CommentSection targetType="bot" targetId={bot.id} />
       </div>
 
       <ContactModal bot={bot} isOpen={isContactOpen} onClose={() => setIsContactOpen(false)} />

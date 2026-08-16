@@ -18,9 +18,9 @@ import { api } from '@/lib/api-client';
 import type { Post } from '@shared/types';
 import { MOCK_BLOG_CATEGORIES } from '@shared/mock-data';
 import { Skeleton } from '@/components/ui/skeleton';
-import { toast } from 'sonner';
 import { PostResourceDownloads } from '@/components/post/PostResourceDownloads';
 import { RelatedPosts } from '@/components/post/RelatedPosts';
+import { CommentSection } from '@/components/comments/CommentSection';
 import { formatPostDate, formatViewCount, toSentenceCase } from '@/lib/format';
 import { PythonLogoMark } from '@/components/icons/PythonLogoMark';
 import { fetchPostPagePayload, type PostPagePayload } from '@/lib/post-payload';
@@ -280,13 +280,11 @@ export function PostPage({
                     · {formatViewCount(post.views)} lượt xem
                   </span>
                 </div>
-                <Button
-                  variant="ghost"
-                  className="gap-2 text-brand hover:text-brand hover:bg-brand/10"
-                  onClick={() => toast.info('Bình luận đang phát triển')}
-                >
-                  Bình luận
-                </Button>
+              </div>
+
+              {/* Bình luận blog */}
+              <div className="pt-2">
+                <CommentSection targetType="post" targetId={post.id} />
               </div>
             </div>
           </article>

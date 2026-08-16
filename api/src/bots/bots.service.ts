@@ -1,4 +1,4 @@
-import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { MOCK_CATEGORIES } from '../data/mock-data.js';
 import { BotCategory } from '../data/types.js';
@@ -269,5 +269,150 @@ export class BotsService {
     throw new ForbiddenException(
       `Bạn không có quyền ${action} bot của người khác.`,
     );
+  }
+
+  // ── Đánh giá bot ──────────────────────────────────────────────
+
+  /** GET reviews cho bot — viewerId để đánh dấu isOwn */
+  async getReviews(botId: string, viewerId: string | null) {
+    const bot = await this.prisma.bot.findUnique({ where: { id: botId }, select: { id: true } });
+    if (!bot) throw new NotFoundException('Bot không tồn tại.');
+    const rows = await this.prisma.botReview.findMany({
+      where: { botId },
+      orderBy: { createdAt: 'desc' },
+      include: { user: true },
+    });
+    return rows.map((r) => ({
+      id: r.id,
+      userName: r.user?.name ?? 'Người dùng',
+      userAvatar: r.user?.avatar ?? '',
+      rating: r.rating,
+      date: r.createdAt,
+      comment: r.comment,
+      images: safeParse<string[]>(r.images),
+      isOwn: Boolean(viewerId && r.userId === viewerId),
+    }));
+  }
+
+  /** Tạo review — yêu cầu login; recalc rating bot */
+  async createReview(
+    botId: string,
+    input: { rating: number; comment?: string; images?: string[] },
+    author: { id: string; name: string; avatar: string },
+  ) {
+    const bot = await this.prisma.bot.findUnique({ where: { id: botId }, select: { id: true } });
+    if (!bot) throw new NotFoundException('Bot không tồn tại.');
+    const rating = Number(input?.rating);
+    if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
+      throw new BadRequestException('Đánh giá phải từ 1 đến 5 sao.');
+    }
+    const comment = (input?.comment ?? '').trim();
+    if (comment.length > 1000) {
+      throw new BadRequestException('Nội dung đánh giá tối đa 1000 ký tự.');
+    }
+    const images = Array.isArray(input?.images) ? input.images.slice(0, 5) : [];
+    if ((input?.images ?? []).length > 5) {
+      throw new BadRequestException('Tối đa 5 ảnh cho mỗi đánh giá.');
+    }
+    const id = `rv-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    const created = await this.prisma.botReview.create({
+      data: {
+        id,
+        botId,
+        userId: author.id,
+        rating,
+        comment,
+        images: JSON.stringify(images),
+        createdAt: new Date().toISOString().slice(0, 10),
+      },
+      include: { user: true },
+    });
+    await this.recalcBotRating(botId);
+    return {
+      id: created.id,
+      userName: created.user?.name ?? author.name,
+      userAvatar: created.user?.avatar ?? author.avatar,
+      rating: created.rating,
+      date: created.createdAt,
+      comment: created.comment,
+      images: safeParse<string[]>(created.images),
+      isOwn: true,
+    };
+  }
+
+  /** Sửa review — chỉ chủ */
+  async updateReview(botId: string, reviewId: string, input: any, actor: { id: string }) {
+    const review = await this.prisma.botReview.findUnique({
+      where: { id: reviewId, botId },
+    });
+    if (!review) throw new NotFoundException('Đánh giá không tồn tại.');
+    if (review.userId !== actor.id) {
+      throw new ForbiddenException('Bạn chỉ có thể sửa đánh giá của mình.');
+    }
+    const data: Record<string, unknown> = {};
+    if (input?.rating !== undefined) {
+      const rating = Number(input.rating);
+      if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
+        throw new BadRequestException('Đánh giá phải từ 1 đến 5 sao.');
+      }
+      data.rating = rating;
+    }
+    if (input?.comment !== undefined) {
+      const comment = (input.comment ?? '').trim();
+      if (comment.length > 1000) {
+        throw new BadRequestException('Nội dung đánh giá tối đa 1000 ký tự.');
+      }
+      data.comment = comment;
+    }
+    if (input?.images !== undefined) {
+      const images = Array.isArray(input.images) ? input.images.slice(0, 5) : [];
+      data.images = JSON.stringify(images);
+    }
+    const updated = await this.prisma.botReview.update({
+      where: { id: reviewId },
+      data,
+      include: { user: true },
+    });
+    await this.recalcBotRating(botId);
+    return {
+      id: updated.id,
+      userName: updated.user?.name ?? 'Người dùng',
+      userAvatar: updated.user?.avatar ?? '',
+      rating: updated.rating,
+      date: updated.createdAt,
+      comment: updated.comment,
+      images: safeParse<string[]>(updated.images),
+      isOwn: true,
+    };
+  }
+
+  /** Xóa review — chỉ chủ; recalc rating bot */
+  async deleteReview(botId: string, reviewId: string, actor: { id: string }) {
+    const review = await this.prisma.botReview.findUnique({
+      where: { id: reviewId, botId },
+    });
+    if (!review) throw new NotFoundException('Đánh giá không tồn tại.');
+    if (review.userId !== actor.id) {
+      throw new ForbiddenException('Bạn chỉ có thể xóa đánh giá của mình.');
+    }
+    await this.prisma.botReview.delete({ where: { id: reviewId } });
+    await this.recalcBotRating(botId);
+    return true;
+  }
+
+  /** Tính lại rating = AVG(rating), reviewCount = COUNT */
+  private async recalcBotRating(botId: string) {
+    const agg = await this.prisma.botReview.aggregate({
+      where: { botId },
+      _avg: { rating: true },
+      _count: true,
+    });
+    await this.prisma.bot.update({
+      where: { id: botId },
+      data: {
+        rating: agg._avg.rating ?? 5,
+        reviewCount: agg._count,
+      },
+    });
   }
 }

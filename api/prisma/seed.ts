@@ -198,9 +198,118 @@ async function main() {
     });
   }
 
+  // Comments (blog + forum + bot) + reactions
+  // Tác giả: dùng buyer MOCK_USER + các seller seed (đã có user)
+  const SEED_AUTHORS = [
+    { id: MOCK_USER.id, name: MOCK_USER.name, avatar: MOCK_USER.avatar },
+    { id: SELLER_SEEDS[0].userId, name: SELLER_SEEDS[0].name, avatar: SELLER_SEEDS[0].avatar },
+    { id: SELLER_SEEDS[1].userId, name: SELLER_SEEDS[1].name, avatar: SELLER_SEEDS[1].avatar },
+  ];
+  const botId = MOCK_BOTS[0]?.id;
+  const forumId = MOCK_FORUM_POSTS[0]?.id;
+  const postId = MOCK_POSTS[0]?.id;
+
+  // Xóa dữ liệu comment/review cũ để reseed sạch
+  await prisma.comment.deleteMany({});
+  await prisma.botReview.deleteMany({});
+  await prisma.reaction.deleteMany({});
+
+  if (botId && forumId && postId) {
+    const parentId = `seed-cmt-${botId}-1`;
+    await prisma.comment.create({
+      data: {
+        id: parentId,
+        targetType: 'bot',
+        targetId: botId,
+        authorId: SEED_AUTHORS[0].id,
+        authorName: SEED_AUTHORS[0].name,
+        authorAvatar: SEED_AUTHORS[0].avatar,
+        content: 'Bot này chạy ổn định, mình dùng được 2 tuần rồi. Nhược điểm là lúc đầu hơi khó cài đặt.',
+        reactions: JSON.stringify([{ emoji: '👍', count: 3, reactedByMe: false }]),
+        createdAt: '2026-08-10',
+      },
+    });
+    await prisma.comment.create({
+      data: {
+        id: `seed-cmt-${botId}-2`,
+        targetType: 'bot',
+        targetId: botId,
+        parentId,
+        authorId: SEED_AUTHORS[1].userId,
+        authorName: SEED_AUTHORS[1].name,
+        authorAvatar: SEED_AUTHORS[1].avatar,
+        content: 'Cảm ơn bạn! Bản 1.2 đã thêm hướng dẫn cài đặt chi tiết từng bước rồi nhé.',
+        reactions: JSON.stringify([{ emoji: '❤️', count: 1, reactedByMe: false }]),
+        createdAt: '2026-08-11',
+      },
+    });
+    await prisma.comment.create({
+      data: {
+        id: `seed-cmt-${forumId}-1`,
+        targetType: 'forum',
+        targetId: forumId,
+        authorId: SEED_AUTHORS[2].userId,
+        authorName: SEED_AUTHORS[2].name,
+        authorAvatar: SEED_AUTHORS[2].avatar,
+        content: 'Mình đã thử cách này, đỡ bị khóa nick hẳn. Cảm ơn tác giả đã chia sẻ!',
+        reactions: JSON.stringify([
+          { emoji: '👍', count: 5, reactedByMe: false },
+          { emoji: '😂', count: 2, reactedByMe: false },
+        ]),
+        createdAt: '2026-08-09',
+      },
+    });
+    await prisma.comment.create({
+      data: {
+        id: `seed-cmt-${postId}-1`,
+        targetType: 'post',
+        targetId: postId,
+        authorId: SEED_AUTHORS[0].id,
+        authorName: SEED_AUTHORS[0].name,
+        authorAvatar: SEED_AUTHORS[0].avatar,
+        content: 'Bài viết rất chi tiết, đọc xong mình tự làm được ngay. Mong có thêm phần mở rộng.',
+        reactions: JSON.stringify([{ emoji: '👍', count: 2, reactedByMe: false }]),
+        createdAt: '2026-08-08',
+      },
+    });
+
+    // Bot reviews (kèm ảnh)
+    await prisma.botReview.create({
+      data: {
+        id: `seed-rv-${botId}-1`,
+        botId,
+        userId: SEED_AUTHORS[0].id,
+        rating: 5,
+        comment: 'Bot chạy mượt, đúng như mô tả. Hỗ trợ nhanh, giao diện dễ dùng.',
+        images: JSON.stringify([
+          'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&auto=format&fit=crop&q=80',
+        ]),
+        createdAt: '2026-08-05',
+      },
+    });
+    await prisma.botReview.create({
+      data: {
+        id: `seed-rv-${botId}-2`,
+        botId,
+        userId: SEED_AUTHORS[2].id,
+        rating: 4,
+        comment: 'Ổn định, chỉ mong thêm báo cáo tự động. Ngoài ra rất đáng tiền.',
+        images: JSON.stringify([]),
+        createdAt: '2026-08-06',
+      },
+    });
+
+    // Cập nhật rating/reviewCount cho bot theo reviews vừa tạo
+    const avg = await prisma.botReview.aggregate({ where: { botId }, _avg: { rating: true }, _count: true });
+    await prisma.bot.update({
+      where: { id: botId },
+      data: { rating: avg._avg.rating ?? 5, reviewCount: avg._count },
+    });
+  }
+
   // eslint-disable-next-line no-console
   console.log(
-    `Seeded ${MOCK_BLOG_CATEGORIES.length} categories, ${MOCK_POSTS.length} posts, ${MOCK_BOTS.length} bots, ${MOCK_FORUM_POSTS.length} forum posts, ${1 + SELLER_SEEDS.length} users.`,
+    `Seeded ${MOCK_BLOG_CATEGORIES.length} categories, ${MOCK_POSTS.length} posts, ${MOCK_BOTS.length} bots, ${MOCK_FORUM_POSTS.length} forum posts, ${1 + SELLER_SEEDS.length} users, comments+reviews.`,
   );
 }
 

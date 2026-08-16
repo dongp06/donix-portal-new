@@ -73,4 +73,14 @@ export class CommunityController {
       data: await this.communityService.upvotePost(id),
     };
   }
+
+  /** Toggle react emoji trên bài diễn đàn — yêu cầu đăng nhập */
+  @Post('posts/:id/react')
+  async reactPost(@Param('id') id: string, @Body() body: any, @Req() req: Request) {
+    const user = await requireUser(req, this.auth);
+    return {
+      success: true,
+      data: await this.communityService.togglePostReaction(id, body?.emoji, { id: user.id }),
+    };
+  }
 }

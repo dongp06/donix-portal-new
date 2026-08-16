@@ -1,8 +1,8 @@
-import { Controller, Get, Post, Put, Delete, Param, Query, Body, Req, ForbiddenException } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Put, Delete, Param, Query, Body, Req, ForbiddenException } from '@nestjs/common';
 import type { Request } from 'express';
 import { BotsService } from './bots.service.js';
 import { AuthService } from '../auth/auth.service.js';
-import { requireUser } from '../auth/current-user.js';
+import { requireUser, getCurrentUser } from '../auth/current-user.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 
 @Controller('bots')
@@ -36,6 +36,49 @@ export class BotsController {
   async findOne(@Param('idOrSlug') idOrSlug: string) {
     const bot = await this.botsService.findOne(idOrSlug);
     return { success: true, data: bot };
+  }
+
+  // ── Reviews (đánh giá bot) ─────────────────────────────
+
+  @Get(':idOrSlug/reviews')
+  async listReviews(@Param('idOrSlug') idOrSlug: string, @Req() req: Request) {
+    const bot = await this.botsService.findOne(idOrSlug);
+    const viewer = await getCurrentUser(req, this.auth);
+    const data = await this.botsService.getReviews(bot.id, viewer?.id ?? null);
+    return { success: true, data };
+  }
+
+  @Post(':idOrSlug/reviews')
+  async addReview(@Param('idOrSlug') idOrSlug: string, @Body() body: any, @Req() req: Request) {
+    const user = await requireUser(req, this.auth);
+    const bot = await this.botsService.findOne(idOrSlug);
+    const data = await this.botsService.createReview(
+      bot.id,
+      { rating: body?.rating, comment: body?.comment, images: body?.images },
+      { id: user.id, name: user.name, avatar: user.avatar },
+    );
+    return { success: true, data };
+  }
+
+  @Patch(':idOrSlug/reviews/:rid')
+  async editReview(
+    @Param('idOrSlug') idOrSlug: string,
+    @Param('rid') rid: string,
+    @Body() body: any,
+    @Req() req: Request,
+  ) {
+    const user = await requireUser(req, this.auth);
+    const bot = await this.botsService.findOne(idOrSlug);
+    const data = await this.botsService.updateReview(bot.id, rid, body, { id: user.id });
+    return { success: true, data };
+  }
+
+  @Delete(':idOrSlug/reviews/:rid')
+  async removeReview(@Param('idOrSlug') idOrSlug: string, @Param('rid') rid: string, @Req() req: Request) {
+    const user = await requireUser(req, this.auth);
+    const bot = await this.botsService.findOne(idOrSlug);
+    const data = await this.botsService.deleteReview(bot.id, rid, { id: user.id });
+    return { success: true, data };
   }
 
   /**

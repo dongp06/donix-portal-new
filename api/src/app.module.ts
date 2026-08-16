@@ -10,6 +10,7 @@ import { BotsModule } from './bots/bots.module.js';
 import { CommunityModule } from './community/community.module.js';
 import { SellersModule } from './sellers/sellers.module.js';
 import { UsersModule } from './users/users.module.js';
+import { CommentsModule } from './comments/comments.module.js';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { UsersModule } from './users/users.module.js';
     CommunityModule,
     SellersModule,
     UsersModule,
+    CommentsModule,
   ],
 })
 export class AppModule {}

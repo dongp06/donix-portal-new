@@ -8,6 +8,8 @@ import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { useRole } from '../../context/RoleContext';
 import { GoogleLoginButton } from '../../components/auth/GoogleLoginButton';
+import { CommentSection } from '../../components/comments/CommentSection';
+import { ReactionSummary } from '@shared/types';
 
 const CATEGORIES: ForumCategory[] = [
   'Chia sẻ kinh nghiệm',
@@ -29,6 +31,9 @@ export default function CommunityPage() {
   const [newCategory, setNewCategory] = useState<ForumCategory>('Chia sẻ kinh nghiệm');
   const [newContent, setNewContent] = useState('');
   const [newTags, setNewTags] = useState('');
+  // Bình luận từng bài (mở/đóng) + react emoji
+  const [expandedComments, setExpandedComments] = useState<Set<string>>(new Set());
+  const [openEmojiFor, setOpenEmojiFor] = useState<string | null>(null);
 
   const categories = ['Tất cả', ...CATEGORIES];
 
@@ -70,6 +75,24 @@ export default function CommunityPage() {
     } catch (e) {
       setPosts((prev) => prev.map((p) => (p.id === postId ? { ...p, upvotes: p.upvotes - 1 } : p)));
       toast.error(e instanceof Error ? e.message : 'Upvote thất bại');
+    }
+  };
+
+  /** Toggle react emoji trên bài diễn đàn */
+  const handlePostReaction = async (postId: string, emoji: string) => {
+    try {
+      const res = await fetch(`/api/community/posts/${postId}/react`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ emoji }),
+      });
+      const json = await res.json();
+      if (!res.ok || !json.success) throw new Error(json.error || 'React thất bại');
+      const reactions = json.data as ReactionSummary[];
+      setPosts((prev) => prev.map((p) => (p.id === postId ? { ...p, reactions } : p)));
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'React thất bại');
     }
   };
 
@@ -245,10 +268,10 @@ export default function CommunityPage() {
             </p>
           )}
           {filteredPosts.map((post) => (
-            <article
-              key={post.id}
-              className="flex flex-col justify-between gap-6 rounded-2xl border border-border bg-card p-6 transition-colors hover:border-brand/30 md:flex-row md:items-center"
-            >
+            <React.Fragment key={post.id}>
+              <article
+                className="flex flex-col justify-between gap-6 rounded-2xl border border-border bg-card p-6 transition-colors hover:border-brand/30 md:flex-row md:items-center"
+              >
               <div className="flex-1 space-y-3">
                 <div className="flex flex-wrap items-center gap-2 text-xs">
                   <span className="rounded-full border border-brand/30 bg-brand/10 px-2.5 py-0.5 font-semibold text-brand">
@@ -343,12 +366,86 @@ export default function CommunityPage() {
                   <ThumbsUp className="mb-1 h-4 w-4" aria-hidden />
                   <span className="text-xs font-bold">{post.upvotes}</span>
                 </button>
-                <div className="flex min-w-[60px] flex-col items-center justify-center rounded-xl border border-border bg-background p-3 text-muted-foreground">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const next = new Set(expandedComments);
+                    if (next.has(post.id)) next.delete(post.id);
+                    else next.add(post.id);
+                    setExpandedComments(next);
+                  }}
+                  className={cn(
+                    'flex min-w-[60px] flex-col items-center justify-center rounded-xl border bg-background p-3 transition-colors',
+                    expandedComments.has(post.id)
+                      ? 'border-brand/50 text-brand'
+                      : 'border-border text-muted-foreground hover:border-brand/40 hover:text-foreground',
+                  )}
+                  aria-expanded={expandedComments.has(post.id)}
+                  aria-label={`Bình luận bài "${post.title}"`}
+                >
                   <MessageSquare className="mb-1 h-4 w-4" aria-hidden />
                   <span className="text-xs font-bold">{post.commentsCount}</span>
+                </button>
+              </div>
+
+              {/* React emoji trên bài */}
+              <div className="flex flex-wrap items-center gap-1.5 border-t border-border pt-3">
+                {(post.reactions ?? []).map((r) => (
+                  <button
+                    key={r.emoji}
+                    type="button"
+                    onClick={() => void handlePostReaction(post.id, r.emoji)}
+                    title={`${r.emoji} ${r.count}`}
+                    className={cn(
+                      'inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs transition-colors',
+                      r.reactedByMe
+                        ? 'border-brand/50 bg-brand/10 text-brand'
+                        : 'border-border bg-background text-muted-foreground hover:border-brand/40',
+                    )}
+                  >
+                    <span className="text-sm">{r.emoji}</span>
+                    <span>{r.count}</span>
+                  </button>
+                ))}
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setOpenEmojiFor(openEmojiFor === post.id ? null : post.id)}
+                    className="inline-flex items-center gap-1 rounded-full border border-border bg-background px-2.5 py-1 text-xs text-muted-foreground transition-colors hover:border-brand/40 hover:text-foreground"
+                    aria-expanded={openEmojiFor === post.id}
+                    aria-haspopup="true"
+                    aria-label={`React bài "${post.title}"`}
+                  >
+                    <ThumbsUp className="h-3.5 w-3.5" aria-hidden />
+                    Thích
+                  </button>
+                  {openEmojiFor === post.id && (
+                    <div className="absolute bottom-full left-0 z-10 mb-1.5 flex items-center gap-1 rounded-full border border-border bg-card p-1.5 shadow-xl" role="menu" aria-label="Chọn cảm xúc">
+                      {['👍', '❤️', '😂', '😮', '😢', '😡'].map((e) => (
+                        <button
+                          key={e}
+                          type="button"
+                          onClick={() => void handlePostReaction(post.id, e)}
+                          className="rounded-full p-1.5 text-lg transition-transform hover:scale-125"
+                          role="menuitem"
+                          aria-label={e}
+                        >
+                          {e}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             </article>
+
+            {/* Bình luận của bài */}
+            {expandedComments.has(post.id) && (
+              <div className="rounded-2xl border border-border bg-card p-5">
+                <CommentSection targetType="forum" targetId={post.id} />
+              </div>
+            )}
+            </React.Fragment>
           ))}
         </div>
       </div>
