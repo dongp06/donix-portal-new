@@ -53,7 +53,11 @@ export function BotCard({ bot, onContactClick }: BotCardProps) {
 
         {/* Seller */}
         <Link
-          href={`/sellers/${bot.seller.id}`}
+          href={
+            bot.seller.slug
+              ? `/sellers/${bot.seller.slug}`
+              : `/sellers/${bot.seller.id}`
+          }
           className="mt-2 inline-flex max-w-full items-center gap-1.5 text-xs text-muted-foreground transition-colors hover:text-brand"
           title={`Hồ sơ người bán ${bot.seller.name}`}
         >

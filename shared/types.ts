@@ -50,6 +50,8 @@ export interface BotSellerInfo {
   tier?: SellerTier;
   isVerified: boolean;
   joinedDate: string;
+  /** Slug profile seller (fallback id nếu chưa có) */
+  slug?: string;
   contact?: BotContactInfo;
 }
 

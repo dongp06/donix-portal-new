@@ -8,9 +8,10 @@ import { BotItem, ForumPost, SellerProfile } from '@shared/types';
 import { BotCard } from '../../../components/bot/BotCard';
 import { ContactModal } from '../../../components/modals/ContactModal';
 import { EditProfileModal } from '../../../components/modals/EditProfileModal';
+import { Badge } from '../../../components/ui/badge';
+import { Progress } from '../../../components/ui/progress';
 import {
   ShieldCheck,
-  Star,
   CalendarDays,
   Bot,
   MessageSquare,
@@ -20,11 +21,31 @@ import {
   MessageCircle,
   Send,
   Phone,
+  History,
+  Award,
+  BadgeCheck,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
-export default function SellerProfilePage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = use(params);
+/** Nhãn tiếng Việt cho từng loại sự kiện uy tín */
+const TRUST_EVENT_LABELS: Record<string, string> = {
+  joined: 'Gia nhập thuebot.org',
+  verification_approved: 'Đã xác minh',
+  verification_submitted: 'Đã nộp hồ sơ xác minh',
+  verification_rejected: 'Bị từ chối xác minh',
+  verification_expired: 'Xác minh hết hạn',
+  verification_revoked: 'Bị thu hồi xác minh',
+  tier_changed: 'Đổi hạng',
+};
+
+function formatDate(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return iso;
+  return d.toLocaleDateString('vi-VN', { day: '2-digit', month: 'long', year: 'numeric' });
+}
+
+export default function SellerProfilePage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = use(params);
   const { user, isAuthenticated, updateProfile } = useRole();
   const [profile, setProfile] = useState<SellerProfile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -35,7 +56,7 @@ export default function SellerProfilePage({ params }: { params: Promise<{ id: st
 
   const load = useCallback(async () => {
     try {
-      const res = await fetch(`/api/sellers/${id}`, { credentials: 'include' });
+      const res = await fetch(`/api/sellers/${slug}`, { credentials: 'include' });
       const json = await res.json();
       if (!res.ok || !json.success || !json.data) {
         setNotFound(true);
@@ -47,7 +68,7 @@ export default function SellerProfilePage({ params }: { params: Promise<{ id: st
     } finally {
       setLoading(false);
     }
-  }, [id]);
+  }, [slug]);
 
   useEffect(() => {
     void load();
@@ -88,7 +109,7 @@ export default function SellerProfilePage({ params }: { params: Promise<{ id: st
     );
   }
 
-  const { user: seller, bots, posts } = profile;
+  const { user: seller, bots, posts, trustEvents } = profile;
   const isOwner = isAuthenticated === true && user.id === seller.id;
   const contact = seller.contact ?? {};
   const channels = [
@@ -104,6 +125,9 @@ export default function SellerProfilePage({ params }: { params: Promise<{ id: st
     ? seller.joinedDate
     : joinDate.toLocaleDateString('vi-VN', { day: '2-digit', month: 'long', year: 'numeric' });
 
+  const trustScore = seller.trustScore;
+  const tier = seller.tier;
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       <div className="mx-auto max-w-6xl space-y-8 px-4 py-10 sm:px-6 lg:px-8">
@@ -118,6 +142,18 @@ export default function SellerProfilePage({ params }: { params: Promise<{ id: st
             <div className="min-w-0 space-y-2">
               <div className="flex flex-wrap items-center gap-2">
                 <h1 className="font-display text-2xl font-bold tracking-tight">{seller.name}</h1>
+                {tier === 'trusted' && (
+                  <Badge className="border-emerald-500/30 bg-emerald-500/10 text-emerald-500">
+                    <BadgeCheck className="h-3.5 w-3.5" aria-hidden />
+                    Trust Seller
+                  </Badge>
+                )}
+                {tier === 'top' && (
+                  <Badge className="border-amber-400/40 bg-amber-400/10 text-amber-400">
+                    <Award className="h-3.5 w-3.5" aria-hidden />
+                    Top Seller
+                  </Badge>
+                )}
                 {seller.isVerified && (
                   <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 text-xs font-semibold text-emerald-500">
                     <ShieldCheck className="h-3.5 w-3.5" aria-hidden />
@@ -126,18 +162,22 @@ export default function SellerProfilePage({ params }: { params: Promise<{ id: st
                 )}
               </div>
               <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
-                <span className="inline-flex items-center gap-1.5">
-                  <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" aria-hidden />
-                  Rating {seller.rating.toFixed(1)} / 5.0
-                </span>
-                <span className="inline-flex items-center gap-1.5">
-                  <Bot className="h-3.5 w-3.5" aria-hidden />
-                  Điểm uy tín {seller.reputation ?? Math.round(seller.rating * 20)}
-                </span>
+                {typeof trustScore === 'number' && (
+                  <span className="inline-flex items-center gap-1.5">
+                    <Bot className="h-3.5 w-3.5" aria-hidden />
+                    Điểm uy tín {trustScore}/100
+                  </span>
+                )}
                 <span className="inline-flex items-center gap-1.5">
                   <CalendarDays className="h-3.5 w-3.5" aria-hidden />
                   Tham gia {joinLabel}
                 </span>
+                {seller.verifiedAt && (
+                  <span className="inline-flex items-center gap-1.5">
+                    <ShieldCheck className="h-3.5 w-3.5" aria-hidden />
+                    Xác minh ngày {formatDate(seller.verifiedAt)}
+                  </span>
+                )}
               </div>
               {seller.bio ? (
                 <p className="max-w-xl text-sm leading-relaxed text-muted-foreground">{seller.bio}</p>
@@ -181,6 +221,54 @@ export default function SellerProfilePage({ params }: { params: Promise<{ id: st
             )}
           </div>
         </div>
+
+        {/* Trust score + timeline */}
+        {typeof trustScore === 'number' && (
+          <div className="grid gap-6 lg:grid-cols-2">
+            <section className="space-y-3 rounded-2xl border border-border bg-card p-6">
+              <h2 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                <Bot className="h-4 w-4" aria-hidden />
+                Điểm uy tín
+              </h2>
+              <div className="flex items-end gap-2">
+                <span className="font-display text-4xl font-bold tracking-tight">{trustScore}</span>
+                <span className="pb-1 text-sm text-muted-foreground">/ 100</span>
+              </div>
+              <Progress value={trustScore} aria-label={`Điểm uy tín ${trustScore}/100`} />
+              <p className="text-xs leading-relaxed text-muted-foreground">
+                Điểm được tính từ thời gian hoạt động, đánh giá và xác minh danh tính của người bán.
+              </p>
+            </section>
+
+            {trustEvents && trustEvents.length > 0 && (
+              <section className="space-y-3 rounded-2xl border border-border bg-card p-6">
+                <h2 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                  <History className="h-4 w-4" aria-hidden />
+                  Lịch sử uy tín
+                </h2>
+                <ol className="space-y-3">
+                  {trustEvents.map((evt) => {
+                    const label =
+                      evt.type === 'tier_changed' && evt.detail?.from && evt.detail?.to
+                        ? `Đổi hạng (${evt.detail.from} → ${evt.detail.to})`
+                        : (TRUST_EVENT_LABELS[evt.type] ?? evt.type);
+                    return (
+                      <li key={evt.id} className="flex items-start gap-3">
+                        <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-brand" aria-hidden />
+                        <div className="min-w-0 text-sm">
+                          <p className="font-medium text-foreground">{label}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {formatDate(evt.createdAt)}
+                          </p>
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ol>
+              </section>
+            )}
+          </div>
+        )}
 
         {/* Tabs */}
         <div>

@@ -192,7 +192,11 @@ export default function BotDetailPage({ params }: { params: Promise<{ id: string
                 Thông tin nhà cung cấp
               </span>
               <Link
-                href={`/sellers/${bot.seller.id}`}
+                href={
+                  bot.seller.slug
+                    ? `/sellers/${bot.seller.slug}`
+                    : `/sellers/${bot.seller.id}`
+                }
                 className="flex items-center gap-3 rounded-xl transition-colors hover:opacity-90"
                 title={`Xem hồ sơ người bán ${bot.seller.name}`}
               >

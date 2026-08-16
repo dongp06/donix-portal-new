@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Link from 'next/link';
 import { BotItem } from '@shared/types';
 import { X, MessageCircle, Send, Phone, ShieldCheck, Star } from 'lucide-react';
 import { toast } from 'sonner';
@@ -53,12 +54,19 @@ export function ContactModal({ bot, isOpen, onClose }: ContactModalProps) {
             className="h-12 w-12 rounded-full border border-border object-cover"
           />
           <div>
-            <div className="flex items-center gap-1 font-semibold">
+            <Link
+              href={
+                bot.seller.slug
+                  ? `/sellers/${bot.seller.slug}`
+                  : `/sellers/${bot.seller.id}`
+              }
+              className="flex items-center gap-1 font-semibold transition-colors hover:text-brand"
+            >
               {bot.seller.name}
               {bot.seller.isVerified && (
                 <ShieldCheck className="h-4 w-4 text-brand" aria-label="Đã xác thực" />
               )}
-            </div>
+            </Link>
             <div className="flex items-center gap-1 text-xs text-muted-foreground">
               <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" aria-hidden />
               <span className="font-medium text-foreground">{bot.seller.rating}</span>

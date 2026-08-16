@@ -23,6 +23,7 @@ export interface BotItemOut {
     totalSales: number;
     isVerified: boolean;
     joinedDate: string;
+    slug?: string;
     contact?: {
       zalo?: string;
       telegram?: string;
@@ -80,6 +81,7 @@ export function toOut(b: Bot): BotItemOut {
       totalSales: b.sellerSales,
       isVerified: b.sellerVerified,
       joinedDate: b.sellerJoinedDate,
+      ...(b.sellerSlug ? { slug: b.sellerSlug } : {}),
       ...(hasContact ? { contact } : {}),
     },
     coverImage: b.coverImage,
