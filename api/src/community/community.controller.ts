@@ -1,8 +1,8 @@
-import { Controller, Get, Post, Param, Query, Body, Req } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Param, Query, Body, Req } from '@nestjs/common';
 import type { Request } from 'express';
-import { CommunityService, CreateForumPostInput } from './community.service.js';
+import { CommunityService } from './community.service.js';
 import { AuthService } from '../auth/auth.service.js';
-import { AUTH_COOKIE } from '../auth/auth.controller.js';
+import { getCurrentUser, requireUser } from '../auth/current-user.js';
 
 @Controller('community')
 export class CommunityController {
@@ -11,44 +11,58 @@ export class CommunityController {
     private readonly auth: AuthService,
   ) {}
 
-  /** Giải mã người dùng từ cookie (nếu đã đăng nhập) — bài đăng gắn với author thật */
-  private async resolveAuthor(req: Request): Promise<CreateForumPostInput['author']> {
-    const token = (req.cookies as Record<string, string> | undefined)?.[AUTH_COOKIE];
-    if (!token) return undefined;
-    try {
-      const payload = this.auth.verifyToken(token);
-      const user = await this.auth.findByEmail(payload.email);
-      if (!user) return undefined;
-      return { id: user.id, name: user.name, avatar: user.avatar, role: user.role };
-    } catch {
-      return undefined;
-    }
-  }
-
   @Get('posts')
-  async getPosts(@Query('category') category?: string) {
+  async getPosts(@Query('category') category?: string, @Req() req?: Request) {
+    const viewer = req ? await getCurrentUser(req, this.auth) : null;
     return {
       success: true,
-      data: await this.communityService.getPosts(category),
+      data: await this.communityService.getPosts(category, viewer?.id ?? null),
     };
   }
 
+  /** Đăng bài — bắt buộc đăng nhập, bài gắn với user thật */
   @Post('posts')
   async createPost(
     @Body() postData: { title: string; content: string; category?: string; tags?: string[] },
     @Req() req: Request,
   ) {
-    const author = await this.resolveAuthor(req);
+    const user = await requireUser(req, this.auth);
     const post = await this.communityService.createPost({
       title: postData?.title,
       content: postData?.content,
       category: postData?.category,
       tags: postData?.tags,
-      author,
+      author: { id: user.id, name: user.name, avatar: user.avatar, role: user.role },
     });
     return {
       success: true,
       data: post,
+    };
+  }
+
+  /** Sửa bài của mình */
+  @Patch('posts/:id')
+  async updatePost(
+    @Param('id') id: string,
+    @Body() postData: { title?: string; content?: string; category?: string; tags?: string[] },
+    @Req() req: Request,
+  ) {
+    const user = await requireUser(req, this.auth);
+    const post = await this.communityService.updatePost(id, user.id, postData);
+    return {
+      success: true,
+      data: post,
+    };
+  }
+
+  /** Xóa bài của mình */
+  @Delete('posts/:id')
+  async deletePost(@Param('id') id: string, @Req() req: Request) {
+    const user = await requireUser(req, this.auth);
+    await this.communityService.deletePost(id, user.id);
+    return {
+      success: true,
+      data: true,
     };
   }
 

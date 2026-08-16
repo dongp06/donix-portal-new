@@ -15,6 +15,7 @@ export interface ApiAuthUser {
   isVerified: boolean;
   bio: string | null;
   joinedDate: string;
+  contact?: BotContactInfo;
   isNewUser?: boolean;
 }
 
@@ -28,6 +29,7 @@ function toUserProfile(u: ApiAuthUser): UserProfile {
     isVerifiedSeller: u.isVerified,
     bio: u.bio ?? undefined,
     joinedDate: u.joinedDate,
+    contact: u.contact,
   };
 }
 
@@ -47,6 +49,8 @@ interface BotContextType {
   updateBot: (id: string, botData: Partial<BotItem>, contact?: BotContactInfo) => Promise<BotItem>;
   deleteBot: (id: string) => Promise<void>;
   registerUser: (info: { name: string; email: string; role: UserRole }) => UserProfile;
+  /** Sửa hồ sơ của chính mình (bio + liên hệ) */
+  updateProfile: (bio: string, contact: BotContactInfo) => Promise<void>;
   /** Trạng thái auth: null = đang kiểm tra, false = chưa đăng nhập, true = đã đăng nhập */
   isAuthenticated: boolean | null;
   loginWithGoogle: (role?: UserRole) => Promise<ApiAuthUser>;
@@ -150,7 +154,7 @@ export function RoleProvider({ children }: { children: React.ReactNode }) {
     toast.success('Đã đăng xuất');
   };
 
-  /** Gửi bot lên API (lưu DB) rồi cập nhật state — bot mới lên chợ ngay */
+  /** Gửi bot lên API (lưu DB) rồi cập nhật state — seller gắn từ cookie trên backend */
   const addNewBot = async (botData: Partial<BotItem>, contact?: BotContactInfo) => {
     const payload = {
       title: botData.title,
@@ -163,24 +167,15 @@ export function RoleProvider({ children }: { children: React.ReactNode }) {
       features: botData.features,
       pricing: botData.pricing,
       tags: botData.tags,
-      seller: {
-        id: user.id,
-        name: user.name,
-        avatar: user.avatar,
-        rating: 5.0,
-        totalSales: 0,
-        isVerified: true,
-        joinedDate: user.joinedDate,
-        contact: contact
-          ? {
-              zalo: contact.zalo?.trim() || undefined,
-              telegram: contact.telegram?.trim() || undefined,
-              phone: contact.phone?.trim() || undefined,
-              messenger: contact.messenger?.trim() || undefined,
-              facebook: contact.facebook?.trim() || undefined,
-            }
-          : undefined,
-      },
+      contact: contact
+        ? {
+            zalo: contact.zalo?.trim() || undefined,
+            telegram: contact.telegram?.trim() || undefined,
+            phone: contact.phone?.trim() || undefined,
+            messenger: contact.messenger?.trim() || undefined,
+            facebook: contact.facebook?.trim() || undefined,
+          }
+        : undefined,
     };
     const res = await fetch('/api/bots', {
       method: 'POST',
@@ -255,6 +250,31 @@ export function RoleProvider({ children }: { children: React.ReactNode }) {
     toast.success('Đã xóa bot');
   };
 
+  /** Sửa hồ sơ của chính mình — bio + liên hệ (PATCH /api/users/me) */
+  const updateProfile = async (bio: string, contact: BotContactInfo) => {
+    const res = await fetch('/api/users/me', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({
+        bio,
+        contact: {
+          zalo: contact.zalo?.trim() ?? '',
+          telegram: contact.telegram?.trim() ?? '',
+          phone: contact.phone?.trim() ?? '',
+          messenger: contact.messenger?.trim() ?? '',
+          facebook: contact.facebook?.trim() ?? '',
+        },
+      }),
+    });
+    const json = await res.json();
+    if (!res.ok || !json.success || !json.data) {
+      throw new Error(json.error || 'Cập nhật hồ sơ thất bại');
+    }
+    setUser(toUserProfile(json.data as ApiAuthUser));
+    toast.success('Đã cập nhật hồ sơ');
+  };
+
   return (
     <BotContext.Provider
       value={{
@@ -265,6 +285,7 @@ export function RoleProvider({ children }: { children: React.ReactNode }) {
         updateBot,
         deleteBot,
         registerUser,
+        updateProfile,
         isAuthenticated,
         loginWithGoogle,
         logout,

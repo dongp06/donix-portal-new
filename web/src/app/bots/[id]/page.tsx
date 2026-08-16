@@ -217,7 +217,11 @@ export default function BotDetailPage({ params }: { params: Promise<{ id: string
               <span className="block text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                 Thông tin nhà cung cấp
               </span>
-              <div className="flex items-center gap-3">
+              <Link
+                href={`/sellers/${bot.seller.id}`}
+                className="flex items-center gap-3 rounded-xl transition-colors hover:opacity-90"
+                title={`Xem hồ sơ người bán ${bot.seller.name}`}
+              >
                 <img
                   src={bot.seller.avatar}
                   alt={bot.seller.name}
@@ -236,7 +240,7 @@ export default function BotDetailPage({ params }: { params: Promise<{ id: string
                     <span>({bot.seller.totalSales} giao dịch)</span>
                   </div>
                 </div>
-              </div>
+              </Link>
               <div className="space-y-1.5 border-t border-border pt-4 text-xs text-muted-foreground">
                 <p>
                   Tham gia: <strong className="font-semibold text-foreground">{bot.seller.joinedDate}</strong>

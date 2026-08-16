@@ -51,6 +51,20 @@ export function BotCard({ bot, onContactClick }: BotCardProps) {
           {bot.tagline}
         </p>
 
+        {/* Seller */}
+        <Link
+          href={`/sellers/${bot.seller.id}`}
+          className="mt-2 inline-flex max-w-full items-center gap-1.5 text-xs text-muted-foreground transition-colors hover:text-brand"
+          title={`Hồ sơ người bán ${bot.seller.name}`}
+        >
+          <img
+            src={bot.seller.avatar}
+            alt=""
+            className="h-4 w-4 rounded-full object-cover"
+          />
+          <span className="truncate">{bot.seller.name}</span>
+        </Link>
+
         {/* Rating & stats */}
         <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground">
           <span className="inline-flex items-center gap-1 font-medium">

@@ -9,6 +9,11 @@ import {
   MOCK_USER,
 } from '../src/data/mock-data.js';
 import { sqliteDbPath } from '../src/prisma/database.js';
+import {
+  SELLER_SEEDS,
+  sellerSeedUserId,
+  forumAuthorSeedId,
+} from './seller-seeds.js';
 
 const prisma = new PrismaClient({
   adapter: new PrismaBetterSqlite3({ url: sqliteDbPath() }),
@@ -23,7 +28,7 @@ function toBotData(b: (typeof MOCK_BOTS)[number]) {
     description: b.description,
     categorySlug: b.categorySlug,
     categoryName: b.categoryName,
-    sellerId: b.seller.id,
+    sellerId: sellerSeedUserId(b.seller.id),
     sellerName: b.seller.name,
     sellerAvatar: b.seller.avatar,
     sellerRating: b.seller.rating,
@@ -57,7 +62,7 @@ function toForumData(p: (typeof MOCK_FORUM_POSTS)[number]) {
     title: p.title,
     excerpt: p.excerpt,
     content: p.content,
-    authorId: null,
+    authorId: forumAuthorSeedId(p.authorName),
     authorName: p.authorName,
     authorAvatar: p.authorAvatar,
     authorRole: p.authorRole,
@@ -87,6 +92,35 @@ async function main() {
     },
     update: {},
   });
+
+  // Seller users (mock prov-01…04 → user thật)
+  for (const s of SELLER_SEEDS) {
+    await prisma.user.upsert({
+      where: { id: s.userId },
+      create: {
+        id: s.userId,
+        googleId: null,
+        name: s.name,
+        email: s.email,
+        avatar: s.avatar,
+        role: 'seller',
+        isVerified: s.isVerified,
+        bio: s.bio,
+        joinedDate: s.joinedDate,
+        contact: JSON.stringify(s.contact),
+      },
+      update: {
+        name: s.name,
+        email: s.email,
+        avatar: s.avatar,
+        role: 'seller',
+        isVerified: s.isVerified,
+        bio: s.bio,
+        joinedDate: s.joinedDate,
+        contact: JSON.stringify(s.contact),
+      },
+    });
+  }
 
   // Blog categories
   // Xóa các category cũ (bot marketplace) không thuộc blog — chỉ giữ các id blog
@@ -166,7 +200,7 @@ async function main() {
 
   // eslint-disable-next-line no-console
   console.log(
-    `Seeded ${MOCK_BLOG_CATEGORIES.length} categories, ${MOCK_POSTS.length} posts, ${MOCK_BOTS.length} bots, ${MOCK_FORUM_POSTS.length} forum posts, 1 user.`,
+    `Seeded ${MOCK_BLOG_CATEGORIES.length} categories, ${MOCK_POSTS.length} posts, ${MOCK_BOTS.length} bots, ${MOCK_FORUM_POSTS.length} forum posts, ${1 + SELLER_SEEDS.length} users.`,
   );
 }
 

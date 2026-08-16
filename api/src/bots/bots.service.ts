@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { MOCK_CATEGORIES } from '../data/mock-data.js';
 import { BotCategory } from '../data/types.js';
@@ -51,7 +51,7 @@ function safeParse<T>(value: string | null): T {
   }
 }
 
-function toOut(b: Bot): BotItemOut {
+export function toOut(b: Bot): BotItemOut {
   const contact = {
     zalo: b.contactZalo ?? undefined,
     telegram: b.contactTelegram ?? undefined,
@@ -148,16 +148,21 @@ export class BotsService {
     return toOut(bot);
   }
 
-  async create(botData: Partial<BotItemOut>): Promise<BotItemOut> {
-    const seller = botData.seller ?? {
-      id: 'prov-01',
-      name: 'DevNguyen_Pro',
-      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
-      rating: 4.9,
-      totalSales: 1420,
-      isVerified: true,
-      joinedDate: '2024-03-15',
-    };
+  /**
+   * Tạo bot — seller là user thật đã đăng nhập (gắn từ controller).
+   * Nếu người tạo là buyer, controller nâng họ lên seller trước khi gọi.
+   */
+  async create(
+    botData: Partial<BotItemOut>,
+    seller: {
+      id: string;
+      name: string;
+      avatar: string;
+      joinedDate: string;
+      isVerified: boolean;
+      contact?: Partial<Record<string, string>>;
+    },
+  ): Promise<BotItemOut> {
     const coverImage =
       botData.coverImage ||
       'https://images.unsplash.com/photo-1518770660439-4636190af475?w=800&auto=format&fit=crop&q=80';
@@ -176,8 +181,8 @@ export class BotsService {
         sellerId: seller.id,
         sellerName: seller.name,
         sellerAvatar: seller.avatar,
-        sellerRating: seller.rating,
-        sellerSales: seller.totalSales,
+        sellerRating: 5.0,
+        sellerSales: 0,
         sellerVerified: seller.isVerified,
         sellerJoinedDate: seller.joinedDate,
         contactZalo: c.zalo ?? null,
@@ -203,11 +208,16 @@ export class BotsService {
     return toOut(created);
   }
 
-  async update(id: string, updateData: Partial<BotItemOut>): Promise<BotItemOut> {
+  async update(
+    id: string,
+    updateData: Partial<BotItemOut>,
+    actor: { id: string; role: string },
+  ): Promise<BotItemOut> {
     const existing = await this.prisma.bot.findUnique({ where: { id } });
     if (!existing) {
       throw new NotFoundException(`Bot với ID '${id}' không tồn tại.`);
     }
+    this.assertOwner(existing.sellerId, actor, 'sửa');
     const c = updateData.seller?.contact ?? {};
     const data: Record<string, unknown> = {
       updatedAt: new Date().toISOString().split('T')[0],
@@ -240,11 +250,24 @@ export class BotsService {
     return toOut(updated);
   }
 
-  async delete(id: string): Promise<void> {
+  async delete(id: string, actor: { id: string; role: string }): Promise<void> {
     const existing = await this.prisma.bot.findUnique({ where: { id } });
     if (!existing) {
       throw new NotFoundException(`Bot với ID '${id}' không tồn tại.`);
     }
+    this.assertOwner(existing.sellerId, actor, 'xóa');
     await this.prisma.bot.delete({ where: { id } });
+  }
+
+  /** Chỉ chủ bot (sellerId khớp) hoặc admin mới được sửa/xóa */
+  private assertOwner(
+    sellerId: string,
+    actor: { id: string; role: string },
+    action: string,
+  ) {
+    if (actor.role === 'admin' || sellerId === actor.id) return;
+    throw new ForbiddenException(
+      `Bạn không có quyền ${action} bot của người khác.`,
+    );
   }
 }

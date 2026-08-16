@@ -6,6 +6,14 @@ export interface ApiResponse<T = unknown> {
 
 export type UserRole = 'buyer' | 'seller' | 'admin';
 
+export interface BotContactInfo {
+  zalo?: string;
+  telegram?: string;
+  phone?: string;
+  messenger?: string;
+  facebook?: string;
+}
+
 export interface UserProfile {
   id: string;
   name: string;
@@ -15,6 +23,8 @@ export interface UserProfile {
   isVerifiedSeller?: boolean;
   bio?: string;
   joinedDate: string;
+  /** Liên hệ của seller (zalo/telegram/phone/messenger/facebook) */
+  contact?: BotContactInfo;
 }
 
 export type BotCategorySlug = 'messenger' | 'telegram' | 'discord' | 'zalo' | 'instagram';
@@ -36,13 +46,7 @@ export interface BotSellerInfo {
   totalSales: number;
   isVerified: boolean;
   joinedDate: string;
-  contact?: {
-    zalo?: string;
-    telegram?: string;
-    phone?: string;
-    messenger?: string;
-    facebook?: string;
-  };
+  contact?: BotContactInfo;
 }
 
 export interface BotPricing {
@@ -107,6 +111,8 @@ export interface ForumPost {
   createdAt: string;
   tags: string[];
   isPinned?: boolean;
+  /** true nếu bài này là của người xem đang đăng nhập (cho nút sửa/xóa) */
+  isOwn?: boolean;
 }
 
 export interface PostAttachment {
@@ -151,4 +157,26 @@ export interface Post {
   attachments?: PostAttachment[];
   /** Slug các bài liên quan */
   relatedSlugs?: string[];
+}
+
+/** Hồ sơ seller công khai — GET /api/sellers/:id */
+export interface SellerProfileUser {
+  id: string;
+  name: string;
+  avatar: string;
+  role: UserRole;
+  isVerified: boolean;
+  bio?: string;
+  joinedDate: string;
+  contact?: BotContactInfo;
+  /** Rating cao nhất trong các bot của seller */
+  rating: number;
+  /** Tổng giao dịch cộng dồn từ các bot */
+  sales: number;
+}
+
+export interface SellerProfile {
+  user: SellerProfileUser;
+  bots: BotItem[];
+  posts: ForumPost[];
 }

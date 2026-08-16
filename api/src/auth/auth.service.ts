@@ -12,10 +12,21 @@ export interface AuthUser {
   isVerified: boolean;
   bio: string | null;
   joinedDate: string;
+  /** Liên hệ seller (zalo/telegram/phone/messenger/facebook) — JSON trên User.contact */
+  contact?: Record<string, string>;
   /** true nếu tài khoản vừa được tạo mới trong lần đăng nhập này */
   isNewUser: boolean;
   /** Vai trò mặc định người dùng chọn khi tạo tài khoản (được gửi từ client) */
   selectedRole?: 'buyer' | 'seller';
+}
+
+function parseContact(contact: string | null): Record<string, string> | undefined {
+  if (!contact) return undefined;
+  try {
+    return JSON.parse(contact) as Record<string, string>;
+  } catch {
+    return undefined;
+  }
 }
 
 @Injectable()
@@ -96,6 +107,7 @@ export class AuthService {
       isVerified: user.isVerified,
       bio: user.bio,
       joinedDate: user.joinedDate,
+      contact: parseContact(user.contact),
       isNewUser,
       selectedRole: isNewUser ? selectedRole : undefined,
     };
@@ -113,6 +125,51 @@ export class AuthService {
       isVerified: user.isVerified,
       bio: user.bio,
       joinedDate: user.joinedDate,
+      contact: parseContact(user.contact),
+      isNewUser: false,
+    };
+  }
+
+  /**
+   * Nâng buyer lên seller (verified) — dùng khi buyer đăng bot đầu tiên.
+   * Nếu đã là seller/admin thì giữ nguyên.
+   */
+  async promoteToSeller(email: string): Promise<AuthUser> {
+    const existing = await this.prisma.user.findUnique({ where: { email } });
+    if (!existing) {
+      throw new UnauthorizedException('Tài khoản không tồn tại.');
+    }
+    if (existing.role !== 'buyer') {
+      return this.toAuthUser(existing);
+    }
+    const updated = await this.prisma.user.update({
+      where: { email },
+      data: { role: 'seller', isVerified: true },
+    });
+    return this.toAuthUser(updated);
+  }
+
+  private toAuthUser(user: {
+    id: string;
+    name: string;
+    email: string;
+    avatar: string;
+    role: string;
+    isVerified: boolean;
+    bio: string | null;
+    joinedDate: string;
+    contact: string | null;
+  }): AuthUser {
+    return {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      avatar: user.avatar,
+      role: user.role as AuthUser['role'],
+      isVerified: user.isVerified,
+      bio: user.bio,
+      joinedDate: user.joinedDate,
+      contact: parseContact(user.contact),
       isNewUser: false,
     };
   }

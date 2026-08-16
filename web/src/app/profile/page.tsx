@@ -90,13 +90,22 @@ export default function ProfilePage() {
             <p className="mt-1 text-sm text-muted-foreground">{user.email}</p>
           </div>
           {isSeller && (
-            <Link
-              href="/dashboard"
-              className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-brand/40 px-4 py-2.5 text-sm font-semibold text-brand transition-colors hover:bg-brand/10"
-            >
-              <Plus className="h-4 w-4" aria-hidden />
-              Đăng bot
-            </Link>
+            <div className="flex flex-wrap gap-2">
+              <Link
+                href={`/sellers/${user.id}`}
+                className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-border bg-background px-4 py-2.5 text-sm font-semibold text-muted-foreground transition-colors hover:border-brand/40 hover:text-foreground"
+              >
+                <UserRound className="h-4 w-4" aria-hidden />
+                Hồ sơ người bán của tôi
+              </Link>
+              <Link
+                href="/dashboard"
+                className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-brand/40 px-4 py-2.5 text-sm font-semibold text-brand transition-colors hover:bg-brand/10"
+              >
+                <Plus className="h-4 w-4" aria-hidden />
+                Đăng bot
+              </Link>
+            </div>
           )}
         </div>
 

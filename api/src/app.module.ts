@@ -8,6 +8,8 @@ import { PrismaModule } from './prisma/prisma.module.js';
 import { AuthModule } from './auth/auth.module.js';
 import { BotsModule } from './bots/bots.module.js';
 import { CommunityModule } from './community/community.module.js';
+import { SellersModule } from './sellers/sellers.module.js';
+import { UsersModule } from './users/users.module.js';
 
 @Module({
   imports: [
@@ -20,6 +22,8 @@ import { CommunityModule } from './community/community.module.js';
     PostsModule,
     BotsModule,
     CommunityModule,
+    SellersModule,
+    UsersModule,
   ],
 })
 export class AppModule {}

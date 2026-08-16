@@ -1,10 +1,13 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { ForumPost, ForumCategory } from '@shared/types';
-import { MessageSquare, ThumbsUp, Plus, X } from 'lucide-react';
+import { MessageSquare, ThumbsUp, Plus, X, Pencil, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { useRole } from '../../context/RoleContext';
+import { GoogleLoginButton } from '../../components/auth/GoogleLoginButton';
 
 const CATEGORIES: ForumCategory[] = [
   'Chia sẻ kinh nghiệm',
@@ -14,38 +17,39 @@ const CATEGORIES: ForumCategory[] = [
 ];
 
 export default function CommunityPage() {
+  const { user, isAuthenticated } = useRole();
   const [posts, setPosts] = useState<ForumPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<string>('Tất cả');
   const [isNewPostOpen, setIsNewPostOpen] = useState<boolean>(false);
+  const [editTarget, setEditTarget] = useState<ForumPost | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   const [newTitle, setNewTitle] = useState('');
   const [newCategory, setNewCategory] = useState<ForumCategory>('Chia sẻ kinh nghiệm');
   const [newContent, setNewContent] = useState('');
-  const [newTags, setNewTags] = useState('Bot Auto, Dev');
+  const [newTags, setNewTags] = useState('');
 
   const categories = ['Tất cả', ...CATEGORIES];
 
-  // Load bài diễn đàn từ API
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const res = await fetch('/api/community/posts', { credentials: 'include' });
-        const json = await res.json();
-        if (!cancelled && json.success && Array.isArray(json.data)) {
-          setPosts(json.data as ForumPost[]);
-        }
-      } catch {
-        if (!cancelled) toast.error('Không tải được bài diễn đàn');
-      } finally {
-        if (!cancelled) setLoading(false);
+  // Load bài diễn đàn từ API (kèm isOwn cho bài của chính mình)
+  const loadPosts = async () => {
+    try {
+      const res = await fetch('/api/community/posts', { credentials: 'include' });
+      const json = await res.json();
+      if (json.success && Array.isArray(json.data)) {
+        setPosts(json.data as ForumPost[]);
       }
-    })();
-    return () => {
-      cancelled = true;
-    };
+    } catch {
+      toast.error('Không tải được bài diễn đàn');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    void loadPosts();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const filteredPosts = posts.filter(
@@ -67,6 +71,34 @@ export default function CommunityPage() {
       setPosts((prev) => prev.map((p) => (p.id === postId ? { ...p, upvotes: p.upvotes - 1 } : p)));
       toast.error(e instanceof Error ? e.message : 'Upvote thất bại');
     }
+  };
+
+  const resetForm = () => {
+    setNewTitle('');
+    setNewContent('');
+    setNewCategory('Chia sẻ kinh nghiệm');
+    setNewTags('');
+  };
+
+  const openCreate = () => {
+    setEditTarget(null);
+    resetForm();
+    setIsNewPostOpen(true);
+  };
+
+  const openEdit = (post: ForumPost) => {
+    setEditTarget(post);
+    setNewTitle(post.title);
+    setNewContent(post.content);
+    setNewCategory(post.category);
+    setNewTags(post.tags.join(', '));
+    setIsNewPostOpen(true);
+  };
+
+  const closeModal = () => {
+    setIsNewPostOpen(false);
+    setEditTarget(null);
+    resetForm();
   };
 
   const handleCreatePost = async (e: React.FormEvent) => {
@@ -93,14 +125,64 @@ export default function CommunityPage() {
         throw new Error(json.error || 'Đăng bài thất bại');
       }
       setPosts((prev) => [json.data as ForumPost, ...prev]);
-      setIsNewPostOpen(false);
-      setNewTitle('');
-      setNewContent('');
+      closeModal();
       toast.success('Đăng bài viết mới thành công');
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Đăng bài thất bại');
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleUpdatePost = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editTarget || !newTitle.trim() || !newContent.trim() || submitting) return;
+    setSubmitting(true);
+    try {
+      const res = await fetch(`/api/community/posts/${editTarget.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          title: newTitle.trim(),
+          content: newContent.trim(),
+          category: newCategory,
+          tags: newTags
+            .split(',')
+            .map((t) => t.trim())
+            .filter(Boolean),
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok || !json.success || !json.data) {
+        throw new Error(json.error || 'Cập nhật bài thất bại');
+      }
+      const updated = json.data as ForumPost;
+      setPosts((prev) => prev.map((p) => (p.id === updated.id ? { ...p, ...updated } : p)));
+      closeModal();
+      toast.success('Đã cập nhật bài viết');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Cập nhật bài thất bại');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleDeletePost = async (post: ForumPost) => {
+    if (!window.confirm(`Bạn chắc chắn muốn xóa bài "${post.title}"?`)) return;
+    try {
+      const res = await fetch(`/api/community/posts/${post.id}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+      const json = await res.json();
+      if (!res.ok || !json.success) {
+        throw new Error(json.error || 'Xóa bài thất bại');
+      }
+      setPosts((prev) => prev.filter((p) => p.id !== post.id));
+      toast.success('Đã xóa bài viết');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Xóa bài thất bại');
     }
   };
 
@@ -124,7 +206,7 @@ export default function CommunityPage() {
 
           <button
             type="button"
-            onClick={() => setIsNewPostOpen(true)}
+            onClick={openCreate}
             className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-brand px-5 py-2.5 text-sm font-semibold text-brand-foreground transition-colors hover:brightness-110"
           >
             <Plus className="h-4 w-4" aria-hidden />
@@ -177,6 +259,11 @@ export default function CommunityPage() {
                       Ghim nổi bật
                     </span>
                   )}
+                  {post.isOwn && (
+                    <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-0.5 font-semibold text-emerald-500">
+                      Bài của bạn
+                    </span>
+                  )}
                   <span className="text-muted-foreground">• {post.createdAt}</span>
                 </div>
 
@@ -184,17 +271,35 @@ export default function CommunityPage() {
                 <p className="text-sm leading-relaxed text-muted-foreground">{post.excerpt}</p>
 
                 <div className="flex flex-wrap items-center gap-4 pt-1 text-xs">
-                  <div className="flex items-center gap-2">
-                    <img
-                      src={post.authorAvatar}
-                      alt={post.authorName}
-                      className="h-6 w-6 rounded-full border border-border object-cover"
-                    />
-                    <span className="font-semibold text-foreground">{post.authorName}</span>
-                    <span className="rounded bg-muted px-2 py-0.5 text-[11px] text-muted-foreground">
-                      {post.authorRole}
-                    </span>
-                  </div>
+                  {post.authorId ? (
+                    <Link
+                      href={`/sellers/${post.authorId}`}
+                      className="flex items-center gap-2 rounded transition-colors hover:text-brand"
+                      title={`Xem hồ sơ ${post.authorName}`}
+                    >
+                      <img
+                        src={post.authorAvatar}
+                        alt={post.authorName}
+                        className="h-6 w-6 rounded-full border border-border object-cover"
+                      />
+                      <span className="font-semibold text-foreground">{post.authorName}</span>
+                      <span className="rounded bg-muted px-2 py-0.5 text-[11px] text-muted-foreground">
+                        {post.authorRole}
+                      </span>
+                    </Link>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <img
+                        src={post.authorAvatar}
+                        alt={post.authorName}
+                        className="h-6 w-6 rounded-full border border-border object-cover"
+                      />
+                      <span className="font-semibold text-foreground">{post.authorName}</span>
+                      <span className="rounded bg-muted px-2 py-0.5 text-[11px] text-muted-foreground">
+                        {post.authorRole}
+                      </span>
+                    </div>
+                  )}
                   <div className="flex gap-1.5">
                     {post.tags.map((tag) => (
                       <span key={tag} className="font-mono text-[11px] text-muted-foreground">
@@ -205,8 +310,30 @@ export default function CommunityPage() {
                 </div>
               </div>
 
-              {/* Upvote & comments */}
+              {/* Actions + upvote & comments */}
               <div className="flex items-center gap-3 border-t border-border pt-4 md:border-l md:border-t-0 md:pl-6 md:pt-0">
+                {post.isOwn && (
+                  <div className="flex flex-col gap-2">
+                    <button
+                      type="button"
+                      onClick={() => openEdit(post)}
+                      className="flex items-center justify-center gap-1 rounded-lg border border-border bg-background px-2.5 py-1.5 text-xs text-muted-foreground transition-colors hover:border-brand/40 hover:text-foreground"
+                      aria-label={`Sửa bài "${post.title}"`}
+                    >
+                      <Pencil className="h-3.5 w-3.5" aria-hidden />
+                      Sửa
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => void handleDeletePost(post)}
+                      className="flex items-center justify-center gap-1 rounded-lg border border-border bg-background px-2.5 py-1.5 text-xs text-muted-foreground transition-colors hover:border-red-500/40 hover:text-red-500"
+                      aria-label={`Xóa bài "${post.title}"`}
+                    >
+                      <Trash2 className="h-3.5 w-3.5" aria-hidden />
+                      Xóa
+                    </button>
+                  </div>
+                )}
                 <button
                   type="button"
                   onClick={() => void handleUpvote(post.id)}
@@ -226,108 +353,162 @@ export default function CommunityPage() {
         </div>
       </div>
 
-      {/* New post modal */}
-      {isNewPostOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 p-4 backdrop-blur-sm">
-          <div
-            className="relative w-full max-w-xl space-y-4 rounded-2xl border border-border bg-card p-6 text-foreground shadow-2xl"
-            role="dialog"
-            aria-modal="true"
-            aria-label="Đăng bài thảo luận mới"
-          >
-            <button
-              type="button"
-              onClick={() => setIsNewPostOpen(false)}
-              className="absolute right-4 top-4 rounded-lg p-1 text-muted-foreground transition-colors hover:text-foreground"
-              aria-label="Đóng"
+      {/* New / edit post modal (requires login) */}
+      {isNewPostOpen &&
+        (isAuthenticated === true ? (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 p-4 backdrop-blur-sm">
+            <div
+              className="relative max-h-[90vh] w-full max-w-xl space-y-4 overflow-y-auto rounded-2xl border border-border bg-card p-6 text-foreground shadow-2xl"
+              role="dialog"
+              aria-modal="true"
+              aria-label={editTarget ? 'Sửa bài thảo luận' : 'Đăng bài thảo luận mới'}
             >
-              <X className="h-5 w-5" />
-            </button>
+              <button
+                type="button"
+                onClick={closeModal}
+                className="absolute right-4 top-4 rounded-lg p-1 text-muted-foreground transition-colors hover:text-foreground"
+                aria-label="Đóng"
+              >
+                <X className="h-5 w-5" />
+              </button>
 
-            <h3 className="font-display text-lg font-bold">Đăng bài thảo luận mới</h3>
+              <h3 className="font-display text-lg font-bold">
+                {editTarget ? 'Sửa bài thảo luận' : 'Đăng bài thảo luận mới'}
+              </h3>
 
-            <form onSubmit={handleCreatePost} className="space-y-4">
-              <div>
-                <label htmlFor="post-title" className="mb-1 block text-xs text-muted-foreground">
-                  Tiêu đề bài viết
-                </label>
-                <input
-                  id="post-title"
-                  type="text"
-                  required
-                  value={newTitle}
-                  onChange={(e) => setNewTitle(e.target.value)}
-                  placeholder="VD: Cần đặt làm bot Auto TikTok Reup"
-                  className={inputClass}
+              {/* Đăng bài với tư cách ai */}
+              <div className="flex items-center gap-2 rounded-xl border border-border bg-background px-3 py-2 text-xs text-muted-foreground">
+                <img
+                  src={user.avatar}
+                  alt={user.name}
+                  className="h-6 w-6 rounded-full border border-border object-cover"
                 />
+                <span>
+                  Đăng bài với tư cách{' '}
+                  <strong className="text-foreground">{user.name}</strong>
+                </span>
               </div>
 
-              <div>
-                <label htmlFor="post-category" className="mb-1 block text-xs text-muted-foreground">
-                  Chủ đề
-                </label>
-                <select
-                  id="post-category"
-                  value={newCategory}
-                  onChange={(e) => setNewCategory(e.target.value as ForumCategory)}
-                  className={inputClass}
-                >
-                  {CATEGORIES.map((c) => (
-                    <option key={c} value={c}>
-                      {c}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <form
+                onSubmit={editTarget ? handleUpdatePost : handleCreatePost}
+                className="space-y-4"
+              >
+                <div>
+                  <label htmlFor="post-title" className="mb-1 block text-xs text-muted-foreground">
+                    Tiêu đề bài viết
+                  </label>
+                  <input
+                    id="post-title"
+                    type="text"
+                    required
+                    minLength={5}
+                    maxLength={200}
+                    value={newTitle}
+                    onChange={(e) => setNewTitle(e.target.value)}
+                    placeholder="VD: Cần đặt làm bot Auto TikTok Reup"
+                    className={inputClass}
+                  />
+                </div>
 
-              <div>
-                <label htmlFor="post-content" className="mb-1 block text-xs text-muted-foreground">
-                  Nội dung bài viết
-                </label>
-                <textarea
-                  id="post-content"
-                  rows={4}
-                  required
-                  value={newContent}
-                  onChange={(e) => setNewContent(e.target.value)}
-                  placeholder="Mô tả chi tiết ý tưởng hoặc câu hỏi của bạn..."
-                  className={inputClass}
-                />
-              </div>
+                <div>
+                  <label htmlFor="post-category" className="mb-1 block text-xs text-muted-foreground">
+                    Chủ đề
+                  </label>
+                  <select
+                    id="post-category"
+                    value={newCategory}
+                    onChange={(e) => setNewCategory(e.target.value as ForumCategory)}
+                    className={inputClass}
+                  >
+                    {CATEGORIES.map((c) => (
+                      <option key={c} value={c}>
+                        {c}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-              <div>
-                <label htmlFor="post-tags" className="mb-1 block text-xs text-muted-foreground">
-                  Thẻ tag (phân cách bằng dấu phẩy)
-                </label>
-                <input
-                  id="post-tags"
-                  type="text"
-                  value={newTags}
-                  onChange={(e) => setNewTags(e.target.value)}
-                  className={inputClass}
-                />
-              </div>
+                <div>
+                  <label htmlFor="post-content" className="mb-1 block text-xs text-muted-foreground">
+                    Nội dung bài viết
+                  </label>
+                  <textarea
+                    id="post-content"
+                    rows={5}
+                    required
+                    minLength={20}
+                    value={newContent}
+                    onChange={(e) => setNewContent(e.target.value)}
+                    placeholder="Mô tả chi tiết ý tưởng hoặc câu hỏi của bạn…"
+                    className={inputClass}
+                  />
+                </div>
 
-              <div className="flex gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setIsNewPostOpen(false)}
-                  className="flex-1 rounded-xl border border-border bg-background py-2.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
-                >
-                  Hủy
-                </button>
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  className="flex-1 rounded-xl bg-brand py-2.5 text-sm font-semibold text-brand-foreground transition-colors hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  {submitting ? 'Đang đăng…' : 'Đăng bài ngay'}
-                </button>
-              </div>
-            </form>
+                <div>
+                  <label htmlFor="post-tags" className="mb-1 block text-xs text-muted-foreground">
+                    Thẻ tag (phân cách bằng dấu phẩy, tối đa 5)
+                  </label>
+                  <input
+                    id="post-tags"
+                    type="text"
+                    value={newTags}
+                    onChange={(e) => setNewTags(e.target.value)}
+                    placeholder="VD: Bot Zalo, Marketing"
+                    className={inputClass}
+                  />
+                </div>
+
+                <div className="flex gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={closeModal}
+                    className="flex-1 rounded-xl border border-border bg-background py-2.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+                  >
+                    Hủy
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={submitting}
+                    className="flex-1 rounded-xl bg-brand py-2.5 text-sm font-semibold text-brand-foreground transition-colors hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {submitting
+                      ? editTarget
+                        ? 'Đang lưu…'
+                        : 'Đang đăng…'
+                      : editTarget
+                        ? 'Lưu thay đổi'
+                        : 'Đăng bài ngay'}
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
-        </div>
-      )}
+        ) : (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 p-4 backdrop-blur-sm">
+            <div
+              className="relative w-full max-w-sm space-y-4 rounded-2xl border border-border bg-card p-6 text-center text-foreground shadow-2xl"
+              role="dialog"
+              aria-modal="true"
+              aria-label="Đăng nhập để đăng bài"
+            >
+              <button
+                type="button"
+                onClick={closeModal}
+                className="absolute right-4 top-4 rounded-lg p-1 text-muted-foreground transition-colors hover:text-foreground"
+                aria-label="Đóng"
+              >
+                <X className="h-5 w-5" />
+              </button>
+              <h3 className="font-display text-lg font-bold">Đăng nhập để đăng bài</h3>
+              <p className="text-sm text-muted-foreground">
+                Bài viết sẽ gắn với hồ sơ của bạn để cộng đồng dễ liên hệ và theo dõi.
+              </p>
+              <div className="flex justify-center pt-2">
+                <GoogleLoginButton redirectTo="/community" />
+              </div>
+            </div>
+          </div>
+        ))}
     </div>
   );
 }

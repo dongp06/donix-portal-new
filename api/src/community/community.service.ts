@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
 import type { ForumPost } from '../../prisma/generated/prisma/client.js';
 
@@ -7,11 +12,18 @@ export interface CreateForumPostInput {
   content: string;
   category?: string;
   tags?: string[];
-  /** Người đăng bài đã xác thực (nếu có) */
-  author?: { id: string; name: string; avatar: string; role: string };
+  /** Người đăng bài đã xác thực (bắt buộc đăng nhập) */
+  author: { id: string; name: string; avatar: string; role: string };
 }
 
-function toOut(p: ForumPost) {
+export const FORUM_CATEGORIES = [
+  'Chia sẻ kinh nghiệm',
+  'Yêu cầu làm bot',
+  'Thảo luận Dev',
+  'Báo lỗi & Hỗ trợ',
+];
+
+export function toOut(p: ForumPost) {
   return {
     id: p.id,
     title: p.title,
@@ -39,34 +51,66 @@ function safeParse<T>(value: string | null): T {
   }
 }
 
+/** Validate dữ liệu bài viết — throw BadRequestException với message tiếng Việt */
+function validatePostInput(input: {
+  title?: string;
+  content?: string;
+  category?: string;
+  tags?: string[];
+}) {
+  const title = input.title?.trim();
+  if (!title || title.length < 5 || title.length > 200) {
+    throw new BadRequestException('Tiêu đề phải từ 5 đến 200 ký tự.');
+  }
+  const content = input.content?.trim();
+  if (!content || content.length < 20) {
+    throw new BadRequestException('Nội dung bài viết tối thiểu 20 ký tự.');
+  }
+  if (input.category && !FORUM_CATEGORIES.includes(input.category)) {
+    throw new BadRequestException(
+      `Danh mục không hợp lệ. Chọn một trong: ${FORUM_CATEGORIES.join(', ')}.`,
+    );
+  }
+  if (input.tags && input.tags.length > 5) {
+    throw new BadRequestException('Tối đa 5 thẻ tag.');
+  }
+  return { title, content };
+}
+
 @Injectable()
 export class CommunityService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async getPosts(category?: string) {
+  /**
+   * Danh sách bài diễn đàn. viewerId (nếu có) → gắn isOwn để client
+   * hiện nút sửa/xóa cho bài của chính mình.
+   */
+  async getPosts(category?: string, viewerId?: string | null) {
     const where = category && category !== 'Tất cả' ? { category } : {};
     const rows = await this.prisma.forumPost.findMany({
       where,
       orderBy: [{ isPinned: 'desc' }, { createdAt: 'desc' }],
     });
-    return rows.map(toOut);
+    return rows.map((p) => ({
+      ...toOut(p),
+      isOwn: Boolean(viewerId && p.authorId === viewerId),
+    }));
   }
 
   async createPost(input: CreateForumPostInput) {
+    const { title, content } = validatePostInput(input);
     const author = input.author;
     const created = await this.prisma.forumPost.create({
       data: {
         id: `post-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`,
-        title: input.title,
-        excerpt: input.content.slice(0, 120) + (input.content.length > 120 ? '...' : ''),
-        content: input.content,
-        authorId: author?.id ?? null,
-        authorName: author?.name ?? 'Khách',
-        authorAvatar:
-          author?.avatar ??
-          'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop&q=80',
+        title,
+        excerpt: content.slice(0, 120) + (content.length > 120 ? '...' : ''),
+        content,
+        authorId: author.id,
+        authorName: author.name,
+        authorAvatar: author.avatar,
         authorRole:
-          author?.role === 'seller' ? 'Người bán' : author?.role === 'admin' ? 'Admin' : 'Người mua',
+          author.role === 'seller' ? 'Người bán' : author.role === 'admin' ? 'Admin' : 'Người mua',
         category: input.category || 'Chia sẻ kinh nghiệm',
         upvotes: 1,
         commentsCount: 0,
@@ -75,7 +119,60 @@ export class CommunityService {
         isPinned: false,
       },
     });
-    return toOut(created);
+    return { ...toOut(created), isOwn: true };
+  }
+
+  /** Sửa bài — chỉ tác giả (authorId khớp userId) được sửa */
+  async updatePost(
+    id: string,
+    userId: string,
+    input: { title?: string; content?: string; category?: string; tags?: string[] },
+  ) {
+    const existing = await this.prisma.forumPost.findUnique({ where: { id } });
+    if (!existing) {
+      throw new NotFoundException('Bài viết không tồn tại.');
+    }
+    if (existing.authorId !== userId) {
+      throw new ForbiddenException('Bạn chỉ có thể sửa bài viết của mình.');
+    }
+    const { title, content } = validatePostInput({
+      title: input.title ?? existing.title,
+      content: input.content ?? existing.content,
+      category: input.category ?? existing.category,
+      tags: input.tags,
+    });
+    const updated = await this.prisma.forumPost.update({
+      where: { id },
+      data: {
+        title,
+        content,
+        excerpt: content.slice(0, 120) + (content.length > 120 ? '...' : ''),
+        ...(input.category ? { category: input.category } : {}),
+        ...(input.tags ? { tags: JSON.stringify(input.tags) } : {}),
+      },
+    });
+    return { ...toOut(updated), isOwn: true };
+  }
+
+  /** Xóa bài — chỉ tác giả được xóa */
+  async deletePost(id: string, userId: string): Promise<void> {
+    const existing = await this.prisma.forumPost.findUnique({ where: { id } });
+    if (!existing) {
+      throw new NotFoundException('Bài viết không tồn tại.');
+    }
+    if (existing.authorId !== userId) {
+      throw new ForbiddenException('Bạn chỉ có thể xóa bài viết của mình.');
+    }
+    await this.prisma.forumPost.delete({ where: { id } });
+  }
+
+  /** Bài của một tác giả (trang seller profile) */
+  async getPostsByAuthor(authorId: string) {
+    const rows = await this.prisma.forumPost.findMany({
+      where: { authorId },
+      orderBy: [{ isPinned: 'desc' }, { createdAt: 'desc' }],
+    });
+    return rows.map(toOut);
   }
 
   async upvotePost(id: string) {

@@ -31,6 +31,8 @@ declare global {
 type Props = {
   /** Vai trò mặc định khi tạo tài khoản mới (gửi kèm lên backend) */
   role?: 'buyer' | 'seller';
+  /** Trang chuyển tới sau khi đăng nhập thành công (mặc định theo role) */
+  redirectTo?: string;
   className?: string;
 };
 
@@ -38,7 +40,7 @@ type Props = {
  * Nút đăng nhập Google (Google Identity Services).
  * Backend verify idToken qua google-auth-library, set JWT cookie httpOnly.
  */
-export function GoogleLoginButton({ role, className }: Props) {
+export function GoogleLoginButton({ role, redirectTo, className }: Props) {
   const { loginWithGoogle } = useRole();
   const btnRef = useRef<HTMLDivElement>(null);
   const [scriptLoaded, setScriptLoaded] = useState(false);
@@ -75,7 +77,7 @@ export function GoogleLoginButton({ role, className }: Props) {
             // update user trong context
             const { data } = json;
             window.location.href =
-              data.role === 'seller' ? '/dashboard' : '/profile';
+              redirectTo ?? (data.role === 'seller' ? '/dashboard' : '/profile');
           } catch (e) {
             console.error(e);
             alert(e instanceof Error ? e.message : 'Đăng nhập Google thất bại');
@@ -114,7 +116,7 @@ export function GoogleLoginButton({ role, className }: Props) {
     return () => {
       cancelled = true;
     };
-  }, [role]);
+  }, [role, redirectTo]);
 
   const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
 
