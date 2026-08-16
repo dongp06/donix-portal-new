@@ -18,6 +18,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
         <nav className="flex flex-wrap items-center gap-2 text-sm" aria-label="Điều hướng quản trị">
           <Button asChild variant="outline" size="sm">
+            <Link href="/admin">Tổng quan</Link>
+          </Button>
+          <Button asChild variant="outline" size="sm">
             <Link href="/admin/posts">Danh sách</Link>
           </Button>
           <Button asChild variant="outline" size="sm">
