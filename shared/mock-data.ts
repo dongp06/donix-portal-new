@@ -1,9 +1,7 @@
 import {
   BotCategory,
   BotItem,
-  Category,
-  ForumPost,
-  Post,
+  PostSeed,
   UserProfile
 } from './types';
 
@@ -66,7 +64,7 @@ export const MOCK_BOTS: BotItem[] = [
       rating: 4.9,
       reputation: 98,
       totalSales: 1420,
-      isVerified: true,
+      isTrusted: false,
       joinedDate: '2024-03-15',
       contact: { zalo: '0987 654 321', telegram: '@devnguyen_pro', messenger: 'm.me/devnguyen_pro', facebook: 'fb.com/devnguyen.pro' },
     },
@@ -82,9 +80,7 @@ export const MOCK_BOTS: BotItem[] = [
       'Dashboard quản lý nhiều Fanpage cùng lúc'
     ],
     pricing: {
-      hourly: 3000,
-      daily: 25000,
-      monthly: 350000
+      monthlyPrice: 350000
     },
     status: 'online',
     rating: 4.9,
@@ -100,7 +96,7 @@ export const MOCK_BOTS: BotItem[] = [
     slug: 'telegram-auto-broadcast-group-puller',
     title: 'Bot Telegram Kéo Mem & Auto Spam Broadcast Group',
     tagline: 'Quét UID thành viên nhóm đối thủ, tự động kéo mem & gửi tin nhắn quảng cáo 500+ group/ngày',
-    description: 'Công cụ Bot Telegram hàng đầu cho Marketer, Crypto Community & Seller. Tự động tìm group theo từ khóa, lọc ra thành viên active 24h qua, gửi tin nhắn DM trực tiếp và hỗ trợ nút bấm Inline nút link.',
+    description: 'Công cụ Bot Telegram cho Marketer, Crypto Seller và đội vận hành. Tự động tìm group theo từ khóa, lọc thành viên active 24h qua, gửi tin nhắn DM trực tiếp và hỗ trợ nút bấm inline.',
     categorySlug: 'telegram',
     categoryName: 'Bot Telegram',
     seller: {
@@ -110,7 +106,7 @@ export const MOCK_BOTS: BotItem[] = [
       rating: 4.8,
       reputation: 96,
       totalSales: 980,
-      isVerified: true,
+      isTrusted: false,
       joinedDate: '2024-01-10',
       contact: { zalo: '0912 345 678', telegram: '@cyberbot_studio' },
     },
@@ -126,9 +122,7 @@ export const MOCK_BOTS: BotItem[] = [
       'Bảng điều khiển Web Cloud không cần cài phần mềm'
     ],
     pricing: {
-      hourly: 5000,
-      daily: 35000,
-      monthly: 450000
+      monthlyPrice: 450000
     },
     status: 'online',
     rating: 4.8,
@@ -141,7 +135,7 @@ export const MOCK_BOTS: BotItem[] = [
   },
   {
     id: 'bot-103',
-    slug: 'discord-community-manager-auto-role',
+    slug: 'discord-post-manager-auto-role',
     title: 'Bot Discord Auto-Role, Spam Server & Thông Báo Signal',
     tagline: 'Tự động phân quyền thành viên, gửi tin nhắn quảng cáo server & thông báo tín hiệu coin/game',
     description: 'Hệ thống Bot Discord toàn diện cho các cộng đồng Gaming, Crypto, Trading & E-learning. Tự động kiểm tra điều kiện cấp Role, phát nhạc HD, đăng bài tự động trên nhiều server và chào mừng mem mới.',
@@ -154,7 +148,7 @@ export const MOCK_BOTS: BotItem[] = [
       rating: 4.95,
       reputation: 99,
       totalSales: 2150,
-      isVerified: true,
+      isTrusted: false,
       joinedDate: '2023-11-05',
       contact: { telegram: '@vn_crypto_tech', phone: '0933 222 111' },
     },
@@ -170,15 +164,13 @@ export const MOCK_BOTS: BotItem[] = [
       'Tích hợp lệnh Slash Command (/help, /verify, /pay)'
     ],
     pricing: {
-      hourly: 4000,
-      daily: 30000,
-      monthly: 390000
+      monthlyPrice: 390000
     },
     status: 'online',
     rating: 4.92,
     reviewCount: 160,
     views: 15230,
-    tags: ['Discord Bot', 'Auto Role', 'Discord Marketing', 'Community Bot'],
+    tags: ['Discord Bot', 'Auto Role', 'Discord Marketing', 'Posts Bot'],
     version: 'v2.1.0',
     systemReqs: 'Token Bot Discord + Quyền Administrator trên Server',
     updatedAt: '2026-07-31'
@@ -198,7 +190,7 @@ export const MOCK_BOTS: BotItem[] = [
       rating: 4.75,
       reputation: 95,
       totalSales: 740,
-      isVerified: false,
+      isTrusted: false,
       joinedDate: '2024-05-20',
       contact: { zalo: '0977 888 999' },
     },
@@ -214,9 +206,7 @@ export const MOCK_BOTS: BotItem[] = [
       'Hỗ trợ quản lý nhiều tài khoản Zalo chạy song song'
     ],
     pricing: {
-      hourly: 3000,
-      daily: 22000,
-      monthly: 290000
+      monthlyPrice: 290000
     },
     status: 'online',
     rating: 4.85,
@@ -242,7 +232,7 @@ export const MOCK_BOTS: BotItem[] = [
       rating: 4.9,
       reputation: 98,
       totalSales: 1420,
-      isVerified: true,
+      isTrusted: false,
       joinedDate: '2024-03-15',
       contact: { zalo: '0987 654 321', telegram: '@devnguyen_pro', messenger: 'm.me/devnguyen_pro', facebook: 'fb.com/devnguyen.pro' },
     },
@@ -258,9 +248,7 @@ export const MOCK_BOTS: BotItem[] = [
       'Định dạng ảnh đính kèm & link sản phẩm mua sắm'
     ],
     pricing: {
-      hourly: 4000,
-      daily: 28000,
-      monthly: 360000
+      monthlyPrice: 360000
     },
     status: 'online',
     rating: 4.88,
@@ -279,114 +267,100 @@ export const MOCK_USER: UserProfile = {
   email: 'minhtuan.dev@donix.vn',
   avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80',
   role: 'buyer',
-  isVerifiedSeller: false,
   bio: 'Chuyên viên Tự động hóa & Khách mua Bot thường xuyên tại Donix',
   joinedDate: '2024-02-01'
 };
 
-export const MOCK_FORUM_POSTS: ForumPost[] = [
+export const MOCK_POSTS: PostSeed[] = [
   {
-    id: 'post-1',
-    title: 'Kinh nghiệm chống khóa nick Zalo khi dùng Bot Spam tin nhắn kết bạn',
-    excerpt: 'Hôm nay mình xin chia sẻ bộ quy tắc đặt Delay & xoay IP Proxy giúp Bot Zalo chạy cả tháng không lo die nick.',
-    content: 'Khi chạy bot Zalo Marketing, điều quan trọng nhất không phải là tốc độ gửi mà là mô phỏng hành vi người dùng thật. Các bạn nên lưu ý: 1. Đặt delay ngẫu nhiên từ 15s-45s giữa mỗi tin nhắn. 2. Dùng xoay Proxy IPv4/IPv6 Dân cư (Residential Proxy). 3. Nuôi nick tối thiểu 7 ngày trước khi bật bot...',
+    id: 'post-demo-1',
+    slug: 'toi-uu-telegram-bot-voi-worker-queue',
+    title: 'Tối ưu Telegram Bot với worker và queue: bài học sau 30 ngày vận hành',
+    excerpt: 'Một checklist thực tế để bot Telegram chạy ổn định, dễ theo dõi và không nghẽn khi lượng tin tăng.',
+    content: 'Sau 30 ngày vận hành bot Telegram cho nhiều kênh, mình tách phần nhận sự kiện khỏi phần xử lý bằng worker và queue. Mỗi job có retry giới hạn, idempotency key và log đủ context để tra lại khi có sự cố. Nếu chạy trên VPS nhỏ, hãy giới hạn concurrency trước khi tăng số worker.',
     authorName: 'CyberBot_Studio',
     authorAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=80',
     authorRole: 'Người bán',
-    category: 'Chia sẻ kinh nghiệm',
+    type: 'share',
+    status: 'published',
+    category: 'telegram',
+    categoryName: 'Telegram',
+    coverImage: 'https://images.unsplash.com/photo-1611746872915-64382b5c76da?w=800&auto=format&fit=crop&q=80',
+    linkedBotId: 'bot-102',
+    views: 428,
     upvotes: 42,
-    commentsCount: 15,
-    createdAt: '2026-07-30',
-    tags: ['Zalo Bot', 'Proxy', 'Spam Safe'],
-    isPinned: true
+    commentsCount: 1,
+    reactionCount: 42,
+    readTimeMinutes: 5,
+    createdAt: '2026-08-15T09:30:00.000Z',
+    tags: ['telegram', 'worker', 'queue'],
+    isPinned: true,
+    isFeatured: true
   },
   {
-    id: 'post-2',
-    title: '[Yêu cầu làm bot] Cần mua Bot tự động crawl tin tuyển dụng IT từ VietnamWorks & TopCV',
-    excerpt: 'Mình cần một người làm bot crawl thông tin công ty, vị trí, mức lương và xuất file Excel mỗi ngày 8h sáng.',
-    content: 'Yêu cầu cụ thể: Chạy bằng Python/Playwright, hỗ trợ proxy để không bị block IP, đẩy dữ liệu vào Google Sheet và thông báo qua Telegram. Ngân sách duy trì tháng khoảng 500k-800k. Anh em nào có sẵn bot hoặc nhận code nhắn mình nhé!',
-    authorName: 'MinhTu_Game99',
+    id: 'post-demo-2',
+    slug: 'can-bot-discord-tu-dong-cap-role-sau-thanh-toan',
+    title: 'Cần bot Discord tự cấp role sau khi thành viên thanh toán',
+    excerpt: 'Mình đang tìm hướng triển khai flow xác nhận thanh toán, cấp role và thu hồi role khi gói hết hạn.',
+    content: 'Mình cần bot Discord nhận webhook từ hệ thống thanh toán, đối chiếu mã đơn rồi cấp role theo gói. Có thể dùng database nhỏ để lưu thời hạn và tự thu hồi role khi hết hạn. Mọi người cho mình xin kinh nghiệm về các điểm cần bảo vệ khi nhận webhook.',
+    authorName: 'Trần Minh Tuấn',
     authorAvatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop&q=80',
     authorRole: 'Người mua',
-    category: 'Yêu cầu làm bot',
+    type: 'question',
+    status: 'published',
+    category: 'discord',
+    categoryName: 'Discord',
+    views: 271,
     upvotes: 19,
-    commentsCount: 8,
-    createdAt: '2026-07-29',
-    tags: ['Crawl Data', 'Python', 'Yêu Cầu Mới']
+    commentsCount: 0,
+    reactionCount: 19,
+    readTimeMinutes: 3,
+    createdAt: '2026-08-14T14:10:00.000Z',
+    tags: ['discord', 'payment', 'webhook']
   },
   {
-    id: 'post-3',
-    title: 'Đã cập nhật Auto Võ Lâm v4.8.2: Sửa lỗi đơ màn hình khi vượt ải 80',
-    excerpt: 'Thông báo update quan trọng cho toàn bộ anh em đang dùng Auto Võ Lâm HNX & Mobile.',
-    content: 'Chào các bạn, bản v4.8.2 đã chính thức phát hành. Bản này sửa triệt để lỗi đứng hình khi gặp Boss hệ Thủy ở ải 80, đồng thời tối ưu thêm 20% dung lượng RAM sử dụng trên LDPlayer. Anh em chỉ cần khởi động lại tool là tự auto update nhé.',
+    id: 'post-demo-3',
+    slug: 'telegram-auto-post-v2-4-da-cap-nhat',
+    title: 'Telegram Auto Post v2.4: thêm retry và theo dõi trạng thái gửi',
+    excerpt: 'Bản cập nhật mới bổ sung retry có kiểm soát, log dễ đọc hơn và dashboard theo dõi từng lịch đăng.',
+    content: 'Telegram Auto Post v2.4 đã phát hành. Lần này hệ thống thêm retry có backoff, cảnh báo khi token hết hạn và bộ lọc theo trạng thái lịch đăng. Seller cũng cập nhật tài liệu migration để các tài khoản đang chạy có thể nâng cấp trong vài phút.',
     authorName: 'DevNguyen_Pro',
     authorAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80',
     authorRole: 'Người bán',
-    category: 'Thảo luận Dev',
-    upvotes: 35,
-    commentsCount: 12,
-    createdAt: '2026-07-28',
-    tags: ['Võ Lâm', 'Update', 'Changelog']
-  }
-];
-
-// ==== Blog ====
-export const MOCK_BLOG_CATEGORIES: Category[] = [
-  { id: 'bc-1', slug: 'chia-se', name: 'Chia sẻ kinh nghiệm', navLabel: 'Chia sẻ', count: 1 },
-  { id: 'bc-2', slug: 'tu-dong-hoa', name: 'Tự động hóa', navLabel: 'Tự động hóa', count: 1 },
-  { id: 'bc-3', slug: 'cong-cu', name: 'Công cụ & Tool', navLabel: 'Công cụ', count: 1 },
-];
-
-export const MOCK_POSTS: Post[] = [
-  {
-    id: 'post-b1',
-    slug: 'cach-chay-bot-zalo-an-toan',
-    title: 'Cách chạy Bot Zalo an toàn, tránh khóa nick khi spam tin nhắn',
-    excerpt: 'Bộ quy tắc đặt delay, xoay proxy và nuôi nick giúp bot Zalo chạy ổn định nhiều tháng.',
-    content: '<p>Khi chạy bot Zalo marketing, điều quan trọng nhất là mô phỏng hành vi người thật.</p><ul><li>Đặt delay ngẫu nhiên 15-45s giữa mỗi tin nhắn.</li><li>Xoay proxy dân cư theo từng phiên.</li><li>Nuôi nick tối thiểu 7 ngày trước khi bật bot.</li></ul>',
+    type: 'bot_update',
+    status: 'published',
+    category: 'automation',
+    categoryName: 'Bot & Automation',
     coverImage: 'https://images.unsplash.com/photo-1518770660439-4636190af475?w=800&auto=format&fit=crop&q=80',
-    categoryId: 'bc-1',
-    categoryName: 'Chia sẻ kinh nghiệm',
-    views: 1284,
-    date: '2026-07-28',
-    isPinned: true,
-    readTimeMinutes: 6,
-    stackLabel: 'Zalo',
-    tagLine: 'Chống khóa nick',
-    relatedSlugs: ['cach-chay-bot-zalo-an-toan'],
+    linkedBotId: 'bot-101',
+    views: 612,
+    upvotes: 35,
+    commentsCount: 0,
+    reactionCount: 35,
+    readTimeMinutes: 3,
+    createdAt: '2026-08-13T08:20:00.000Z',
+    tags: ['update', 'automation', 'changelog']
   },
   {
-    id: 'post-b2',
-    slug: 'bot-telegram-keo-mem',
-    title: 'Bot Telegram kéo mem vào group không dính spam filter',
-    excerpt: 'Chiến thuật kéo mem bằng bot Telegram mà vẫn giữ tài khoản an toàn.',
-    content: '<p>Kéo mem group Telegram cần chia nhỏ lịch và thêm phản hồi tự nhiên.</p><p>Tránh gửi cùng một nội dung lặp lại liên tục trong khung giờ ngắn.</p>',
-    coverImage: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=800&auto=format&fit=crop&q=80',
-    categoryId: 'bc-2',
-    categoryName: 'Tự động hóa',
-    views: 952,
-    date: '2026-07-22',
-    isPinned: false,
-    readTimeMinutes: 4,
-    stackLabel: 'Telegram',
-    tagLine: 'Kéo mem group',
-    relatedSlugs: ['cach-chay-bot-zalo-an-toan'],
-  },
-  {
-    id: 'post-b3',
-    slug: 'top-5-tool-tang-tuong-tac-tiktok',
-    title: 'Top 5 tool tăng tương tác TikTok miễn phí năm 2026',
-    excerpt: 'Tổng hợp những tool hỗ trợ tăng view, follow và tương tác TikTok tốt nhất hiện nay.',
-    content: '<p>Chúng tôi đã thử và tổng hợp 5 công cụ hỗ trợ TikTok.</p><p>Lưu ý chọn tool có proxy dân cư để an toàn tài khoản.</p>',
-    coverImage: 'https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?w=800&auto=format&fit=crop&q=80',
-    categoryId: 'bc-3',
-    categoryName: 'Công cụ & Tool',
-    views: 2410,
-    date: '2026-07-15',
-    isPinned: true,
-    readTimeMinutes: 8,
-    stackLabel: 'TikTok',
-    tagLine: 'Review tool',
-    relatedSlugs: ['bot-telegram-keo-mem'],
-  },
+    id: 'post-demo-4',
+    slug: 'canh-bao-kiem-tra-quyen-truoc-khi-cap-token-bot',
+    title: 'Cảnh báo: kiểm tra quyền trước khi cấp token cho bot bên thứ ba',
+    excerpt: 'Một checklist ngắn để giảm rủi ro khi kết nối bot vào group, server hoặc tài khoản doanh nghiệp.',
+    content: 'Trước khi cấp token hoặc quyền quản trị, hãy kiểm tra seller, phạm vi quyền, nơi lưu secret và cách thu hồi quyền. Không gửi token vào chat công khai, không dùng lại secret giữa nhiều bot và luôn yêu cầu hướng dẫn xóa dữ liệu khi ngừng sử dụng.',
+    authorName: 'thuebot.org',
+    authorAvatar: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=100&auto=format&fit=crop&q=80',
+    authorRole: 'Admin',
+    type: 'warning',
+    status: 'published',
+    category: 'warning',
+    categoryName: 'Cảnh báo',
+    views: 903,
+    upvotes: 57,
+    commentsCount: 0,
+    reactionCount: 57,
+    readTimeMinutes: 2,
+    createdAt: '2026-08-12T07:45:00.000Z',
+    tags: ['security', 'trust', 'seller'],
+    isFeatured: true
+  }
 ];

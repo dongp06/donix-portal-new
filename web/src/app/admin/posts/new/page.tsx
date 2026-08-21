@@ -1,5 +1,7 @@
-import { PostEditor } from '@/components/admin/PostEditor';
+import { AdminPostEditor } from '@/components/admin/AdminPostEditor';
+import { getAdminAccess } from '@/lib/admin-server';
 
-export default function AdminNewPostPage() {
-  return <PostEditor mode="create" />;
+export default async function AdminNewPostPage() {
+  const access = await getAdminAccess();
+  return <AdminPostEditor initialRole={access?.staff.role} />;
 }

@@ -15,6 +15,7 @@ import {
   Send,
   Phone,
   Facebook,
+  Globe2,
   Link2,
 } from 'lucide-react';
 import { useRole } from '@/context/RoleContext';
@@ -22,19 +23,27 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import type { SellerProfile } from '@shared/types';
+import { api } from '@/lib/api-client';
+import { MediaImageUpload } from '@/components/media/MediaImageUpload';
 
 /** Schema form Hồ sơ shop — khớp với body PUT /api/sellers/me/profile */
+const profileImageReference = z.string().trim().refine(
+  (value) => !value || /^(?:attachment:\/\/[a-zA-Z0-9_-]+|\/api\/media\/[a-zA-Z0-9_-]+|https?:\/\/[^\s"'<>]+)$/i.test(value),
+  'Ảnh phải là URL http(s) hoặc attachment media hợp lệ',
+);
+
 const profileSchema = z.object({
   shopName: z.string().trim().min(1, 'Vui lòng nhập tên shop'),
   bio: z.string().trim().max(500, 'Tối đa 500 ký tự'),
-  avatar: z.union([z.string().trim().url('Địa chỉ URL không hợp lệ'), z.literal('')]),
-  banner: z.union([z.string().trim().url('Địa chỉ URL không hợp lệ'), z.literal('')]),
+  avatar: profileImageReference,
+  banner: profileImageReference,
   contact: z.object({
     zalo: z.string().trim().max(200, 'Tối đa 200 ký tự'),
     telegram: z.string().trim().max(200, 'Tối đa 200 ký tự'),
     phone: z.string().trim().max(50, 'Tối đa 50 ký tự'),
+    messenger: z.string().trim().max(200, 'Tối đa 200 ký tự'),
     facebook: z.string().trim().max(200, 'Tối đa 200 ký tự'),
+    website: z.string().trim().max(200, 'Tối đa 200 ký tự'),
   }),
 });
 
@@ -57,18 +66,22 @@ export interface SellerMeProfile {
  * Cache theo phiên: sau khi lưu profile, giữ response để prefill cho lần sau
  * (Radix Tabs unmount tab khi chuyển — cần cache để không mất dữ liệu vừa lưu).
  */
-let cachedProfile: { userId: string; profile: SellerMeProfile } | null = null;
+const cachedProfiles = new Map<string, SellerMeProfile>();
 
 const CONTACT_FIELDS = [
   { key: 'zalo', label: 'Zalo', icon: MessageCircle, placeholder: 'Số điện thoại hoặc ID Zalo' },
   { key: 'telegram', label: 'Telegram', icon: Send, placeholder: 'Username hoặc số điện thoại' },
   { key: 'phone', label: 'Số điện thoại', icon: Phone, placeholder: 'Số điện thoại liên hệ' },
+  { key: 'messenger', label: 'Messenger', icon: MessageCircle, placeholder: 'Username hoặc link Messenger' },
   { key: 'facebook', label: 'Facebook', icon: Facebook, placeholder: 'Link hoặc username Facebook' },
+  { key: 'website', label: 'Website', icon: Globe2, placeholder: 'https://tenmien.vn' },
 ] as const;
 
 export function ProfileTab() {
   const { user } = useRole();
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
   const [saving, setSaving] = useState(false);
   const [slug, setSlug] = useState('');
 
@@ -76,6 +89,8 @@ export function ProfileTab() {
     register,
     handleSubmit,
     reset,
+    setValue,
+    watch,
     formState: { errors },
   } = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
@@ -84,7 +99,7 @@ export function ProfileTab() {
       bio: '',
       avatar: '',
       banner: '',
-      contact: { zalo: '', telegram: '', phone: '', facebook: '' },
+      contact: { zalo: '', telegram: '', phone: '', messenger: '', facebook: '', website: '' },
     },
   });
 
@@ -93,10 +108,12 @@ export function ProfileTab() {
     let cancelled = false;
     (async () => {
       setLoading(true);
+      setLoadError(null);
       try {
         // Đã lưu trong phiên này — dùng cache để không gọi API lại
-        if (cachedProfile?.userId === user.id) {
-          const p = cachedProfile.profile;
+        const cachedProfile = cachedProfiles.get(user.id);
+        if (cachedProfile) {
+          const p = cachedProfile;
           if (!cancelled) {
             reset({
               shopName: p.shopName ?? user.name,
@@ -107,7 +124,9 @@ export function ProfileTab() {
                 zalo: p.contact?.zalo ?? user.contact?.zalo ?? '',
                 telegram: p.contact?.telegram ?? user.contact?.telegram ?? '',
                 phone: p.contact?.phone ?? user.contact?.phone ?? '',
+                messenger: p.contact?.messenger ?? user.contact?.messenger ?? '',
                 facebook: p.contact?.facebook ?? user.contact?.facebook ?? '',
+                website: p.contact?.website ?? user.contact?.website ?? '',
               },
             });
             setSlug(p.slug ?? '');
@@ -115,30 +134,29 @@ export function ProfileTab() {
           return;
         }
 
-        // Không có GET profile riêng — dùng API công khai /api/sellers/:id để prefill
-        const res = await fetch(`/api/sellers/${user.id}`, { credentials: 'include' });
-        const json = await res.json();
+        const profile = await api<SellerMeProfile>('/api/sellers/me/profile', {
+          credentials: 'include',
+          cache: 'no-store',
+        });
         if (!cancelled) {
-          if (res.ok && json.success && json.data) {
-            const profile = json.data as SellerProfile;
-            const u = profile.user;
-            reset({
-              shopName: u.name ?? '',
-              bio: u.bio ?? '',
-              avatar: u.avatar ?? '',
-              banner: '',
-              contact: {
-                zalo: u.contact?.zalo ?? '',
-                telegram: u.contact?.telegram ?? '',
-                phone: u.contact?.phone ?? '',
-                facebook: u.contact?.facebook ?? '',
-              },
-            });
-            setSlug(u.slug ?? '');
-          }
+          reset({
+            shopName: profile.shopName ?? user.name,
+            bio: profile.bio ?? user.bio ?? '',
+            avatar: profile.avatar ?? user.avatar ?? '',
+            banner: profile.banner ?? '',
+            contact: {
+              zalo: profile.contact?.zalo ?? user.contact?.zalo ?? '',
+              telegram: profile.contact?.telegram ?? user.contact?.telegram ?? '',
+              phone: profile.contact?.phone ?? user.contact?.phone ?? '',
+              messenger: profile.contact?.messenger ?? user.contact?.messenger ?? '',
+              facebook: profile.contact?.facebook ?? user.contact?.facebook ?? '',
+              website: profile.contact?.website ?? user.contact?.website ?? '',
+            },
+          });
+          setSlug(profile.slug ?? '');
         }
-      } catch {
-        // API lỗi — giữ form rỗng để user tự nhập
+      } catch (error) {
+        if (!cancelled) setLoadError(error instanceof Error ? error.message : 'Không thể tải hồ sơ seller.');
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -147,16 +165,17 @@ export function ProfileTab() {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user.id]);
+  }, [reloadKey, user.id]);
 
   const onSubmit = async (values: ProfileFormValues) => {
     if (saving) return;
     setSaving(true);
     try {
-      const res = await fetch('/api/sellers/me/profile', {
+      const profile = await api<SellerMeProfile>('/api/sellers/me/profile', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
+        cache: 'no-store',
         body: JSON.stringify({
           shopName: values.shopName,
           bio: values.bio,
@@ -166,16 +185,13 @@ export function ProfileTab() {
             zalo: values.contact.zalo,
             telegram: values.contact.telegram,
             phone: values.contact.phone,
+            messenger: values.contact.messenger,
             facebook: values.contact.facebook,
+            website: values.contact.website,
           },
         }),
       });
-      const json = await res.json();
-      if (!res.ok || !json.success || !json.data) {
-        throw new Error(json.error || 'Lưu hồ sơ thất bại');
-      }
-      const profile = json.data as SellerMeProfile;
-      cachedProfile = { userId: user.id, profile };
+      cachedProfiles.set(user.id, profile);
       if (profile.slug) setSlug(profile.slug);
       toast.success('Đã lưu hồ sơ');
     } catch (err) {
@@ -192,6 +208,17 @@ export function ProfileTab() {
           <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
           Đang tải hồ sơ…
         </p>
+      </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div className="flex min-h-[40vh] flex-col items-center justify-center gap-4 rounded-2xl border border-destructive/30 bg-destructive/5 p-6 text-center">
+        <p className="text-sm font-medium text-destructive">{loadError}</p>
+        <Button type="button" variant="outline" onClick={() => setReloadKey((value) => value + 1)}>
+          Thử lại
+        </Button>
       </div>
     );
   }
@@ -260,10 +287,16 @@ export function ProfileTab() {
         <div className="grid gap-6 sm:grid-cols-2">
           {/* Avatar */}
           <div className="grid gap-2">
-            <Label htmlFor="profile-avatar">Ảnh đại diện (URL)</Label>
+            <Label htmlFor="profile-avatar">Ảnh đại diện (upload local hoặc URL)</Label>
+            <MediaImageUpload
+              value={watch('avatar')}
+              onChange={(value) => setValue('avatar', value, { shouldDirty: true, shouldValidate: true })}
+              usage="bot_logo"
+              label="Tải ảnh đại diện lên"
+            />
             <Input
               id="profile-avatar"
-              type="url"
+              type="text"
               placeholder="https://…/avatar.jpg"
               maxLength={500}
               aria-invalid={!!errors.avatar}
@@ -276,10 +309,16 @@ export function ProfileTab() {
 
           {/* Banner */}
           <div className="grid gap-2">
-            <Label htmlFor="profile-banner">Ảnh bìa (URL, tùy chọn)</Label>
+            <Label htmlFor="profile-banner">Ảnh bìa (upload local hoặc URL, tùy chọn)</Label>
+            <MediaImageUpload
+              value={watch('banner')}
+              onChange={(value) => setValue('banner', value, { shouldDirty: true, shouldValidate: true })}
+              usage="bot_cover"
+              label="Tải ảnh bìa lên"
+            />
             <Input
               id="profile-banner"
-              type="url"
+              type="text"
               placeholder="https://…/banner.jpg"
               maxLength={500}
               aria-invalid={!!errors.banner}

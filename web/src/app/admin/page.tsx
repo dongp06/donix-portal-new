@@ -1,304 +1,138 @@
 'use client';
 
 import Link from 'next/link';
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { ArrowRight, CheckCircle2, Clock3, RefreshCw, ShieldCheck, Star, Users, XCircle } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
+import { AlertTriangle, ArrowRight, Bot, CheckCircle2, Clock3, MessageSquare, RefreshCw, ShieldCheck } from 'lucide-react';
 
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
 import { apiAdmin } from '@/lib/api-client';
 
-type VerificationStatus = 'pending' | 'approved' | 'under_review' | 'rejected' | 'expired';
-
-type VerificationRow = {
+type QueueItem = {
   id: string;
-  status: VerificationStatus;
-  submittedAt: string;
-  user: {
-    id: string;
-    name: string;
-    email: string;
-    avatar?: string | null;
-    joinedDate: string;
-  };
-  trustScore: number;
-  reviewCount: number;
-  avgRating: number;
+  type: string;
+  targetType: string;
+  targetId: string;
+  targetName: string;
+  reason: string;
+  priority: string;
+  status: string;
+  assignedTo?: string | null;
+  createdAt: string;
+  reference?: string;
 };
 
-const STATUS_LABELS: Record<VerificationStatus, string> = {
-  pending: 'Chờ duyệt',
-  approved: 'Đã duyệt',
-  under_review: 'Đang xem xét',
-  rejected: 'Từ chối',
-  expired: 'Hết hạn',
+type Overview = {
+  needsAttention: { botApprovals: number; trustRequests: number; reports: number; riskyReviews: number };
+  highPriority: QueueItem[];
+  activityToday: { botsUpdated: number; sellersJoined: number; reportsCreated: number; postsPending: number };
+  marketplace: { bots: number; activeBots: number; sellers: number; trustedSellers: number; posts: number; comments: number };
+  staff: { total: number };
+  generatedAt: string;
 };
 
-function formatDate(value?: string): string {
-  if (!value) return '—';
+const priorityTone: Record<string, string> = {
+  critical: 'bg-[#dc3545]/10 text-[#b42332]',
+  high: 'bg-[#e5a100]/15 text-[#8a6100]',
+  medium: 'bg-[#1677ff]/10 text-[#145dca]',
+  low: 'bg-[#69707d]/10 text-[#69707d]',
+};
+
+const priorityLabel: Record<string, string> = { critical: 'Critical', high: 'High', medium: 'Medium', low: 'Low' };
+
+function formatNumber(value: number): string {
+  return value.toLocaleString('vi-VN');
+}
+
+function formatTime(value: string): string {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return '—';
-  return date.toLocaleDateString('vi-VN', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-  });
+  return date.toLocaleString('vi-VN', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
 }
 
-function statusTone(status: VerificationStatus): string {
-  switch (status) {
-    case 'approved':
-      return 'border-emerald-500/30 bg-emerald-500/10 text-emerald-500';
-    case 'rejected':
-      return 'border-destructive/30 bg-destructive/10 text-destructive';
-    case 'expired':
-      return 'border-border bg-muted text-muted-foreground';
-    case 'under_review':
-      return 'border-amber-500/30 bg-amber-500/10 text-amber-600';
-    default:
-      return 'border-brand/30 bg-brand/10 text-brand';
-  }
-}
-
-function StatCard({
-  label,
-  value,
-  description,
-  icon: Icon,
-  tone,
-}: {
-  label: string;
-  value: string;
-  description: string;
-  icon: typeof ShieldCheck;
-  tone: string;
-}) {
+function ActionCard({ href, label, value, description, icon: Icon, tone }: { href: string; label: string; value: number; description: string; icon: typeof Bot; tone: string }) {
   return (
-    <Card>
-      <CardContent className="flex items-start justify-between gap-4 p-5">
-        <div className="space-y-2">
-          <p className="text-sm text-muted-foreground">{label}</p>
-          <p className="font-display text-3xl font-bold tracking-tight text-foreground">{value}</p>
-          <p className="text-xs text-muted-foreground">{description}</p>
+    <Link href={href} className="group rounded-xl border border-[#e5e7eb] bg-white p-5 transition-[border-color,box-shadow] hover:border-[#1677ff]/35 hover:shadow-[0_10px_30px_-20px_rgba(18,21,27,.45)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1677ff]">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-[13px] font-semibold text-[#69707d]">{label}</p>
+          <p className="mt-2 text-3xl font-bold tracking-tight text-[#12151b]">{formatNumber(value)}</p>
         </div>
-        <span className={`rounded-xl border p-2.5 ${tone}`}>
-          <Icon className="h-5 w-5" aria-hidden />
-        </span>
-      </CardContent>
-    </Card>
+        <span className={`rounded-lg p-2.5 ${tone}`}><Icon className="h-5 w-5" aria-hidden /></span>
+      </div>
+      <div className="mt-4 flex items-center justify-between gap-3 text-xs text-[#69707d]">
+        <span>{description}</span>
+        <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" aria-hidden />
+      </div>
+    </Link>
   );
+}
+
+function Metric({ label, value, detail }: { label: string; value: number; detail: string }) {
+  return <div className="rounded-xl border border-[#e5e7eb] bg-white p-5"><p className="text-xs font-semibold text-[#69707d]">{label}</p><p className="mt-2 text-2xl font-bold tracking-tight text-[#12151b]">{formatNumber(value)}</p><p className="mt-1 text-xs text-[#8b929d]">{detail}</p></div>;
 }
 
 export default function AdminDashboardPage() {
-  const [rows, setRows] = useState<VerificationRow[] | null>(null);
+  const [data, setData] = useState<Overview | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
+    setLoading(true);
     setError(null);
     try {
-      const data = await apiAdmin<VerificationRow[]>('/api/admin/verifications');
-      setRows(data);
+      setData(await apiAdmin<Overview>('/api/admin/overview'));
     } catch (cause) {
-      setRows([]);
-      setError(cause instanceof Error ? cause.message : 'Không tải được dữ liệu Trust Seller.');
+      setError(cause instanceof Error ? cause.message : 'Không tải được tổng quan vận hành.');
+    } finally {
+      setLoading(false);
     }
   }, []);
 
-  useEffect(() => {
-    void load();
-  }, [load]);
+  useEffect(() => { void load(); }, [load]);
 
-  const stats = useMemo(() => {
-    const data = rows ?? [];
-    const averageScore = data.length
-      ? Math.round(data.reduce((sum, row) => sum + row.trustScore, 0) / data.length)
-      : 0;
-    return {
-      total: data.length,
-      pending: data.filter((row) => row.status === 'pending').length,
-      approved: data.filter((row) => row.status === 'approved').length,
-      underReview: data.filter((row) => row.status === 'under_review').length,
-      averageScore,
-    };
-  }, [rows]);
+  if (loading && !data) {
+    return <div className="space-y-8" aria-busy="true"><div className="h-20 animate-pulse rounded-xl bg-[#e9edf2]" /><div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">{Array.from({ length: 4 }, (_, index) => <div key={index} className="h-36 animate-pulse rounded-xl bg-[#e9edf2]" />)}</div><div className="h-72 animate-pulse rounded-xl bg-[#e9edf2]" /></div>;
+  }
 
-  const reviewQueue = useMemo(
-    () =>
-      (rows ?? [])
-        .filter((row) => row.status === 'pending' || row.status === 'under_review')
-        .slice(0, 5),
-    [rows],
-  );
-
-  if (rows === null) {
-    return (
-      <div className="space-y-6">
-        <div className="space-y-2">
-          <Skeleton className="h-8 w-56" />
-          <Skeleton className="h-4 w-96 max-w-full" />
-        </div>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {Array.from({ length: 4 }, (_, index) => (
-            <Skeleton key={index} className="h-36 rounded-xl" />
-          ))}
-        </div>
-        <Skeleton className="h-64 rounded-xl" />
-      </div>
-    );
+  if (!data) {
+    return <div className="rounded-xl border border-[#f0b4ba] bg-[#fff4f4] p-6 text-sm text-[#b42332]"><p>{error ?? 'Không tải được dữ liệu.'}</p><button type="button" onClick={() => void load()} className="mt-4 inline-flex min-h-10 items-center gap-2 rounded-lg bg-[#b42332] px-4 py-2 font-semibold text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b42332]"><RefreshCw className="h-4 w-4" aria-hidden /> Thử lại</button></div>;
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div className="flex flex-wrap items-end justify-between gap-4">
-        <div className="space-y-2">
-          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-brand">Trust operations</p>
-          <h2 className="font-display text-3xl font-bold tracking-tight text-foreground">Tổng quan Trust Seller</h2>
-          <p className="max-w-2xl text-sm leading-relaxed text-muted-foreground">
-            Theo dõi các hồ sơ xác minh đã được gửi và xử lý hàng đợi Trust Seller bằng dữ liệu thực tế.
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <Button type="button" variant="outline" size="sm" onClick={() => void load()}>
-            <RefreshCw aria-hidden />
-            Làm mới
-          </Button>
-          <Button asChild size="sm">
-            <Link href="/admin/verifications">
-              Mở hàng đợi
-              <ArrowRight aria-hidden />
-            </Link>
-          </Button>
-        </div>
+        <div><p className="text-sm font-semibold text-[#1677ff]">Operations Console</p><h1 className="mt-2 text-3xl font-bold tracking-tight text-[#12151b] sm:text-4xl">Tổng quan vận hành</h1><p className="mt-2 max-w-2xl text-sm text-[#69707d]">Hôm nay có gì cần xử lý trên thuebot.org?</p></div>
+        <button type="button" onClick={() => void load()} disabled={loading} className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-[#dfe3e8] bg-white px-3.5 py-2 text-sm font-semibold text-[#36404d] transition-colors hover:border-[#1677ff]/40 hover:text-[#1677ff] disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1677ff]"><RefreshCw className={loading ? 'h-4 w-4 animate-spin' : 'h-4 w-4'} aria-hidden /> Làm mới</button>
       </div>
 
-      {error ? (
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive">
-          <p>{error}</p>
-          <Button type="button" variant="secondary" size="sm" onClick={() => void load()}>
-            Thử lại
-          </Button>
+      {error ? <div className="rounded-lg border border-[#f0b4ba] bg-[#fff4f4] px-4 py-3 text-sm text-[#b42332]">{error}</div> : null}
+
+      <section aria-labelledby="needs-attention">
+        <div className="mb-4 flex items-center justify-between gap-3"><h2 id="needs-attention" className="text-lg font-bold text-[#12151b]">Cần xử lý</h2><Link href="/admin/moderation" className="text-sm font-semibold text-[#1677ff] hover:underline">Mở hàng đợi <ArrowRight className="inline h-4 w-4" aria-hidden /></Link></div>
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <ActionCard href="/admin/bots?status=pending" label="Bot chờ duyệt" value={data.needsAttention.botApprovals} description="Listing cần kiểm tra" icon={Bot} tone="bg-[#f58200]/10 text-[#c86a00]" />
+          <ActionCard href="/admin/verifications" label="Trust requests" value={data.needsAttention.trustRequests} description="Hồ sơ seller chờ review" icon={ShieldCheck} tone="bg-[#1677ff]/10 text-[#1677ff]" />
+          <ActionCard href="/admin/reports" label="Report chưa xử lý" value={data.needsAttention.reports} description="Báo cáo đang mở" icon={AlertTriangle} tone="bg-[#dc3545]/10 text-[#b42332]" />
+          <ActionCard href="/admin/reviews" label="Review rủi ro cao" value={data.needsAttention.riskyReviews} description="Rating 1–2 cần xem" icon={MessageSquare} tone="bg-[#e5a100]/15 text-[#8a6100]" />
         </div>
-      ) : null}
+      </section>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard
-          label="Hồ sơ đã nộp"
-          value={String(stats.total)}
-          description="Tổng số verification trong hệ thống"
-          icon={Users}
-          tone="border-sky-500/30 bg-sky-500/10 text-sky-500"
-        />
-        <StatCard
-          label="Chờ duyệt"
-          value={String(stats.pending)}
-          description="Cần admin kiểm tra"
-          icon={Clock3}
-          tone="border-brand/30 bg-brand/10 text-brand"
-        />
-        <StatCard
-          label="Đã xác minh"
-          value={String(stats.approved)}
-          description="Verification còn hiệu lực theo hồ sơ"
-          icon={CheckCircle2}
-          tone="border-emerald-500/30 bg-emerald-500/10 text-emerald-500"
-        />
-        <StatCard
-          label="Điểm trung bình"
-          value={`${stats.averageScore}/100`}
-          description="Trên các hồ sơ đã nộp"
-          icon={Star}
-          tone="border-amber-500/30 bg-amber-500/10 text-amber-500"
-        />
+      <section aria-labelledby="high-priority" className="rounded-xl border border-[#e5e7eb] bg-white">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#edf0f2] px-5 py-4 sm:px-6"><div><h2 id="high-priority" className="font-bold text-[#12151b]">Cần xử lý gấp</h2><p className="mt-1 text-xs text-[#69707d]">Các tín hiệu có mức ưu tiên cao nhất trong hàng đợi.</p></div><span className="rounded-full bg-[#f7f8fa] px-2.5 py-1 text-xs font-semibold text-[#69707d]">{data.highPriority.length} mục</span></div>
+        {data.highPriority.length ? <div className="divide-y divide-[#edf0f2]">{data.highPriority.map((item) => <Link key={item.id} href={item.targetType === 'case' ? `/admin/cases/${item.targetId}` : '/admin/moderation'} className="flex flex-wrap items-center gap-4 px-5 py-4 transition-colors hover:bg-[#fbfcfd] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#1677ff] sm:px-6"><div className="flex min-w-0 flex-1 items-center gap-3"><span className={`rounded-md px-2 py-1 text-[10px] font-bold uppercase ${priorityTone[item.priority] ?? priorityTone.medium}`}>{priorityLabel[item.priority] ?? item.priority}</span><div className="min-w-0"><p className="truncate text-sm font-bold text-[#12151b]">{item.targetName}</p><p className="mt-0.5 truncate text-xs text-[#69707d]">{item.reason} · {formatTime(item.createdAt)}</p></div></div><span className="text-xs font-semibold text-[#1677ff]">Mở case <ArrowRight className="inline h-3.5 w-3.5" aria-hidden /></span></Link>)}</div> : <div className="px-6 py-12 text-center"><CheckCircle2 className="mx-auto h-8 w-8 text-[#13b981]" aria-hidden /><p className="mt-3 text-sm font-semibold text-[#12151b]">Chưa có tín hiệu ưu tiên cao</p><p className="mt-1 text-xs text-[#69707d]">Hàng đợi đang trong trạng thái ổn định.</p></div>}
+      </section>
+
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+        <section aria-labelledby="activity" className="rounded-xl border border-[#e5e7eb] bg-white p-5 sm:p-6"><h2 id="activity" className="font-bold text-[#12151b]">Hoạt động hôm nay</h2><p className="mt-1 text-xs text-[#69707d]">Dữ liệu được tổng hợp từ các module đang vận hành.</p><div className="mt-5 grid grid-cols-2 gap-3"><Metric label="Bot cập nhật" value={data.activityToday.botsUpdated} detail="listing có thay đổi" /><Metric label="Seller mới" value={data.activityToday.sellersJoined} detail="tham gia hôm nay" /><Metric label="Report mới" value={data.activityToday.reportsCreated} detail="báo cáo được tạo" /><Metric label="Post chờ duyệt" value={data.activityToday.postsPending} detail="nội dung pending" /></div></section>
+        <section aria-labelledby="marketplace-health" className="rounded-xl border border-[#e5e7eb] bg-white p-5 sm:p-6"><div className="flex items-start justify-between gap-3"><div><h2 id="marketplace-health" className="font-bold text-[#12151b]">Marketplace</h2><p className="mt-1 text-xs text-[#69707d]">Quy mô và trạng thái hiện tại.</p></div><Link href="/admin/analytics" className="text-xs font-semibold text-[#1677ff] hover:underline">Analytics <ArrowRight className="inline h-3.5 w-3.5" aria-hidden /></Link></div><div className="mt-5 grid grid-cols-2 gap-3"><Metric label="Bot đang hoạt động" value={data.marketplace.activeBots} detail={`trên ${formatNumber(data.marketplace.bots)} listing`} /><Metric label="Seller active" value={data.marketplace.sellers} detail={`${formatNumber(data.marketplace.trustedSellers)} Trusted Seller`} /><Metric label="Posts" value={data.marketplace.posts} detail="nội dung không bị gỡ" /><Metric label="Bình luận" value={data.marketplace.comments} detail="trên marketplace" /></div></section>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_18rem]">
-        <Card>
-          <CardHeader className="flex flex-row items-start justify-between gap-4 space-y-0">
-            <div className="space-y-1.5">
-              <CardTitle>Hàng đợi cần xử lý</CardTitle>
-              <CardDescription>Hồ sơ pending và under review mới nhất.</CardDescription>
-            </div>
-            <Badge variant="outline">{stats.pending + stats.underReview} hồ sơ</Badge>
-          </CardHeader>
-          <CardContent>
-            {reviewQueue.length === 0 ? (
-              <div className="rounded-lg border border-dashed border-border px-6 py-10 text-center">
-                <ShieldCheck className="mx-auto h-8 w-8 text-emerald-500" aria-hidden />
-                <p className="mt-3 font-medium text-foreground">Không có hồ sơ cần xử lý</p>
-                <p className="mt-1 text-sm text-muted-foreground">Hàng đợi hiện đang trống.</p>
-              </div>
-            ) : (
-              <div className="divide-y divide-border rounded-lg border border-border">
-                {reviewQueue.map((row) => (
-                  <div key={row.id} className="flex flex-wrap items-center justify-between gap-4 px-4 py-4">
-                    <div className="flex min-w-0 items-center gap-3">
-                      {row.user.avatar ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={row.user.avatar}
-                          alt=""
-                          className="h-10 w-10 shrink-0 rounded-full border border-border object-cover"
-                        />
-                      ) : (
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-muted text-sm font-semibold text-muted-foreground">
-                          {row.user.name.trim().charAt(0).toUpperCase() || '?'}
-                        </div>
-                      )}
-                      <div className="min-w-0">
-                        <p className="truncate font-medium text-foreground">{row.user.name}</p>
-                        <p className="truncate text-xs text-muted-foreground">{row.user.email}</p>
-                        <p className="mt-1 text-xs text-muted-foreground">
-                          Nộp {formatDate(row.submittedAt)} · {row.reviewCount} đánh giá · {row.avgRating.toFixed(1)}/5
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="text-right">
-                        <p className="font-semibold text-foreground">{Math.round(row.trustScore)}/100</p>
-                        <Badge className={statusTone(row.status)} variant="outline">
-                          {STATUS_LABELS[row.status]}
-                        </Badge>
-                      </div>
-                      <Button asChild size="sm" variant="outline">
-                        <Link href="/admin/verifications">Xem</Link>
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+      <section aria-labelledby="moderation-queue" className="rounded-xl border border-[#e5e7eb] bg-white">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#edf0f2] px-5 py-4 sm:px-6"><div><h2 id="moderation-queue" className="font-bold text-[#12151b]">Moderation queue</h2><p className="mt-1 text-xs text-[#69707d]">Report, trust request và case được gom vào một hàng đợi.</p></div><Link href="/admin/moderation" className="text-sm font-semibold text-[#1677ff] hover:underline">Xem toàn bộ <ArrowRight className="inline h-4 w-4" aria-hidden /></Link></div>
+        <div className="overflow-x-auto"><table className="w-full min-w-[680px] text-left text-sm"><thead className="bg-[#fbfcfd] text-xs font-semibold text-[#69707d]"><tr><th className="px-5 py-3 sm:px-6">Loại</th><th className="px-5 py-3">Target</th><th className="px-5 py-3">Priority</th><th className="px-5 py-3">Assigned</th><th className="px-5 py-3">Chờ từ</th><th className="px-5 py-3 sm:px-6"><span className="sr-only">Mở</span></th></tr></thead><tbody className="divide-y divide-[#edf0f2]">{data.highPriority.slice(0, 5).map((item) => <tr key={item.id} className="transition-colors hover:bg-[#fbfcfd]"><td className="px-5 py-4 text-xs font-semibold text-[#69707d] sm:px-6">{item.type}</td><td className="max-w-[260px] truncate px-5 py-4 font-semibold text-[#12151b]">{item.targetName}</td><td className="px-5 py-4"><span className={`rounded-md px-2 py-1 text-[10px] font-bold uppercase ${priorityTone[item.priority] ?? priorityTone.medium}`}>{priorityLabel[item.priority] ?? item.priority}</span></td><td className="px-5 py-4 text-xs text-[#69707d]">{item.assignedTo ?? 'Chưa giao'}</td><td className="px-5 py-4 text-xs text-[#69707d]">{formatTime(item.createdAt)}</td><td className="px-5 py-4 text-right sm:px-6"><Link href={item.targetType === 'case' ? `/admin/cases/${item.targetId}` : '/admin/moderation'} className="font-semibold text-[#1677ff] hover:underline">Mở</Link></td></tr>)}</tbody></table></div>
+        {!data.highPriority.length ? <div className="px-6 py-10 text-center text-sm text-[#69707d]">Chưa có mục cần hiển thị.</div> : null}
+      </section>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Trạng thái</CardTitle>
-            <CardDescription>Phân loại hồ sơ hiện có.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {(['pending', 'under_review', 'approved', 'rejected', 'expired'] as VerificationStatus[]).map((status) => {
-              const count = (rows ?? []).filter((row) => row.status === status).length;
-              return (
-                <div key={status} className="flex items-center justify-between gap-3 text-sm">
-                  <span className="flex items-center gap-2 text-muted-foreground">
-                    {status === 'approved' ? (
-                      <CheckCircle2 className="h-4 w-4 text-emerald-500" aria-hidden />
-                    ) : status === 'rejected' || status === 'expired' ? (
-                      <XCircle className="h-4 w-4 text-muted-foreground" aria-hidden />
-                    ) : (
-                      <Clock3 className="h-4 w-4 text-brand" aria-hidden />
-                    )}
-                    {STATUS_LABELS[status]}
-                  </span>
-                  <span className="font-semibold text-foreground">{count}</span>
-                </div>
-              );
-            })}
-          </CardContent>
-        </Card>
-      </div>
+      <p className="flex items-center gap-2 text-xs text-[#8b929d]"><Clock3 className="h-3.5 w-3.5" aria-hidden /> Cập nhật lúc {formatTime(data.generatedAt)} · {data.staff.total} tài khoản staff</p>
     </div>
   );
 }

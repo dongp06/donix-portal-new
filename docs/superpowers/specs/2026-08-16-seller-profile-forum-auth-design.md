@@ -1,5 +1,7 @@
 # Seller Profile + Forum Posts gắn user đăng nhập
 
+> **Superseded for authentication:** this historical design predates the pure Fastify cutover. Its JWT/`donix_token` references are not runtime contracts. Use `docs/fastify-migration/security-transport-spec.md` and `docs/fastify-migration/api-contract.md` for the current opaque `__Host-x`/DPoP architecture.
+
 Ngày: 2026-08-16 · Trạng thái: đã duyệt
 
 ## Bối cảnh

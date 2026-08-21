@@ -7,13 +7,22 @@ import { Search, TrendingUp, FolderOpen } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { MOCK_BLOG_CATEGORIES, MOCK_BOTS } from '@shared/mock-data';
 import { cn } from '@/lib/utils';
 import { formatViewCount } from '@/lib/format';
+import { useRole } from '@/context/RoleContext';
+import { MediaImage } from '@/components/media/MediaImage';
 
 export function Sidebar() {
   const pathname = usePathname();
-  const popularPosts = [...MOCK_BOTS].sort((a, b) => b.views - a.views).slice(0, 4);
+  const { bots } = useRole();
+  const popularPosts = [...bots].sort((a, b) => b.views - a.views).slice(0, 4);
+  const topics = [
+    { slug: 'telegram', label: 'Telegram' },
+    { slug: 'discord', label: 'Discord' },
+    { slug: 'automation', label: 'Bot & Automation' },
+    { slug: 'guides', label: 'Hướng dẫn' },
+    { slug: 'warning', label: 'Cảnh báo' },
+  ];
 
   return (
     <aside className="space-y-8 sticky top-28">
@@ -34,12 +43,12 @@ export function Sidebar() {
           <h3 className="text-lg font-bold text-foreground">Chuyên mục</h3>
         </div>
         <div className="grid gap-2">
-          {MOCK_BLOG_CATEGORIES.map((cat) => {
-            const href = `/category/${cat.slug}`;
-            const active = pathname === href;
+          {topics.map((topic) => {
+            const href = `/posts?category=${topic.slug}`;
+            const active = pathname === '/posts' && new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '').get('category') === topic.slug;
             return (
               <Link
-                key={cat.id}
+                key={topic.slug}
                 href={href}
                 className={cn(
                   'group flex items-center justify-between p-3 rounded-xl bg-card border transition-colors',
@@ -55,7 +64,7 @@ export function Sidebar() {
                   )}
                 >
                   <FolderOpen className={cn('h-3.5 w-3.5', active ? 'text-brand' : 'text-brand/70')} />
-                  {cat.navLabel ?? cat.name}
+                  {topic.label}
                 </span>
                 <span
                   className={cn(
@@ -65,7 +74,7 @@ export function Sidebar() {
                       : 'bg-brand/90 text-brand-foreground shadow-sm',
                   )}
                 >
-                  {cat.count}
+                  →
                 </span>
               </Link>
             );
@@ -81,8 +90,9 @@ export function Sidebar() {
           {popularPosts.map((post) => (
             <Link key={post.id} href={`/bots/${post.id}`} className="flex gap-3 group items-start">
               <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 border border-border">
-                <img
+                <MediaImage
                   src={post.coverImage}
+                  fallbackSrc="/favicon.svg"
                   alt={post.title}
                   className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                 />

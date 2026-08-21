@@ -29,19 +29,26 @@ export const metadata: Metadata = {
   },
   description: defaultDesc,
   keywords: [
-    'Donix',
-    'tải tool',
-    'lập trình',
-    'Python',
-    'chia sẻ tài nguyên',
-    'hướng dẫn',
-    'phần mềm',
+    'thuebot',
+    'bot marketplace',
+    'thuê bot',
+    'bán bot',
+    'tự động hóa',
+    'chợ bot',
+    'điểm uy tín',
   ],
   authors: [{ name: SITE_NAME, url: getSiteUrl() }],
   creator: SITE_NAME,
   icons: {
-    icon: [{ url: '/favicon.png', type: 'image/png' }],
-    apple: [{ url: '/favicon.png', type: 'image/png' }],
+    icon: [
+      { url: '/favicon.ico', sizes: 'any' },
+      { url: '/favicon-32.png', sizes: '32x32', type: 'image/png' },
+      { url: '/favicon-192.png', sizes: '192x192', type: 'image/png' },
+    ],
+    apple: [{ url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }],
+    other: [
+      { rel: 'mask-icon', url: '/favicon.svg', color: '#1677FF' },
+    ],
   },
   openGraph: {
     type: 'website',
@@ -52,7 +59,7 @@ export const metadata: Metadata = {
     url: '/',
     images: [
       {
-        url: '/logo.png',
+        url: '/favicon-512.png',
         width: 512,
         height: 512,
         alt: SITE_NAME,
@@ -63,7 +70,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: `${SITE_NAME} — Chợ bot thuê & tài nguyên tự động hóa`,
     description: defaultDesc,
-    images: ['/logo.png'],
+    images: ['/favicon-512.png'],
   },
   robots: {
     index: true,

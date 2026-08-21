@@ -3,9 +3,10 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRole } from '../../context/RoleContext';
+import { TrustedBadge } from '@/components/trust/TrustedBadge';
+import { MediaImage } from '@/components/media/MediaImage';
 import {
   UserRound,
-  ShieldCheck,
   CalendarDays,
   Mail,
   LogOut,
@@ -112,9 +113,10 @@ export default function ProfilePage() {
         {/* Profile card */}
         <div className="rounded-2xl border border-border bg-card p-6">
           <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
-            <img
+            <MediaImage
               src={user.avatar}
               alt={user.name}
+              fallbackSrc="/avt.png"
               className="h-20 w-20 rounded-2xl border border-border object-cover"
             />
             <div className="min-w-0 flex-1 space-y-1.5">
@@ -122,12 +124,7 @@ export default function ProfilePage() {
                 <span className="rounded-full border border-brand/30 bg-brand/10 px-2.5 py-1 text-xs font-semibold text-brand">
                   {ROLE_LABEL[user.role] ?? user.role}
                 </span>
-                {user.isVerifiedSeller && (
-                  <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 text-xs font-semibold text-emerald-500">
-                    <ShieldCheck className="h-3.5 w-3.5" aria-hidden />
-                    Đã xác thực
-                  </span>
-                )}
+                {user.isTrustedSeller ? <TrustedBadge size="md" info={{ isTrusted: true }} /> : null}
               </div>
               {user.bio ? (
                 <p className="text-sm leading-relaxed text-muted-foreground">{user.bio}</p>
@@ -171,7 +168,7 @@ export default function ProfilePage() {
               Tài khoản
             </span>
             <div className="mt-1 font-display text-2xl font-bold tracking-tight">
-              {user.isVerifiedSeller ? 'Đã xác thực' : 'Cơ bản'}
+              {user.isTrustedSeller ? 'Trusted Seller' : user.verificationState === 'verified' ? 'Basic verified' : 'Đang hoàn thiện'}
             </div>
           </div>
 

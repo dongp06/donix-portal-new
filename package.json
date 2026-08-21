@@ -1,11 +1,36 @@
 {
   "name": "donix-portal",
   "private": true,
-  "workspaces": ["web", "api"],
+  "overrides": {
+    "deepmerge-ts": "^8.0.1",
+    "prisma": {
+      "@prisma/config": {
+        "deepmerge-ts": "^8.0.1"
+      }
+    }
+  },
+  "workspaces": [
+    "web",
+    "apps/api-fastify"
+  ],
   "scripts": {
-    "dev": "npx -y concurrently -n web,api -c blue,green \"npm run dev -w web\" \"npm run start:dev -w api\"",
+    "dev": "npx -y concurrently -n web,api -c blue,green \"npm run dev -w web\" \"npm run start:dev -w api-fastify\"",
     "build": "npm run build -w web",
-    "start": "npx -y concurrently -n web,api \"npm run start -w web\" \"npm run start:prod -w api\""
+    "lint": "npm run lint -w web",
+    "typecheck:fastify": "npm run typecheck --workspace api-fastify",
+    "test:fastify": "npm run test --workspace api-fastify",
+    "build:fastify": "npm run build --workspace api-fastify",
+    "check:legacy": "node apps/api-fastify/scripts/legacy-runtime-check.mjs",
+    "smoke:fastify": "node apps/api-fastify/scripts/fresh-process-smoke.mjs",
+    "smoke:web": "node apps/api-fastify/scripts/fresh-web-smoke.mjs",
+    "inventory:fastify": "node --import tsx apps/api-fastify/scripts/route-inventory.mjs",
+    "audit:production": "npm audit --omit=dev --audit-level=high",
+    "verify:fastify": "npm run check:legacy && npm run typecheck:fastify && npm run test:fastify && npm run build:fastify && npm run smoke:fastify",
+    "typecheck:web": "npm run typecheck --workspace web",
+    "verify": "npm run verify:fastify && npm run typecheck:web && npm run lint && npm run build -w web && npm run smoke:web && npm run e2ee:wasm:smoke",
+    "e2ee:wasm:build": "powershell -NoProfile -ExecutionPolicy Bypass -File e2ee/build-libsignal-wasm.ps1",
+    "e2ee:wasm:smoke": "node e2ee/smoke-libsignal.mjs",
+    "start": "npx -y concurrently -n web,api \"npm run start -w web\" \"npm run start:prod -w api-fastify\""
   },
   "devDependencies": {
     "concurrently": "^9.1.2"

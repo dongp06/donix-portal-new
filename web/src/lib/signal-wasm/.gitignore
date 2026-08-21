@@ -1,0 +1,7 @@
+﻿*
+!.gitignore
+!package.json
+!thuebot_libsignal_wasm.js
+!thuebot_libsignal_wasm.d.ts
+!thuebot_libsignal_wasm_bg.wasm
+!thuebot_libsignal_wasm_bg.wasm.d.ts

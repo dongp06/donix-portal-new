@@ -1,141 +1,88 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
-import { useRole } from '@/context/RoleContext';
-
-declare global {
-  interface Window {
-    google?: {
-      accounts: {
-        id: {
-          initialize: (config: {
-            client_id: string;
-            callback: (resp: { credential?: string }) => void;
-          }) => void;
-          renderButton: (
-            el: HTMLElement,
-            options: {
-              theme?: 'outline' | 'filled_blue' | 'filled_black';
-              size?: 'large' | 'medium' | 'small';
-              text?: 'signin_with' | 'signup_with' | 'continue_with';
-              shape?: 'rectangular' | 'pill' | 'circle' | 'square';
-              width?: number;
-            },
-          ) => void;
-        };
-      };
-    };
-  }
-}
+import { Loader2 } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { safeInternalPath } from '@/lib/safe-redirect';
 
 type Props = {
-  /** Vai trò mặc định khi tạo tài khoản mới (gửi kèm lên backend) */
-  role?: 'buyer' | 'seller';
-  /** Trang chuyển tới sau khi đăng nhập thành công (mặc định theo role) */
   redirectTo?: string;
   className?: string;
+  buttonText?: 'signin_with' | 'signup_with' | 'continue_with';
+  variant?: 'surface' | 'plain';
 };
 
-/**
- * Nút đăng nhập Google (Google Identity Services).
- * Backend verify idToken qua google-auth-library, set JWT cookie httpOnly.
- */
-export function GoogleLoginButton({ role, redirectTo, className }: Props) {
-  const { loginWithGoogle } = useRole();
-  const btnRef = useRef<HTMLDivElement>(null);
-  const [scriptLoaded, setScriptLoaded] = useState(false);
+function GoogleIcon() {
+  return (
+    <svg aria-hidden="true" className="h-5 w-5 shrink-0" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <path fill="#4285F4" d="M21.35 12.27c0-.79-.07-1.55-.2-2.27H12v4.3h5.24a4.47 4.47 0 0 1-1.94 2.93v2.39h3.14c1.84-1.69 2.91-4.18 2.91-7.35Z" />
+      <path fill="#34A853" d="M12 21.75c2.63 0 4.84-.87 6.45-2.36l-3.14-2.39c-.87.58-1.98.93-3.31.93-2.54 0-4.69-1.72-5.46-4.03H3.29v2.47A9.75 9.75 0 0 0 12 21.75Z" />
+      <path fill="#FBBC05" d="M6.54 13.9a5.86 5.86 0 0 1 0-3.8V7.63H3.29a9.76 9.76 0 0 0 0 8.74l3.25-2.47Z" />
+      <path fill="#EA4335" d="M12 6.08c1.43 0 2.72.49 3.73 1.46l2.8-2.8C16.84 3.13 14.63 2.25 12 2.25a9.75 9.75 0 0 0-8.71 5.38l3.25 2.47C7.31 7.8 9.46 6.08 12 6.08Z" />
+    </svg>
+  );
+}
+
+export function GoogleLoginButton({
+  redirectTo,
+  className,
+  buttonText = 'continue_with',
+  variant = 'surface',
+}: Props) {
+  const redirectToRef = useRef(redirectTo);
+  const [ready, setReady] = useState(false);
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
-    if (!clientId) return;
+    redirectToRef.current = redirectTo;
+  }, [redirectTo]);
 
-    let cancelled = false;
-    const init = () => {
-      if (!window.google?.accounts?.id) return;
-      if (cancelled) return;
-      window.google.accounts.id.initialize({
-        client_id: clientId,
-        callback: async (resp) => {
-          if (!resp.credential) return;
-          setBusy(true);
-          try {
-            // Gửi idToken lên backend — nút Google button vẫn dùng luồng này
-            const res = await fetch('/api/auth/google', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              credentials: 'include',
-              body: JSON.stringify({
-                idToken: resp.credential,
-                role: role === 'seller' ? 'seller' : 'buyer',
-              }),
-            });
-            const json = await res.json();
-            if (!res.ok || !json.success || !json.data) {
-              throw new Error(json.error || 'Đăng nhập thất bại');
-            }
-            // update user trong context
-            const { data } = json;
-            window.location.href =
-              redirectTo ?? (data.role === 'seller' ? '/dashboard' : '/profile');
-          } catch (e) {
-            console.error(e);
-            alert(e instanceof Error ? e.message : 'Đăng nhập Google thất bại');
-          } finally {
-            setBusy(false);
-          }
-        },
-      });
-      if (btnRef.current) {
-        window.google.accounts.id.renderButton(btnRef.current, {
-          theme: 'outline',
-          size: 'large',
-          text: 'signin_with',
-          shape: 'rectangular',
-          width: 320,
-        });
-      }
-    };
+  useEffect(() => {
+    setReady(true);
+  }, []);
 
-    if (window.google?.accounts?.id) {
-      init();
-      setScriptLoaded(true);
-      return;
-    }
-
-    const script = document.createElement('script');
-    script.src = 'https://accounts.google.com/gsi/client';
-    script.async = true;
-    script.defer = true;
-    script.onload = () => {
-      init();
-      setScriptLoaded(true);
-    };
-    document.head.appendChild(script);
-
-    return () => {
-      cancelled = true;
-    };
-  }, [role, redirectTo]);
-
-  const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
-
-  if (!clientId) {
-    return (
-      <div
-        className={className}
-        role="status"
-        aria-live="polite"
-        style={{ textAlign: 'center' }}
-      >
-        <p className="text-xs text-muted-foreground">
-          Đăng nhập Google chưa được cấu hình (thiếu NEXT_PUBLIC_GOOGLE_CLIENT_ID).
-        </p>
-      </div>
-    );
-  }
+  const label = busy
+    ? 'Đang kết nối Google…'
+    : buttonText === 'signup_with'
+      ? 'Đăng ký bằng Google'
+      : buttonText === 'signin_with'
+        ? 'Đăng nhập bằng Google'
+        : 'Tiếp tục với Google';
 
   return (
-    <div ref={btnRef} className={className} aria-label="Đăng nhập bằng Google" />
+    <div
+      className={cn(
+        'relative w-full',
+        variant === 'surface' && 'rounded-2xl border border-border/80 bg-background/60 p-1.5 dark:border-white/10 dark:bg-black/20',
+        className,
+      )}
+      aria-busy={busy || !ready}
+    >
+      <button
+        type="button"
+        onClick={() => {
+          if (busy || !ready) return;
+          setBusy(true);
+          const target = safeInternalPath(redirectToRef.current) ?? '/profile';
+          window.location.assign(`/api/auth/google/start?returnTo=${encodeURIComponent(target)}`);
+        }}
+        disabled={!ready || busy}
+        className={cn(
+          'flex h-[52px] w-full items-center justify-center gap-3 rounded-xl border px-4 text-[15px] font-semibold',
+          'border-[#dadce0] bg-white text-[#1f1f1f] shadow-[0_1px_2px_rgba(60,64,67,0.12)]',
+          'transition-[background-color,border-color,box-shadow,transform] duration-200',
+          'hover:border-[#c5cbd4] hover:bg-[#f8fafd] hover:shadow-[0_1px_3px_rgba(60,64,67,0.2)]',
+          'active:translate-y-px active:shadow-none',
+          'focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/35 focus-visible:ring-offset-2 focus-visible:ring-offset-background',
+          'disabled:cursor-not-allowed disabled:opacity-70',
+          'dark:border-[#5f6368] dark:bg-[#202124] dark:text-[#e8eaed] dark:shadow-[0_1px_2px_rgba(0,0,0,0.35)]',
+          'dark:hover:border-[#80868b] dark:hover:bg-[#2b2c2f] dark:hover:shadow-[0_1px_3px_rgba(0,0,0,0.45)]',
+        )}
+        aria-label={label}
+      >
+        {busy ? <Loader2 className="h-5 w-5 animate-spin text-brand" aria-hidden /> : <GoogleIcon />}
+        <span>{label}</span>
+      </button>
+    </div>
   );
 }

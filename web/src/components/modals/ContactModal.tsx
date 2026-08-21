@@ -3,8 +3,11 @@
 import React from 'react';
 import Link from 'next/link';
 import { BotItem } from '@shared/types';
-import { X, MessageCircle, Send, Phone, ShieldCheck, Star } from 'lucide-react';
+import { X, MessageCircle, Send, Phone, Globe2, ShieldCheck, Star } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import { toast } from 'sonner';
+import { TrustedBadge } from '@/components/trust/TrustedBadge';
+import { MediaImage } from '@/components/media/MediaImage';
 
 interface ContactModalProps {
   bot: BotItem | null;
@@ -22,7 +25,13 @@ export function ContactModal({ bot, isOpen, onClose }: ContactModalProps) {
     contact.facebook && { icon: MessageCircle, label: 'Facebook', value: contact.facebook },
     contact.telegram && { icon: Send, label: 'Telegram', value: contact.telegram },
     contact.phone && { icon: Phone, label: 'Điện thoại', value: contact.phone },
-  ].filter(Boolean) as { icon: typeof Phone; label: string; value: string }[];
+    contact.website && {
+      icon: Globe2,
+      label: 'Website',
+      value: contact.website,
+      href: /^https?:\/\//i.test(contact.website) ? contact.website : `https://${contact.website}`,
+    },
+  ].filter(Boolean) as { icon: LucideIcon; label: string; value: string; href?: string }[];
 
   const copy = (value: string, label: string) => {
     navigator.clipboard.writeText(value);
@@ -48,8 +57,9 @@ export function ContactModal({ bot, isOpen, onClose }: ContactModalProps) {
 
         {/* Seller header */}
         <div className="mb-5 flex items-center gap-3 border-b border-border pb-4">
-          <img
+          <MediaImage
             src={bot.seller.avatar}
+            fallbackSrc="/avt.png"
             alt={bot.seller.name}
             className="h-12 w-12 rounded-full border border-border object-cover"
           />
@@ -63,9 +73,11 @@ export function ContactModal({ bot, isOpen, onClose }: ContactModalProps) {
               className="flex items-center gap-1 font-semibold transition-colors hover:text-brand"
             >
               {bot.seller.name}
-              {bot.seller.isVerified && (
-                <ShieldCheck className="h-4 w-4 text-brand" aria-label="Đã xác thực" />
-              )}
+              <TrustedBadge
+                size="sm"
+                interactive={false}
+                info={{ isTrusted: bot.seller.isTrusted, rating: bot.seller.rating }}
+              />
             </Link>
             <div className="flex items-center gap-1 text-xs text-muted-foreground">
               <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" aria-hidden />
@@ -86,8 +98,24 @@ export function ContactModal({ bot, isOpen, onClose }: ContactModalProps) {
           <div className="space-y-2">
             {channels.map((c) => {
               const Icon = c.icon;
-              return (
-                <button
+              return c.href ? <a
+                  key={c.label}
+                  href={c.href}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex w-full items-center justify-between rounded-xl border border-border bg-background px-4 py-3 text-left transition-colors hover:border-brand/40"
+                >
+                  <span className="flex items-center gap-3">
+                    <span className="rounded-lg bg-brand/10 p-2 text-brand">
+                      <Icon className="h-4 w-4" aria-hidden />
+                    </span>
+                    <span>
+                      <span className="block text-xs text-muted-foreground">{c.label}</span>
+                      <span className="font-semibold">{c.value}</span>
+                    </span>
+                  </span>
+                  <span className="text-xs font-medium text-brand">Mở</span>
+                </a> : <button
                   key={c.label}
                   type="button"
                   onClick={() => copy(c.value, c.label)}
@@ -103,8 +131,7 @@ export function ContactModal({ bot, isOpen, onClose }: ContactModalProps) {
                     </span>
                   </span>
                   <span className="text-xs font-medium text-brand">Sao chép</span>
-                </button>
-              );
+                </button>;
             })}
           </div>
         ) : (

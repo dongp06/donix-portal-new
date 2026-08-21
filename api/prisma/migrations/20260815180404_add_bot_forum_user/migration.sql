@@ -75,3 +75,4 @@ CREATE INDEX "Bot_categorySlug_idx" ON "Bot"("categorySlug");
 
 -- CreateIndex
 CREATE INDEX "Bot_providerId_idx" ON "Bot"("providerId");
+

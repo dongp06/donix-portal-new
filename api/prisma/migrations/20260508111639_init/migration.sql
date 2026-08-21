@@ -43,3 +43,4 @@ CREATE INDEX "Post_date_idx" ON "Post"("date");
 
 -- CreateIndex
 CREATE INDEX "Post_isPinned_idx" ON "Post"("isPinned");
+

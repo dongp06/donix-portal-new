@@ -1,0 +1,17 @@
+{
+  "name": "thuebot-libsignal-wasm",
+  "type": "module",
+  "description": "Browser WASM bridge for the pinned official Signal libsignal protocol implementation",
+  "version": "0.1.0",
+  "license": "AGPL-3.0-only",
+  "files": [
+    "thuebot_libsignal_wasm_bg.wasm",
+    "thuebot_libsignal_wasm.js",
+    "thuebot_libsignal_wasm.d.ts"
+  ],
+  "main": "thuebot_libsignal_wasm.js",
+  "types": "thuebot_libsignal_wasm.d.ts",
+  "sideEffects": [
+    "./snippets/*"
+  ]
+}

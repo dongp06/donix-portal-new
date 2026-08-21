@@ -8,98 +8,99 @@ datasource db {
 }
 
 model User {
-  id         String      @id
-  googleId   String?     @unique
-  name       String
-  email      String      @unique
-  avatar     String
-  role       String      @default("buyer")
-  isVerified Boolean     @default(false)
-  bio        String?
-  joinedDate String
-  contact    String?
-  tier        String  @default("new")
-  trustScore  Int     @default(0)
-  trustScoreUpdatedAt String?
-  forumPosts ForumPost[]
-  comments   Comment[]
-  reactions  Reaction[]
-  reviews    BotReview[]
-  sellerProfile  SellerProfile?
-  verifications  TrustVerification[]
-  trustEvents    TrustEvent[]
+  id                       String                   @id
+  googleId                 String?                  @unique
+  name                     String
+  email                    String                   @unique
+  avatar                   String
+  role                     String                   @default("buyer")
+  onboardingCompleted      Boolean                  @default(true)
+  bio                      String?
+  joinedDate               String
+  contact                  String?
+  tier                     String                   @default("new")
+  trustScore               Int                      @default(0)
+  trustScoreUpdatedAt      String?
+  /// Canonical public verification state used by every trust surface.
+  verificationState        String                   @default("unverified")
+  trustedAt                String?
+  trustedUntil             String?
+  verificationVersion      Int                      @default(1)
+  actionPermits            ActionPermit[]
+  accessTokens             AuthAccessToken[]
+  authSessions             AuthSession[]
+  reviews                  BotReview[]
+  comments                 Comment[]
+  deviceIdentities         DeviceIdentity[]
+  e2eeAttachments          E2eeAttachment[]
+  e2eeConversationsCreated E2eeConversation[]       @relation("ConversationCreator")
+  e2eeConversationMembers  E2eeConversationMember[]
+  e2eeDeviceKeys           E2eeDeviceKey[]
+  posts                    Post[]
+  reactions                Reaction[]
+  securityEvents           SecurityEvent[]
+  sellerFollowing          SellerFollow[]           @relation("SellerFollowing")
+  sellerFollowers          SellerFollow[]           @relation("SellerFollowers")
+  sellerProfile            SellerProfile?
+  staffMember              StaffMember?
+  trustEvents              TrustEvent[]
+  verifications            TrustVerification[]
+  verificationChecks       VerificationCheck[]
+  webauthnChallenges       WebAuthnChallenge[]
+  webauthnCredentials      WebAuthnCredential[]
 }
 
-model Category {
-  id       String  @id
-  slug     String  @unique
-  name     String
-  navLabel String?
-  posts    Post[]
-}
+/// RBAC nhân sự — TÁCH HOÀN TOÀN khỏi role công khai (buyer/seller).
+/// Chỉ được tạo/sửa từ phía server (seed, invite), không bao giờ từ onboarding.
+model StaffMember {
+  id          String  @id
+  userId      String  @unique
+  role        String
+  isActive    Boolean @default(true)
+  createdAt   String
+  updatedAt   String
+  appointedBy String?
+  invitedBy   String?
+  user        User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-model Post {
-  id              String   @id
-  slug            String   @unique
-  title           String
-  excerpt         String
-  content         String
-  coverImage      String
-  categoryId      String
-  category        Category @relation(fields: [categoryId], references: [id], onDelete: Restrict, onUpdate: Cascade)
-  categoryName    String
-  views           Int      @default(0)
-  date            String
-  isPinned        Boolean  @default(false)
-  readTimeMinutes Int?
-  stackLabel      String?
-  tagLine         String?
-  codeExample     String?
-  sampleOutput    String?
-  attachments     String?
-  relatedSlugs    String?
-
-  @@index([categoryId])
-  @@index([date])
-  @@index([isPinned])
+  @@index([role])
 }
 
 model Bot {
-  id            String   @id
-  slug          String   @unique
-  title         String
-  tagline       String
-  description   String
-  categorySlug  String
-  categoryName  String
-  sellerId      String
-  sellerName    String
-  sellerAvatar  String
-  sellerRating  Float    @default(0)
-  sellerSales   Int      @default(0)
-  sellerVerified Boolean @default(false)
-  sellerJoinedDate String
-  contactZalo   String?
-  contactTelegram String?
-  contactPhone  String?
-  contactMessenger String?
-  contactFacebook String?
-  coverImage    String
-  gallery       String   @default("[]")
-  features      String   @default("[]")
-  priceHourly   Int      @default(0)
-  priceDaily    Int      @default(0)
-  priceMonthly  Int      @default(0)
-  status        String   @default("online")
-  rating        Float    @default(5)
-  reviewCount   Int      @default(0)
-  views         Int      @default(0)
-  tags          String   @default("[]")
-  version       String   @default("v1.0.0")
-  systemReqs    String   @default("")
-  updatedAt     String
-  sellerSlug    String   @default("")
-  reviews       BotReview[]
+  id                      String      @id
+  slug                    String      @unique
+  title                   String
+  tagline                 String
+  description             String
+  categorySlug            String
+  categoryName            String
+  sellerId                String
+  sellerName              String
+  sellerAvatar            String
+  sellerRating            Float       @default(0)
+  sellerSales             Int         @default(0)
+  sellerVerificationState String      @default("unverified")
+  sellerTrustedUntil      String?
+  sellerJoinedDate        String
+  coverImage              String
+  gallery                 String      @default("[]")
+  features                String      @default("[]")
+  monthlyPrice            Int         @default(0)
+  status                  String      @default("online")
+  rating                  Float       @default(5)
+  reviewCount             Int         @default(0)
+  views                   Int         @default(0)
+  tags                    String      @default("[]")
+  version                 String      @default("v1.0.0")
+  systemReqs              String      @default("")
+  updatedAt               String
+  sellerSlug              String      @default("")
+  pricingDescription      String      @default("")
+  pricingImages           String      @default("[]")
+  targetAudience          String      @default("[]")
+  pricingUpdatedAt        String      @default("")
+  reviews                 BotReview[]
+  viewEvents              BotView[]
 
   @@index([categorySlug])
   @@index([sellerId])
@@ -108,53 +109,226 @@ model Bot {
 model BotReview {
   id        String @id
   botId     String
-  bot       Bot    @relation(fields: [botId], references: [id], onDelete: Cascade)
   userId    String
-  user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   rating    Int
   comment   String
   images    String @default("[]")
   createdAt String
+  user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bot       Bot    @relation(fields: [botId], references: [id], onDelete: Cascade)
 
+  @@unique([botId, userId])
   @@index([botId])
   @@index([userId])
 }
 
-model ForumPost {
-  id           String @id
-  title        String
-  excerpt      String
-  content      String
-  authorId     String?
-  author       User?  @relation(fields: [authorId], references: [id], onDelete: SetNull)
-  authorName   String
-  authorAvatar String
-  authorRole   String @default("Người mua")
-  category     String
-  upvotes      Int    @default(0)
-  commentsCount Int   @default(0)
-  createdAt    String
-  tags         String @default("[]")
-  isPinned     Boolean @default(false)
+/// Anonymous and authenticated bot detail views, deduplicated once per
+/// viewer/window. The aggregate counter remains on Bot for fast listing and
+/// analytics reads.
+model BotView {
+  id        String   @id
+  botId     String
+  viewerKey String
+  windowKey String
+  viewedAt  String
+  bot       Bot      @relation(fields: [botId], references: [id], onDelete: Cascade)
 
-  @@index([authorId])
-  @@index([category])
+  @@unique([botId, viewerKey, windowKey])
+  @@index([botId, viewedAt])
+}
+
+model Post {
+  id              String    @id
+  title           String
+  excerpt         String
+  content         String
+  authorId        String?
+  authorName      String
+  authorAvatar    String
+  authorRole      String    @default("Người mua")
+  category        String
+  upvotes         Int       @default(0)
+  commentsCount   Int       @default(0)
+  createdAt       String
+  tags            String    @default("[]")
+  isPinned        Boolean   @default(false)
+  slug            String    @unique(map: "CommunityPost_slug_key") @default("")
+  type            String    @default("share")
+  status          String    @default("published")
+  categoryName    String?
+  coverImage      String?
+  linkedBotId     String?
+  reactionCount   Int       @default(0)
+  bookmarkCount   Int       @default(0)
+  reportCount     Int       @default(0)
+  views           Int       @default(0)
+  readTimeMinutes Int?
+  updatedAt       String    @default("")
+  publishedAt     String?
+  deletedAt       String?
+  isFeatured      Boolean   @default(false)
+  commentsLocked  Boolean   @default(false)
+  answerCommentId String?
+  editVersion     Int       @default(1)
+  isOfficial      Boolean   @default(false)
+  officialRole    String?
+  scheduledAt     String?
+  author          User?     @relation(fields: [authorId], references: [id])
+  resource        Resource?
+
+  @@index([status, scheduledAt])
+  @@index([isFeatured, createdAt], map: "CommunityPost_isFeatured_createdAt_idx")
+  @@index([type, createdAt], map: "CommunityPost_type_createdAt_idx")
+  @@index([status, createdAt], map: "CommunityPost_status_createdAt_idx")
+  @@index([category, createdAt], map: "CommunityPost_category_createdAt_idx")
+  @@index([category], map: "CommunityPost_category_idx")
+  @@index([authorId], map: "CommunityPost_authorId_idx")
+}
+
+model Resource {
+  id            String            @id
+  postId        String            @unique
+  title         String
+  description   String            @default("")
+  license       String            @default("Other")
+  allowDownload Boolean           @default(true)
+  showSource    Boolean           @default(true)
+  requiresLogin Boolean           @default(false)
+  status        String            @default("active")
+  createdAt     String
+  updatedAt     String
+  post          Post              @relation(fields: [postId], references: [id], onDelete: Cascade)
+  versions      ResourceVersion[]
+
+  @@index([status, updatedAt])
+}
+
+model ResourceVersion {
+  id          String         @id
+  resourceId  String
+  version     String
+  changelog   String         @default("")
+  status      String         @default("published")
+  publishedAt String?
+  createdAt   String
+  files       ResourceFile[]
+  resource    Resource       @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+
+  @@unique([resourceId, version])
+  @@index([resourceId, createdAt])
+}
+
+model ResourceFile {
+  id                String           @id
+  resourceVersionId String?
+  uploadedBy        String
+  status            String           @default("staged")
+  originalName      String
+  storageKey        String           @unique
+  mimeType          String
+  sizeBytes         Int
+  sha256            String
+  previewable       Boolean          @default(false)
+  downloadCount     Int              @default(0)
+  createdAt         String
+  resourceVersion   ResourceVersion? @relation(fields: [resourceVersionId], references: [id], onDelete: Cascade)
+
+  @@index([resourceVersionId])
+  @@index([uploadedBy, status])
+}
+
+/// Media Library attachments. Files live outside public/ and are addressed by
+/// attachment:// IDs in Markdown rather than physical storage paths.
+model Attachment {
+  id           String  @id
+  ownerUserId  String?
+  type         String  @default("image")
+  usage        String  @default("post_inline")
+  originalName String
+  storageKey   String  @unique
+  mimeType     String
+  sizeBytes    Int
+  width        Int?
+  height       Int?
+  sha256       String
+  status       String  @default("draft")
+  altText      String  @default("")
+  caption      String  @default("")
+  createdAt    String
+  updatedAt    String
+  publishedAt  String?
+
+  @@index([ownerUserId, status])
+  @@index([status, createdAt])
+}
+
+model PostBookmark {
+  id        String @id
+  postId    String
+  userId    String
+  createdAt String
+
+  @@unique([postId, userId])
+  @@index([userId, createdAt])
+  @@index([postId])
+}
+
+model PostView {
+  id        String @id
+  postId    String
+  viewerKey String
+  windowKey String
+  viewedAt  String
+
+  @@unique([postId, viewerKey, windowKey])
+  @@index([postId, viewedAt])
+}
+
+model PostReport {
+  id         String  @id
+  postId     String
+  reporterId String?
+  category   String
+  details    String?
+  status     String  @default("open")
+  createdAt  String
+  reviewedAt String?
+  reviewedBy String?
+  resolution String?
+
+  @@index([status, createdAt])
+  @@index([postId])
+  @@index([reporterId])
+}
+
+model PostVersion {
+  id        String  @id
+  postId    String
+  version   Int
+  editorId  String?
+  title     String
+  content   String
+  slug      String
+  createdAt String
+
+  @@unique([postId, version])
+  @@index([postId, createdAt])
 }
 
 model Comment {
-  id          String     @id
-  targetType  String
-  targetId    String
-  parentId    String?
-  parent      Comment?   @relation("CommentTree", fields: [parentId], references: [id], onDelete: Cascade)
-  replies     Comment[]  @relation("CommentTree")
-  authorId    String?
-  author      User?      @relation(fields: [authorId], references: [id], onDelete: SetNull)
-  authorName  String
+  id           String    @id
+  targetType   String
+  targetId     String
+  parentId     String?
+  authorId     String?
+  authorName   String
   authorAvatar String
-  content     String
-  reactions   String     @default("[]")
-  createdAt   String
+  content      String
+  reactions    String    @default("[]")
+  createdAt    String
+  author       User?     @relation(fields: [authorId], references: [id])
+  parent       Comment?  @relation("CommentTree", fields: [parentId], references: [id], onDelete: Cascade)
+  replies      Comment[] @relation("CommentTree")
 
   @@index([targetType, targetId])
   @@index([parentId])
@@ -166,50 +340,460 @@ model Reaction {
   targetType String
   targetId   String
   userId     String
-  user       User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   emoji      String
   createdAt  String
+  user       User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([targetType, targetId, userId, emoji])
   @@index([targetType, targetId])
 }
 
 model SellerProfile {
-  id                  String   @id
-  userId              String   @unique
-  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                  String  @id
+  userId              String  @unique
   shopName            String
-  slug                String   @unique
+  slug                String  @unique
   bio                 String?
   avatar              String?
   banner              String?
-  contact             String   @default("{}")
-  profileCompleteness Int      @default(0)
+  contact             String  @default("{}")
+  profileCompleteness Int     @default(0)
   updatedAt           String
+  user                User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model SellerFollow {
+  id         String @id
+  sellerId   String
+  followerId String
+  createdAt  String
+  follower   User   @relation("SellerFollowing", fields: [followerId], references: [id], onDelete: Cascade)
+  seller     User   @relation("SellerFollowers", fields: [sellerId], references: [id], onDelete: Cascade)
+
+  @@unique([sellerId, followerId])
+  @@index([sellerId, createdAt])
+  @@index([followerId, createdAt])
 }
 
 model TrustVerification {
-  id          String  @id
-  userId      String
-  user        User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  status      String
-  note        String?
-  submittedAt String
-  reviewedAt  String?
-  reviewedBy  String?
-  expiresAt   String?
+  id                  String  @id
+  userId              String
+  status              String
+  note                String?
+  submittedAt         String
+  reviewedAt          String?
+  reviewedBy          String?
+  expiresAt           String?
+  trustedAt           String?
+  trustedUntil        String?
+  approvedBy          String?
+  verificationVersion Int     @default(1)
+  recommendation      String?
+  user                User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([status])
 }
 
+/// Individual ownership/identity checks. A supplied contact is not verified
+/// until an ownership proof has been accepted by the server.
+model VerificationCheck {
+  id         String  @id
+  userId     String
+  kind       String
+  status     String  @default("unverified")
+  value      String?
+  method     String?
+  note       String?
+  verifiedAt String?
+  verifiedBy String?
+  expiresAt  String?
+  createdAt  String
+  updatedAt  String
+  user       User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, kind])
+  @@index([userId, status])
+  @@index([kind, status])
+}
+
 model TrustEvent {
   id        String @id
   userId    String
-  user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   type      String
   detail    String @default("{}")
   createdAt String
+  user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+}
+
+/// Operations cases aggregate reports and moderation work across marketplace surfaces.
+model AdminCase {
+  id         String  @id
+  reference  String  @unique
+  type       String
+  targetId   String
+  targetName String
+  reason     String
+  priority   String  @default("medium")
+  status     String  @default("open")
+  assignedTo String?
+  reporterId String?
+  details    String?
+  evidence   String  @default("[]")
+  notes      String  @default("[]")
+  createdAt  String
+  updatedAt  String
+  resolvedAt String?
+  resolvedBy String?
+
+  @@index([status, priority, createdAt])
+  @@index([type, status])
+  @@index([assignedTo, status])
+}
+
+/// Append-only staff activity trail. No UI or API exposes delete/purge.
+model AdminAuditLog {
+  id           String  @id
+  actorId      String
+  actorName    String
+  actorRole    String
+  action       String
+  targetType   String
+  targetId     String?
+  caseId       String?
+  reason       String?
+  beforeData   String?
+  afterData    String?
+  createdAt    String
+  previousHash String  @default("")
+  eventHash    String  @default("")
+
+  @@index([createdAt])
+  @@index([actorId, createdAt])
+  @@index([targetType, targetId])
+}
+
+/// Opaque browser/app sessions. Only tokenHash is persisted; the raw token
+/// exists exclusively in the HttpOnly cookie.
+model AuthSession {
+  id                String            @id
+  tokenHash         String            @unique
+  userId            String
+  deviceId          String?
+  createdAt         String
+  expiresAt         String
+  lastSeenAt        String
+  revokedAt         String?
+  familyId          String            @default("")
+  generation        Int               @default(0)
+  rotatedFrom       String?
+  replacedById      String?
+  idleExpiresAt     String            @default("")
+  absoluteExpiresAt String            @default("")
+  rotatedAt         String?
+  graceUntil        String?
+  reuseDetectedAt   String?
+  accessTokens      AuthAccessToken[]
+  device            DeviceIdentity?   @relation(fields: [deviceId], references: [id])
+  user              User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, expiresAt])
+  @@index([deviceId, revokedAt])
+  @@index([familyId, generation])
+  @@index([familyId, reuseDetectedAt])
+}
+
+/// One-time Google authorization-code state. The raw state exists only in the
+/// short-lived HttpOnly state cookie and in the authorization redirect.
+model OAuthState {
+  id           String  @id
+  tokenHash    String  @unique
+  provider     String
+  returnTo     String
+  codeVerifier String
+  nonce        String
+  createdAt    String
+  expiresAt    String
+  consumedAt   String?
+
+  @@index([provider, expiresAt])
+  @@index([consumedAt, expiresAt])
+}
+
+/// Short-lived opaque API grants. Only the SHA-256 token hash is persisted;
+/// the raw value exists in browser memory and the Authorization header.
+model AuthAccessToken {
+  id            String         @id
+  tokenHash     String         @unique
+  sessionId     String
+  userId        String
+  deviceId      String
+  keyThumbprint String
+  audience      String         @default("thuebot-api")
+  scopes        String         @default("[\"api\"]")
+  issuedAt      String
+  expiresAt     String
+  revokedAt     String?
+  device        DeviceIdentity @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  session       AuthSession    @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId, expiresAt])
+  @@index([userId, expiresAt])
+  @@index([deviceId, revokedAt])
+}
+
+/// WebAuthn/passkey credentials. The public key is stored as base64url COSE
+/// bytes; no authenticator private key ever reaches the API.
+model WebAuthnCredential {
+  id                   String  @id
+  userId               String
+  publicKey            String
+  counter              Int     @default(0)
+  transports           String  @default("[]")
+  credentialDeviceType String?
+  credentialBackedUp   Boolean @default(false)
+  createdAt            String
+  lastUsedAt           String?
+  revokedAt            String?
+  user                 User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, revokedAt])
+}
+
+/// Short-lived server challenges bound to a user/session/action.
+model WebAuthnChallenge {
+  id         String  @id
+  userId     String
+  sessionId  String?
+  action     String?
+  challenge  String  @unique
+  createdAt  String
+  expiresAt  String
+  consumedAt String?
+  user       User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, action, expiresAt])
+  @@index([sessionId, expiresAt])
+}
+
+/// Per-device signing identity. The private key never enters the API.
+model DeviceIdentity {
+  id                  String                   @id
+  userId              String
+  publicKey           String
+  algorithm           String                   @default("ECDSA-P256-SHA256")
+  fingerprint         String                   @unique
+  deviceName          String?
+  platform            String?
+  protocolVersion     Int                      @default(3)
+  trustState          String                   @default("verified")
+  createdAt           String
+  lastSeenAt          String
+  revokedAt           String?
+  lastSequence        Int                      @default(0)
+  actionPermits       ActionPermit[]
+  accessTokens        AuthAccessToken[]
+  sessions            AuthSession[]
+  user                User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  conversationMembers E2eeConversationMember[]
+  e2eeKeys            E2eeDeviceKey[]
+  receivedMessages    E2eeMessage[]            @relation("E2eeRecipient")
+  sentMessages        E2eeMessage[]            @relation("E2eeSender")
+  securityEvents      SecurityEvent[]
+  nonces              SecurityNonce[]
+
+  @@index([userId, revokedAt])
+  @@index([userId, lastSeenAt])
+}
+
+/// One-time server capability bound to an action, route, device, and optional
+/// canonical request body digest.
+model ActionPermit {
+  id            String          @id
+  tokenHash     String          @unique
+  userId        String
+  deviceId      String?
+  action        String
+  method        String
+  path          String
+  targetId      String?
+  bodyHash      String?
+  policyVersion String
+  serverNonce   String
+  issuedAt      String
+  expiresAt     String
+  maxUses       Int             @default(1)
+  uses          Int             @default(0)
+  consumedAt    String?
+  metadata      String          @default("{}")
+  device        DeviceIdentity? @relation(fields: [deviceId], references: [id])
+  user          User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, action, expiresAt])
+  @@index([deviceId, expiresAt])
+}
+
+/// Durable nonce ledger used for anti-replay when the API is restarted.
+model SecurityNonce {
+  id        String          @id
+  deviceId  String?
+  requestId String
+  createdAt String
+  expiresAt String
+  device    DeviceIdentity? @relation(fields: [deviceId], references: [id])
+
+  @@index([deviceId, expiresAt])
+}
+
+/// Idempotency response ledger. Scope key is a hash of actor/device/route/key.
+model IdempotencyRecord {
+  id             String  @id
+  scopeKey       String  @unique
+  userId         String?
+  deviceId       String?
+  route          String
+  idempotencyKey String
+  requestHash    String
+  responseStatus Int
+  responseBody   String
+  createdAt      String
+  expiresAt      String
+
+  @@index([userId, route, expiresAt])
+  @@index([deviceId, route, expiresAt])
+}
+
+/// Risk/deception telemetry. Never persist raw secrets, cookies or plaintext.
+model SecurityEvent {
+  id        String          @id
+  userId    String?
+  deviceId  String?
+  eventType String
+  action    String?
+  riskScore Int             @default(0)
+  ipHash    String?
+  metadata  String          @default("{}")
+  createdAt String
+  device    DeviceIdentity? @relation(fields: [deviceId], references: [id])
+  user      User?           @relation(fields: [userId], references: [id])
+
+  @@index([eventType, createdAt])
+  @@index([userId, createdAt])
+  @@index([deviceId, createdAt])
+  @@index([action, createdAt])
+}
+
+/// E2EE identity/prekey directory. All fields are public key material or
+/// signatures; no private key or plaintext message is stored server-side.
+model E2eeDeviceKey {
+  id                    String              @id
+  userId                String
+  deviceId              String
+  /// Signal's numeric device number, scoped to the Signal user address.
+  signalDeviceId        Int
+  registrationId        Int
+  identityPublicKey     String
+  signedPrekeyId        Int
+  signedPrekeyPublic    String
+  signedPrekeySignature String
+  kyberPrekeyId         Int
+  kyberPrekeyPublic     String
+  kyberPrekeySignature  String
+  protocolVersion       String              @default("signal-pqxdh-v1")
+  createdAt             String
+  rotatedAt             String?
+  revokedAt             String?
+  device                DeviceIdentity      @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  user                  User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  oneTimePrekeys        E2eeOneTimePrekey[]
+
+  @@unique([userId, deviceId])
+  @@unique([userId, signalDeviceId])
+  @@index([userId, revokedAt])
+}
+
+model E2eeOneTimePrekey {
+  id          String        @id
+  deviceKeyId String
+  /// Numeric Signal pre-key id; the string id above is only an internal DB id.
+  preKeyId    Int
+  publicKey   String
+  createdAt   String
+  usedAt      String?
+  deviceKey   E2eeDeviceKey @relation(fields: [deviceKeyId], references: [id], onDelete: Cascade)
+
+  @@unique([deviceKeyId, preKeyId])
+  @@index([deviceKeyId, usedAt])
+}
+
+/// Conversation metadata contains no plaintext message content.
+model E2eeConversation {
+  id              String                   @id
+  createdBy       String
+  protocolVersion String                   @default("signal-pqxdh-v1")
+  createdAt       String
+  updatedAt       String
+  attachments     E2eeAttachment[]
+  creator         User                     @relation("ConversationCreator", fields: [createdBy], references: [id], onDelete: Cascade)
+  members         E2eeConversationMember[]
+  messages        E2eeMessage[]
+
+  @@index([createdBy, updatedAt])
+}
+
+model E2eeConversationMember {
+  id             String           @id
+  conversationId String
+  userId         String
+  deviceId       String
+  joinedAt       String
+  revokedAt      String?
+  device         DeviceIdentity   @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  conversation   E2eeConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@unique([conversationId, deviceId])
+  @@index([userId, revokedAt])
+}
+
+model E2eeMessage {
+  id                String           @id
+  conversationId    String
+  senderDeviceId    String
+  recipientDeviceId String?
+  protocolVersion   String
+  /// Signal CiphertextMessageType: 2=Whisper, 3=PreKey.
+  messageType       Int              @default(0)
+  header            String
+  ciphertext        String
+  clientMessageId   String
+  createdAt         String
+  deliveredAt       String?
+  recipientDevice   DeviceIdentity?  @relation("E2eeRecipient", fields: [recipientDeviceId], references: [id])
+  senderDevice      DeviceIdentity   @relation("E2eeSender", fields: [senderDeviceId], references: [id], onDelete: Cascade)
+  conversation      E2eeConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@unique([conversationId, clientMessageId])
+  @@index([conversationId, createdAt])
+}
+
+model E2eeAttachment {
+  id               String            @id
+  conversationId   String?
+  ownerUserId      String
+  storageKey       String            @unique
+  mimeType         String
+  sizeBytes        Int
+  ciphertextSha256 String
+  encryptedFileKey String
+  nonce            String
+  createdAt        String
+  owner            User              @relation(fields: [ownerUserId], references: [id], onDelete: Cascade)
+  conversation     E2eeConversation? @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId, createdAt])
+  @@index([ownerUserId, createdAt])
 }

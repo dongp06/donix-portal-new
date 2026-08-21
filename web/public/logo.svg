@@ -1,0 +1,41 @@
+<svg width="512" height="512" viewBox="56 19 400 400" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="thuebot.org">
+  <defs>
+    <linearGradient id="shieldGradient" x1="108" y1="40" x2="404" y2="392" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#1677FF"/>
+      <stop offset="1" stop-color="#0B57D0"/>
+    </linearGradient>
+    <linearGradient id="faceGradient" x1="184" y1="150" x2="328" y2="232" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0C2F63"/>
+      <stop offset="1" stop-color="#061D42"/>
+    </linearGradient>
+    <linearGradient id="checkGradient" x1="219" y1="284" x2="297" y2="327" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#10C98A"/>
+      <stop offset="1" stop-color="#00B978"/>
+    </linearGradient>
+  </defs>
+
+  <!-- EXTRA WIDE / STRONGLY BULGED SHIELD -->
+  <path d="M256 40 C305 68 356 85 397 98 V178 C397 225 386 267 365 303 C343 340 308 369 256 397 C204 369 169 340 147 303 C126 267 115 225 115 178 V98 C156 85 207 68 256 40 Z"
+    fill="white" stroke="url(#shieldGradient)" stroke-width="18" stroke-linejoin="round"/>
+
+  <!-- Antenna -->
+  <rect x="249" y="98" width="14" height="35" rx="7" fill="#0B57D0"/>
+  <circle cx="256" cy="92" r="14" fill="#0B57D0"/>
+
+  <!-- Bot shell -->
+  <rect x="173" y="132" width="166" height="118" rx="51" fill="white" stroke="#0B57D0" stroke-width="8"/>
+
+  <!-- Ears -->
+  <rect x="155" y="163" width="31" height="56" rx="15.5" fill="#0B57D0"/>
+  <rect x="326" y="163" width="31" height="56" rx="15.5" fill="#0B57D0"/>
+
+  <!-- Face -->
+  <rect x="191" y="154" width="130" height="72" rx="30" fill="url(#faceGradient)"/>
+
+  <!-- Eyes -->
+  <circle cx="229" cy="190" r="10" fill="#10C98A"/>
+  <circle cx="283" cy="190" r="10" fill="#10C98A"/>
+
+  <!-- Trust check -->
+  <path d="M218 298 L244 324 L298 270" stroke="url(#checkGradient)" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

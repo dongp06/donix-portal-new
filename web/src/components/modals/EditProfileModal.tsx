@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { X, MessageCircle, Send, Phone, Loader2 } from 'lucide-react';
+import { X, MessageCircle, Send, Phone, Globe2, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface EditProfileModalProps {
@@ -14,6 +14,7 @@ interface EditProfileModalProps {
     phone?: string;
     messenger?: string;
     facebook?: string;
+    website?: string;
   };
   onSave: (bio: string, contact: EditProfileModalProps['contact']) => Promise<void>;
 }
@@ -26,6 +27,7 @@ export function EditProfileModal({ isOpen, onClose, bio, contact, onSave }: Edit
   const [phone, setPhone] = useState(contact.phone ?? '');
   const [messenger, setMessenger] = useState(contact.messenger ?? '');
   const [facebook, setFacebook] = useState(contact.facebook ?? '');
+  const [website, setWebsite] = useState(contact.website ?? '');
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -36,6 +38,7 @@ export function EditProfileModal({ isOpen, onClose, bio, contact, onSave }: Edit
       setPhone(contact.phone ?? '');
       setMessenger(contact.messenger ?? '');
       setFacebook(contact.facebook ?? '');
+      setWebsite(contact.website ?? '');
     }
   }, [isOpen, bio, contact]);
 
@@ -46,7 +49,7 @@ export function EditProfileModal({ isOpen, onClose, bio, contact, onSave }: Edit
     if (saving) return;
     setSaving(true);
     try {
-      await onSave(bioDraft, { zalo, telegram, phone, messenger, facebook });
+      await onSave(bioDraft, { zalo, telegram, phone, messenger, facebook, website });
       onClose();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Cập nhật hồ sơ thất bại');
@@ -64,6 +67,7 @@ export function EditProfileModal({ isOpen, onClose, bio, contact, onSave }: Edit
     { label: 'Điện thoại', value: phone, onChange: setPhone, placeholder: 'VD: 0912 345 678', icon: Phone },
     { label: 'Messenger', value: messenger, onChange: setMessenger, placeholder: 'VD: m.me/ten_page', icon: MessageCircle },
     { label: 'Facebook', value: facebook, onChange: setFacebook, placeholder: 'VD: fb.com/ten.page', icon: MessageCircle },
+    { label: 'Website', value: website, onChange: setWebsite, placeholder: 'VD: https://tenmien.vn', icon: Globe2 },
   ];
 
   return (

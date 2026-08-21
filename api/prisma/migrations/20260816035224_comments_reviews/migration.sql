@@ -58,3 +58,4 @@ CREATE INDEX "Reaction_targetType_targetId_idx" ON "Reaction"("targetType", "tar
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Reaction_targetType_targetId_userId_emoji_key" ON "Reaction"("targetType", "targetId", "userId", "emoji");
+

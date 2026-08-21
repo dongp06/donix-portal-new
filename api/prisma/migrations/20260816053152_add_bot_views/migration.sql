@@ -44,3 +44,4 @@ CREATE INDEX "Bot_categorySlug_idx" ON "Bot"("categorySlug");
 CREATE INDEX "Bot_sellerId_idx" ON "Bot"("sellerId");
 PRAGMA foreign_keys=ON;
 PRAGMA defer_foreign_keys=OFF;
+

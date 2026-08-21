@@ -1,0 +1,35 @@
+{
+  "name": "api-fastify",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.json && node scripts/normalize-prisma-runtime.mjs",
+    "start": "node --enable-source-maps dist/apps/api-fastify/src/app/server.js",
+    "start:dev": "tsx watch src/app/server.ts",
+    "start:prod": "node --enable-source-maps dist/apps/api-fastify/src/app/server.js",
+    "test": "node --import tsx --test-concurrency=1 --test test/core.contract.test.ts test/dpop.contract.test.ts test/oauth.contract.test.ts test/opaque-credentials.contract.test.ts test/device-bootstrap.contract.test.ts test/posts-read.contract.test.ts test/views.contract.test.ts test/media.contract.test.ts test/resources.contract.test.ts test/seller-follow.contract.test.ts test/seller-profile.contract.test.ts test/trust.contract.test.ts test/admin-trust.contract.test.ts test/admin-write.contract.test.ts test/admin-content.contract.test.ts test/admin-read-runtime.contract.test.ts test/maintenance.contract.test.ts test/e2ee-files.contract.test.ts test/idempotency-stream.contract.test.ts test/security-budget.contract.test.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@fastify/cookie": "^11.1.2",
+    "@fastify/cors": "^11.3.0",
+    "@fastify/helmet": "^13.1.0",
+    "@fastify/multipart": "^9.2.1",
+    "@fastify/rate-limit": "^10.3.0",
+    "@levischuck/tiny-cbor": "^0.2.11",
+    "@prisma/adapter-better-sqlite3": "^7.9.1",
+    "@prisma/client": "^7.9.1",
+    "@simplewebauthn/server": "^13.3.2",
+    "better-sqlite3": "^12.6.0",
+    "dotenv": "^17.4.2",
+    "fastify": "^5.12.0",
+    "fastify-plugin": "^5.0.1",
+    "google-auth-library": "^11.0.2"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "tsx": "^4.23.12",
+    "typescript": "^5.9.3"
+  }
+}

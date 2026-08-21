@@ -7,6 +7,8 @@ import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { useRole } from '../../context/RoleContext';
 import { GoogleLoginButton } from '../auth/GoogleLoginButton';
+import { MediaImage } from '@/components/media/MediaImage';
+import { fetchWithTimeout } from '@/lib/fetch-with-timeout';
 
 const REACTION_EMOJIS = ['👍', '❤️', '😂', '😮', '😢', '😡'] as const;
 
@@ -33,16 +35,18 @@ function EmojiGlyph({ emoji, className }: { emoji: string; className?: string })
 interface CommentSectionProps {
   targetType: CommentTargetType;
   targetId: string;
+  locked?: boolean;
 }
 
 /**
  * Hệ thống bình luận FB-style: comment + reply lồng nhiều cấp + react emoji.
  * Dùng chung cho blog, diễn đàn, trang bot.
  */
-export function CommentSection({ targetType, targetId }: CommentSectionProps) {
+export function CommentSection({ targetType, targetId, locked = false }: CommentSectionProps) {
   const { user, isAuthenticated } = useRole();
   const [comments, setComments] = useState<CommentItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [replyTo, setReplyTo] = useState<CommentItem | null>(null);
   const [draft, setDraft] = useState('');
   const [editTarget, setEditTarget] = useState<CommentItem | null>(null);
@@ -51,15 +55,21 @@ export function CommentSection({ targetType, targetId }: CommentSectionProps) {
   const [submitting, setSubmitting] = useState(false);
 
   const load = useCallback(async () => {
+    setLoading(true);
+    setLoadError(null);
     try {
-      const res = await fetch(
+      const res = await fetchWithTimeout(
         `/api/comments?targetType=${targetType}&targetId=${encodeURIComponent(targetId)}`,
         { credentials: 'include' },
+        20_000,
       );
-      const json = await res.json();
-      if (json.success && Array.isArray(json.data)) setComments(json.data as CommentItem[]);
-    } catch {
-      toast.error('Không tải được bình luận');
+      const json = await res.json().catch(() => null) as { success?: boolean; data?: unknown } | null;
+      if (!res.ok || !json?.success) throw new Error('Không tải được bình luận');
+      if (Array.isArray(json.data)) setComments(json.data as CommentItem[]);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Không tải được bình luận';
+      setLoadError(message);
+      toast.error(message);
     } finally {
       setLoading(false);
     }
@@ -74,7 +84,7 @@ export function CommentSection({ targetType, targetId }: CommentSectionProps) {
     if (!content || submitting) return;
     setSubmitting(true);
     try {
-      const res = await fetch('/api/comments', {
+      const res = await fetchWithTimeout('/api/comments', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -84,10 +94,10 @@ export function CommentSection({ targetType, targetId }: CommentSectionProps) {
           content,
           parentId: replyTo?.id,
         }),
-      });
-      const json = await res.json();
-      if (!res.ok || !json.success || !json.data) {
-        throw new Error(json.error || 'Gửi bình luận thất bại');
+      }, 30_000);
+      const json = await res.json().catch(() => null) as { success?: boolean; data?: unknown; error?: string } | null;
+      if (!res.ok || !json?.success || !json.data) {
+        throw new Error(json?.error || 'Gửi bình luận thất bại');
       }
       setDraft('');
       setReplyTo(null);
@@ -105,14 +115,14 @@ export function CommentSection({ targetType, targetId }: CommentSectionProps) {
     if (!content || submitting) return;
     setSubmitting(true);
     try {
-      const res = await fetch(`/api/comments/${editTarget.id}`, {
+      const res = await fetchWithTimeout(`/api/comments/${editTarget.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({ content }),
-      });
-      const json = await res.json();
-      if (!res.ok || !json.success) throw new Error(json.error || 'Sửa bình luận thất bại');
+      }, 30_000);
+      const json = await res.json().catch(() => null) as { success?: boolean; error?: string } | null;
+      if (!res.ok || !json?.success) throw new Error(json?.error || 'Sửa bình luận thất bại');
       setEditTarget(null);
       setEditDraft('');
       await load();
@@ -126,12 +136,12 @@ export function CommentSection({ targetType, targetId }: CommentSectionProps) {
   const removeComment = async (c: CommentItem) => {
     if (!window.confirm('Xóa bình luận này?')) return;
     try {
-      const res = await fetch(`/api/comments/${c.id}`, {
+      const res = await fetchWithTimeout(`/api/comments/${c.id}`, {
         method: 'DELETE',
         credentials: 'include',
-      });
-      const json = await res.json();
-      if (!res.ok || !json.success) throw new Error(json.error || 'Xóa bình luận thất bại');
+      }, 30_000);
+      const json = await res.json().catch(() => null) as { success?: boolean; error?: string } | null;
+      if (!res.ok || !json?.success) throw new Error(json?.error || 'Xóa bình luận thất bại');
       await load();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Xóa bình luận thất bại');
@@ -140,14 +150,14 @@ export function CommentSection({ targetType, targetId }: CommentSectionProps) {
 
   const react = async (c: CommentItem, emoji: string) => {
     try {
-      const res = await fetch(`/api/comments/${c.id}/react`, {
+      const res = await fetchWithTimeout(`/api/comments/${c.id}/react`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({ emoji }),
-      });
-      const json = await res.json();
-      if (!res.ok || !json.success) throw new Error(json.error || 'React thất bại');
+      }, 20_000);
+      const json = await res.json().catch(() => null) as { success?: boolean; data?: unknown; error?: string } | null;
+      if (!res.ok || !json?.success) throw new Error(json?.error || 'React thất bại');
       setOpenEmojiFor(null);
       // Cập nhật reactions cục bộ cho nhanh
       setComments((prev) => patchCommentReactions(prev, c.id, json.data as ReactionSummary[]));
@@ -172,7 +182,11 @@ export function CommentSection({ targetType, targetId }: CommentSectionProps) {
       </div>
 
       {/* Input comment */}
-      {isAuthenticated === true ? (
+      {locked ? (
+        <div className="rounded-xl border border-border bg-muted/40 p-4 text-center text-sm text-muted-foreground">
+          Bình luận trên bài viết này đã được khóa.
+        </div>
+      ) : isAuthenticated === true ? (
         <div className="space-y-2">
           {replyTo && (
             <div className="flex items-center justify-between rounded-xl border border-brand/30 bg-brand/10 px-3 py-2 text-xs text-muted-foreground">
@@ -185,7 +199,7 @@ export function CommentSection({ targetType, targetId }: CommentSectionProps) {
             </div>
           )}
           <div className="flex items-start gap-3">
-            <img src={user.avatar} alt={user.name} className="h-8 w-8 shrink-0 rounded-full border border-border object-cover" />
+            <MediaImage src={user.avatar} fallbackSrc="/avt.png" alt={user.name} className="h-8 w-8 shrink-0 rounded-full border border-border object-cover" />
             <div className="flex-1">
               <textarea
                 value={draft}
@@ -214,7 +228,7 @@ export function CommentSection({ targetType, targetId }: CommentSectionProps) {
         <div className="rounded-xl border border-border bg-card p-4 text-center text-xs text-muted-foreground">
           <p className="mb-2">Đăng nhập để tham gia bình luận.</p>
           <div className="flex justify-center">
-            <GoogleLoginButton redirectTo={typeof window !== 'undefined' ? window.location.pathname : '/community'} />
+            <GoogleLoginButton redirectTo={typeof window !== 'undefined' ? window.location.pathname : '/posts'} />
           </div>
         </div>
       ) : null}
@@ -222,7 +236,14 @@ export function CommentSection({ targetType, targetId }: CommentSectionProps) {
       {/* List */}
       <div className="space-y-4">
         {loading && <p className="py-2 text-sm text-muted-foreground">Đang tải bình luận…</p>}
-        {!loading && comments.length === 0 && (
+        {!loading && loadError && (
+          <div className="rounded-xl border border-destructive/30 bg-destructive/5 px-4 py-4 text-sm" role="alert">
+            <p className="font-semibold text-destructive">Không tải được bình luận</p>
+            <p className="mt-1 text-muted-foreground">{loadError}</p>
+            <button type="button" onClick={() => void load()} className="mt-3 inline-flex min-h-9 items-center rounded-lg bg-brand px-3 py-1.5 text-xs font-semibold text-brand-foreground hover:brightness-110">Thử lại</button>
+          </div>
+        )}
+        {!loading && !loadError && comments.length === 0 && (
           <p className="py-2 text-sm text-muted-foreground">Chưa có bình luận. Hãy là người đầu tiên!</p>
         )}
         {comments.map((c) => (
@@ -308,7 +329,7 @@ function CommentNode({
     <div className={cn('space-y-3', maxDepth > 0 && 'border-l border-border pl-4 ml-3')}>
       <div className="space-y-1">
         <div className="flex items-start gap-2.5">
-          <img src={comment.authorAvatar} alt={comment.authorName} className="h-8 w-8 shrink-0 rounded-full border border-border object-cover" />
+          <MediaImage src={comment.authorAvatar} fallbackSrc="/avt.png" alt={comment.authorName} className="h-8 w-8 shrink-0 rounded-full border border-border object-cover" />
           <div className="flex-1 min-w-0">
             <div className="flex flex-wrap items-center gap-2 text-xs">
               <span className="font-semibold text-foreground">{comment.authorName}</span>

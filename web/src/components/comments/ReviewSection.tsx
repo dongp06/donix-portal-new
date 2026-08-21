@@ -6,21 +6,28 @@ import { Star, Camera, X, Pencil, Trash2, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { useRole } from '../../context/RoleContext';
+import { ImageLightbox } from '@/components/media/ImageLightbox';
+import { MediaImage } from '@/components/media/MediaImage';
+import { attachmentReference } from '@/lib/media';
+import { fetchWithTimeout } from '@/lib/fetch-with-timeout';
 
 interface ReviewSectionProps {
   botId: string;
 }
 
-/** Upload 1 ảnh → URL (dùng /api/files/upload có sẵn) */
+/** Upload 1 ảnh và giữ reference ổn định trong DB/content. */
 async function uploadImage(file: File): Promise<string> {
   const body = new FormData();
   body.append('file', file);
-  const res = await fetch('/api/files/upload', { method: 'POST', body });
+  body.append('usage', 'review_image');
+  const res = await fetchWithTimeout('/api/uploads/images', { method: 'POST', body, credentials: 'include' });
   const json = await res.json();
-  if (!res.ok || !json.success || !json.data?.fileId) {
+  if (!res.ok || !json.success || !json.data?.attachmentId) {
     throw new Error(json.error || 'Upload ảnh thất bại');
   }
-  return `/api/files/${json.data.fileId}`;
+  const reference = attachmentReference(json.data.attachmentId);
+  if (!reference) throw new Error('Attachment ID không hợp lệ');
+  return reference;
 }
 
 const MAX_IMAGES = 5;
@@ -33,6 +40,7 @@ export function ReviewSection({ botId }: ReviewSectionProps) {
   const { user, isAuthenticated } = useRole();
   const [reviews, setReviews] = useState<BotReview[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   // Form đánh giá
   const [rating, setRating] = useState(0);
@@ -46,17 +54,23 @@ export function ReviewSection({ botId }: ReviewSectionProps) {
   const [editRating, setEditRating] = useState(0);
   const [editComment, setEditComment] = useState('');
   const [editImages, setEditImages] = useState<string[]>([]);
+  const [reviewPreview, setReviewPreview] = useState<{ images: string[]; index: number } | null>(null);
 
   const fileRef = useRef<HTMLInputElement>(null);
   const editFileRef = useRef<HTMLInputElement>(null);
 
   const load = useCallback(async () => {
+    setLoading(true);
+    setLoadError(null);
     try {
-      const res = await fetch(`/api/bots/${botId}/reviews`, { credentials: 'include' });
-      const json = await res.json();
-      if (json.success && Array.isArray(json.data)) setReviews(json.data as BotReview[]);
-    } catch {
-      toast.error('Không tải được đánh giá');
+      const res = await fetchWithTimeout(`/api/bots/${botId}/reviews`, { credentials: 'include' }, 20_000);
+      const json = await res.json().catch(() => null) as { success?: boolean; data?: unknown } | null;
+      if (!res.ok || !json?.success) throw new Error('Không tải được đánh giá');
+      if (Array.isArray(json.data)) setReviews(json.data as BotReview[]);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Không tải được đánh giá';
+      setLoadError(message);
+      toast.error(message);
     } finally {
       setLoading(false);
     }
@@ -102,15 +116,15 @@ export function ReviewSection({ botId }: ReviewSectionProps) {
     }
     setSubmitting(true);
     try {
-      const res = await fetch(`/api/bots/${botId}/reviews`, {
+      const res = await fetchWithTimeout(`/api/bots/${botId}/reviews`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({ rating, comment: comment.trim(), images }),
-      });
-      const json = await res.json();
-      if (!res.ok || !json.success || !json.data) {
-        throw new Error(json.error || 'Gửi đánh giá thất bại');
+      }, 30_000);
+      const json = await res.json().catch(() => null) as { success?: boolean; data?: BotReview; error?: string } | null;
+      if (!res.ok || !json?.success || !json.data) {
+        throw new Error(json?.error || 'Gửi đánh giá thất bại');
       }
       setReviews((prev) => [json.data as BotReview, ...prev]);
       setRating(0);
@@ -135,15 +149,15 @@ export function ReviewSection({ botId }: ReviewSectionProps) {
     if (!editTarget) return;
     setSubmitting(true);
     try {
-      const res = await fetch(`/api/bots/${botId}/reviews/${editTarget.id}`, {
+      const res = await fetchWithTimeout(`/api/bots/${botId}/reviews/${editTarget.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({ rating: editRating, comment: editComment.trim(), images: editImages }),
-      });
-      const json = await res.json();
-      if (!res.ok || !json.success || !json.data) {
-        throw new Error(json.error || 'Cập nhật đánh giá thất bại');
+      }, 30_000);
+      const json = await res.json().catch(() => null) as { success?: boolean; data?: BotReview; error?: string } | null;
+      if (!res.ok || !json?.success || !json.data) {
+        throw new Error(json?.error || 'Cập nhật đánh giá thất bại');
       }
       const updated = json.data as BotReview;
       setReviews((prev) => prev.map((r) => (r.id === updated.id ? updated : r)));
@@ -159,12 +173,12 @@ export function ReviewSection({ botId }: ReviewSectionProps) {
   const deleteReview = async (r: BotReview) => {
     if (!window.confirm('Xóa đánh giá này?')) return;
     try {
-      const res = await fetch(`/api/bots/${botId}/reviews/${r.id}`, {
+      const res = await fetchWithTimeout(`/api/bots/${botId}/reviews/${r.id}`, {
         method: 'DELETE',
         credentials: 'include',
-      });
-      const json = await res.json();
-      if (!res.ok || !json.success) throw new Error(json.error || 'Xóa đánh giá thất bại');
+      }, 30_000);
+      const json = await res.json().catch(() => null) as { success?: boolean; error?: string } | null;
+      if (!res.ok || !json?.success) throw new Error(json?.error || 'Xóa đánh giá thất bại');
       setReviews((prev) => prev.filter((x) => x.id !== r.id));
       toast.success('Đã xóa đánh giá');
     } catch (err) {
@@ -225,7 +239,7 @@ export function ReviewSection({ botId }: ReviewSectionProps) {
           <div className="flex flex-wrap items-center gap-2">
             {images.map((url, i) => (
               <div key={url} className="relative">
-                <img src={url} alt={`Ảnh đánh giá ${i + 1}`} className="h-16 w-16 rounded-lg border border-border object-cover" />
+              <button type="button" onClick={() => setReviewPreview({ images, index: i })} className="block rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand" aria-label={`Xem ảnh đánh giá ${i + 1}`}><MediaImage src={url} alt={`Ảnh đánh giá ${i + 1}`} className="h-16 w-16 rounded-lg border border-border object-cover" /></button>
                 <button
                   type="button"
                   onClick={() => setImages((prev) => prev.filter((_, idx) => idx !== i))}
@@ -269,7 +283,14 @@ export function ReviewSection({ botId }: ReviewSectionProps) {
       {/* Danh sách review */}
       <div className="space-y-3">
         {loading && <p className="text-sm text-muted-foreground">Đang tải đánh giá…</p>}
-        {!loading && reviews.length === 0 && (
+        {!loading && loadError && (
+          <div className="rounded-xl border border-destructive/30 bg-destructive/5 px-4 py-4 text-sm" role="alert">
+            <p className="font-semibold text-destructive">Không tải được đánh giá</p>
+            <p className="mt-1 text-muted-foreground">{loadError}</p>
+            <button type="button" onClick={() => void load()} className="mt-3 inline-flex min-h-9 items-center rounded-lg bg-brand px-3 py-1.5 text-xs font-semibold text-brand-foreground hover:brightness-110">Thử lại</button>
+          </div>
+        )}
+        {!loading && !loadError && reviews.length === 0 && (
           <p className="rounded-2xl border border-border bg-card p-6 text-center text-sm text-muted-foreground">
             Chưa có đánh giá nào cho bot này.
           </p>
@@ -278,7 +299,7 @@ export function ReviewSection({ botId }: ReviewSectionProps) {
           <article key={r.id} className="space-y-2 rounded-2xl border border-border bg-card p-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <img src={r.userAvatar} alt={r.userName} className="h-8 w-8 rounded-full border border-border object-cover" />
+                <MediaImage src={r.userAvatar} alt={r.userName} className="h-8 w-8 rounded-full border border-border object-cover" />
                 <div>
                   <span className="block text-sm font-semibold text-foreground">{r.userName}</span>
                   <span className="block text-[11px] text-muted-foreground">{r.date}</span>
@@ -310,7 +331,7 @@ export function ReviewSection({ botId }: ReviewSectionProps) {
                 <div className="flex flex-wrap items-center gap-2">
                   {(editImages ?? []).map((url, i) => (
                     <div key={url} className="relative">
-                      <img src={url} alt="" className="h-14 w-14 rounded-lg border border-border object-cover" />
+                      <button type="button" onClick={() => setReviewPreview({ images: editImages ?? [], index: i })} className="block rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand" aria-label={`Xem ảnh đánh giá ${i + 1}`}><MediaImage src={url} alt={`Ảnh đánh giá ${i + 1}`} className="h-14 w-14 rounded-lg border border-border object-cover" /></button>
                       <button
                         type="button"
                         onClick={() => setEditImages((prev) => prev.filter((_, idx) => idx !== i))}
@@ -347,8 +368,8 @@ export function ReviewSection({ botId }: ReviewSectionProps) {
                 {r.comment && <p className="text-sm text-foreground">{r.comment}</p>}
                 {(r.images ?? []).length > 0 && (
                   <div className="flex flex-wrap gap-2">
-                    {(r.images ?? []).map((url) => (
-                      <img key={url} src={url} alt="Ảnh đánh giá" loading="lazy" className="h-20 w-20 rounded-lg border border-border object-cover" />
+                    {(r.images ?? []).map((url, index) => (
+                      <button key={url} type="button" onClick={() => setReviewPreview({ images: r.images ?? [], index })} className="group relative overflow-hidden rounded-lg border border-border bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand" aria-label={`Xem ảnh đánh giá ${index + 1}`}><MediaImage src={url} alt={`Ảnh đánh giá ${index + 1}`} loading="lazy" className="h-20 w-20 object-cover transition-transform duration-300 group-hover:scale-[1.03]" /></button>
                     ))}
                   </div>
                 )}
@@ -357,6 +378,7 @@ export function ReviewSection({ botId }: ReviewSectionProps) {
           </article>
         ))}
       </div>
+      {reviewPreview ? <ImageLightbox key={`${reviewPreview.index}-${reviewPreview.images.join('|')}`} images={reviewPreview.images.map((src, index) => ({ src, alt: `Ảnh đánh giá ${index + 1}` }))} initialIndex={reviewPreview.index} onClose={() => setReviewPreview(null)} /> : null}
     </section>
   );
 }

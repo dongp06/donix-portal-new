@@ -1,3 +1,5 @@
+import { transportFetch } from "./security-client";
+
 interface BaseErrorData {
   url: string;
   timestamp: string;
@@ -595,7 +597,7 @@ class ErrorReporter {
 
   private async sendError(error: ErrorReport) {
     try {
-      const response = await fetch(this.reportingEndpoint, {
+      const response = await transportFetch(this.reportingEndpoint, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -724,7 +726,7 @@ const shouldReportImmediate = (context: ErrorContext): boolean => {
 
 const sendImmediateError = async (payload: ImmediatePayload): Promise<void> => {
   try {
-    await fetch("/api/client-errors", {
+    await transportFetch("/api/client-errors", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),

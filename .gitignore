@@ -39,6 +39,8 @@ Thumbs.db
 # Local SQLite / Prisma (dev DB)
 **/*.db
 **/*.db-journal
+**/*.db-wal
+**/*.db-shm
 
 # Test coverage
 coverage/
@@ -52,12 +54,18 @@ coverage/
 *.pem
 .cache/
 
+# Local Build Shield master/signing material and active build pointer
+.build-shield/
+
 # Claude agent cache
 .agent/
 .claude/
 
 # Local file uploads
 uploads/
+
+# Rust/WASM build cache; the generated browser package is kept separately.
+e2ee/wasm/target/
 
 # Compiled shared/ (build artifacts, not source)
 shared/*.js

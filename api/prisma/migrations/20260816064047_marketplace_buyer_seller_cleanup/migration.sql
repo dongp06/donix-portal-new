@@ -97,3 +97,4 @@ CREATE INDEX "ForumPost_category_idx" ON "ForumPost"("category");
 
 PRAGMA foreign_keys=ON;
 PRAGMA defer_foreign_keys=OFF;
+

@@ -1,8 +1,8 @@
 /** Tên thương hiệu — dùng thống nhất cho OG / JSON-LD. */
-export const SITE_NAME = 'Donix.Net';
+export const SITE_NAME = 'thuebot.org';
 
 const DEFAULT_DESCRIPTION =
-  'Lập trình, game mod, phần mềm, tool tiện ích — bài viết có file tải về và hướng dẫn chi tiết.';
+  'Chợ bot thuê & tài nguyên tự động hóa — đăng bot, xem điểm uy tín, đánh giá và trao đổi trực tiếp với seller.';
 
 export function getDefaultDescription(): string {
   return DEFAULT_DESCRIPTION;
@@ -23,6 +23,20 @@ export function absoluteUrl(path: string): string {
   const base = getSiteUrl();
   const p = path.startsWith('/') ? path : `/${path}`;
   return `${base}${p}`;
+}
+
+/**
+ * JSON-LD is emitted inside a script element. JSON.stringify alone does not
+ * escape a user-controlled `</script>` sequence, so encode HTML-sensitive
+ * characters before using the result with dangerouslySetInnerHTML.
+ */
+export function safeJsonLd(value: unknown): string {
+  return (JSON.stringify(value) ?? 'null')
+    .replace(/</g, '\\u003c')
+    .replace(/>/g, '\\u003e')
+    .replace(/&/g, '\\u0026')
+    .replace(/\u2028/g, '\\u2028')
+    .replace(/\u2029/g, '\\u2029');
 }
 
 /** Ảnh có thể là path site hoặc URL tuyệt đối — dùng cho og:image. */

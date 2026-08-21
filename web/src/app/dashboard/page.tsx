@@ -8,28 +8,56 @@ import { CreateBotModal } from '../../components/modals/CreateBotModal';
 import { ProfileTab } from '../../components/dashboard/ProfileTab';
 import { TrustTab } from '../../components/dashboard/TrustTab';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../../components/ui/tabs';
-import { Plus, Building2, Eye, Pencil, Bot, UserRound, ShieldCheck } from 'lucide-react';
+import { Loader2, Plus, Building2, Eye, Pencil, Bot, UserRound, ShieldCheck } from 'lucide-react';
 import { toast } from 'sonner';
+import { getBotPriceDisplay } from '@/lib/bot-pricing';
+import { ThuebotLogo } from '@/components/brand/ThuebotLogo';
+import { MediaImage } from '@/components/media/MediaImage';
+
+function DashboardAuthLoading() {
+  return (
+    <main className="grid min-h-screen place-items-center bg-background px-6 text-foreground" aria-busy="true">
+      <div className="flex w-full max-w-sm flex-col items-center text-center" role="status" aria-live="polite">
+        <ThuebotLogo size="lg" />
+        <div className="mt-8 flex items-center gap-2 text-sm font-semibold">
+          <Loader2 className="h-4 w-4 animate-spin text-brand" aria-hidden />
+          Đang mở bảng điều khiển…
+        </div>
+        <p className="mt-2 text-xs leading-relaxed text-muted-foreground">Đang kiểm tra phiên đăng nhập của bạn.</p>
+      </div>
+    </main>
+  );
+}
 
 export default function DashboardPage() {
-  const { bots, user, isAuthenticated } = useRole();
+  const { bots, user, authStatus, onboardingCompleted } = useRole();
   const [isCreateBotOpen, setIsCreateBotOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<'bots' | 'profile' | 'trust'>('bots');
   const router = useRouter();
+
+  useEffect(() => {
+    const requestedTab = new URLSearchParams(window.location.search).get('tab');
+    if (requestedTab === 'profile' || requestedTab === 'trust' || requestedTab === 'bots') {
+      setActiveTab(requestedTab);
+    }
+  }, []);
 
   // Chỉ seller mới được vào trang quản lý đăng bot
   useEffect(() => {
-    if (isAuthenticated === true && user.role !== 'seller') {
-      router.replace('/bots');
+    if (authStatus === 'loading') return;
+    if (authStatus === 'unauthenticated') {
+      router.replace('/login?returnTo=%2Fdashboard');
+      return;
     }
-  }, [isAuthenticated, user.role, router]);
+    if (!onboardingCompleted) {
+      router.replace('/onboarding/account-type?returnTo=%2Fdashboard');
+      return;
+    }
+    if (user.role !== 'seller') router.replace('/become-seller');
+  }, [authStatus, onboardingCompleted, router, user.role]);
 
-  if (isAuthenticated !== true || user.role !== 'seller') {
-    return (
-      <div className="flex min-h-[60vh] items-center justify-center bg-background text-foreground">
-        <p className="text-sm text-muted-foreground">Đang kiểm tra quyền truy cập…</p>
-      </div>
-    );
-  }
+  if (authStatus === 'loading') return <DashboardAuthLoading />;
+  if (authStatus !== 'authenticated' || user.role !== 'seller') return null;
 
   // Bot của người bán hiện tại
   const myBots = bots.filter((b) => b.seller.id === user.id);
@@ -60,7 +88,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Tabs */}
-        <Tabs defaultValue="bots" className="w-full">
+        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'bots' | 'profile' | 'trust')} className="w-full">
           <TabsList
             aria-label="Khu vực quản lý"
             className="inline-flex h-auto w-full justify-start gap-1 rounded-xl bg-muted p-1 sm:w-auto"
@@ -117,7 +145,7 @@ export default function DashboardPage() {
                       <tr>
                         <th className="p-4">Tên bot / phần mềm</th>
                         <th className="p-4">Danh mục</th>
-                        <th className="p-4">Giá tham khảo</th>
+                        <th className="p-4">Giá hiển thị</th>
                         <th className="p-4">Trạng thái</th>
                         <th className="p-4 text-right">Thao tác</th>
                       </tr>
@@ -127,12 +155,12 @@ export default function DashboardPage() {
                         <tr key={b.id} className="transition-colors hover:bg-muted/40">
                           <td className="p-4 font-semibold">
                             <div className="flex items-center gap-3">
-                              <img src={b.coverImage} alt={b.title} className="h-10 w-10 rounded-lg object-cover" />
+                              <MediaImage src={b.coverImage} alt={b.title} className="h-10 w-10 rounded-lg object-cover" />
                               <span className="line-clamp-1">{b.title}</span>
                             </div>
                           </td>
                           <td className="p-4 text-muted-foreground">{b.categoryName}</td>
-                          <td className="p-4 font-medium">{b.pricing.hourly.toLocaleString('vi-VN')}đ/giờ</td>
+                          <td className="p-4 font-medium">{getBotPriceDisplay(b.pricing)}</td>
                           <td className="p-4">
                             <span
                               className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold ${

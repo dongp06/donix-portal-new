@@ -1,4 +1,4 @@
-import { SITE_NAME, absoluteUrl, getDefaultDescription } from '@/lib/site';
+import { SITE_NAME, absoluteUrl, getDefaultDescription, safeJsonLd } from '@/lib/site';
 
 /** WebSite + Organization gốc cho trang chủ (toàn site). */
 export function RootJsonLd() {
@@ -22,7 +22,7 @@ export function RootJsonLd() {
         url: siteUrl,
         logo: {
           '@type': 'ImageObject',
-          url: absoluteUrl('/logo.png'),
+          url: absoluteUrl('/favicon-512.png'),
         },
       },
     ],
@@ -31,7 +31,7 @@ export function RootJsonLd() {
   return (
     <script
       type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+      dangerouslySetInnerHTML={{ __html: safeJsonLd(schema) }}
     />
   );
 }

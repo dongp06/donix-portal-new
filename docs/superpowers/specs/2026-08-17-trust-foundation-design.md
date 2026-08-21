@@ -1,5 +1,12 @@
 # Trust Foundation — Seller Profile v2, Trust Score, Tier & Xác minh
 
+> Historical product design record. The HTTP implementation described by old
+> NestJS/controller/cron snippets in this document has been superseded by the
+> pure Fastify runtime in `apps/api-fastify`. Keep the domain decisions and
+> schema intent here, but use `docs/fastify-migration/` and the Fastify source
+> as the current runtime contract; do not copy the legacy NestJS snippets into
+> production code.
+
 Ngày: 2026-08-17
 Trạng thái: Approved
 

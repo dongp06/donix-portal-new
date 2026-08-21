@@ -1,19 +1,26 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRole } from '../../context/RoleContext';
-import { BotItem, BotCategorySlug } from '@shared/types';
 import { BotCard } from '../../components/bot/BotCard';
-import { ContactModal } from '../../components/modals/ContactModal';
 import { Search, ArrowUpDown } from 'lucide-react';
+import { getBotPriceValue } from '@/lib/bot-pricing';
 
 export default function BotsCatalogPage() {
-  const { bots } = useRole();
+  const { bots, botsLoading, botsError, reloadBots } = useRole();
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [sortOption, setSortOption] = useState<string>('popular');
-  const [selectedBotForContact, setSelectedBotForContact] = useState<BotItem | null>(null);
+  const [trustedOnly, setTrustedOnly] = useState(false);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    setSearch(params.get('q')?.trim() ?? '');
+    setSelectedCategory(params.get('category') ?? 'all');
+    setSortOption(params.get('sort') ?? 'popular');
+    setTrustedOnly(params.get('trusted') === '1');
+  }, []);
 
   const categories = [
     { id: 'all', name: 'Tất cả danh mục' },
@@ -28,18 +35,21 @@ export default function BotsCatalogPage() {
     .filter((b) => {
       const matchCat = selectedCategory === 'all' || b.categorySlug === selectedCategory;
       const matchStatus = statusFilter === 'all' || b.status === statusFilter;
+      const matchTrusted = !trustedOnly || b.seller.isTrusted;
       const matchSearch =
         !search ||
         b.title.toLowerCase().includes(search.toLowerCase()) ||
         b.description.toLowerCase().includes(search.toLowerCase()) ||
+        b.tagline.toLowerCase().includes(search.toLowerCase()) ||
+        b.seller.name.toLowerCase().includes(search.toLowerCase()) ||
         b.tags.some((t) => t.toLowerCase().includes(search.toLowerCase()));
-      return matchCat && matchStatus && matchSearch;
+      return matchCat && matchStatus && matchTrusted && matchSearch;
     })
     .sort((a, b) => {
       if (sortOption === 'popular') return b.views - a.views;
       if (sortOption === 'rating') return b.rating - a.rating;
-      if (sortOption === 'price_asc') return a.pricing.daily - b.pricing.daily;
-      if (sortOption === 'price_desc') return b.pricing.daily - a.pricing.daily;
+      if (sortOption === 'price_asc') return getBotPriceValue(a) - getBotPriceValue(b);
+      if (sortOption === 'price_desc') return getBotPriceValue(b) - getBotPriceValue(a);
       return 0;
     });
 
@@ -53,7 +63,7 @@ export default function BotsCatalogPage() {
         <div className="mb-8">
           <p className="eyebrow">Chợ bot tự động hóa</p>
           <h1 className="mt-2 font-display text-3xl font-bold tracking-tight md:text-4xl">
-            Danh sách bot ({filteredBots.length})
+            Danh sách bot{botsLoading && bots.length === 0 ? '' : ` (${filteredBots.length})`}
           </h1>
           <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">
             Lựa chọn bot phù hợp cho công việc, game hoặc đầu tư. Liên hệ trực tiếp người bán qua giá tham khảo theo giờ, ngày, tháng.
@@ -100,10 +110,28 @@ export default function BotsCatalogPage() {
         </div>
 
         {/* Grid */}
-        {filteredBots.length > 0 ? (
+        {botsLoading && bots.length === 0 ? (
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3" aria-busy="true" aria-live="polite">
+            {Array.from({ length: 6 }, (_, index) => (
+              <div key={index} className="h-[24rem] animate-pulse rounded-2xl border border-border bg-card" />
+            ))}
+          </div>
+        ) : botsError && bots.length === 0 ? (
+          <div className="space-y-4 rounded-2xl border border-border bg-card p-16 text-center">
+            <p className="font-display text-xl font-bold">Bot catalog is temporarily unavailable</p>
+            <p className="text-sm text-muted-foreground">{botsError}</p>
+            <button
+              type="button"
+              onClick={() => void reloadBots()}
+              className="inline-flex min-h-11 items-center rounded-xl bg-brand px-4 py-2.5 text-sm font-semibold text-brand-foreground"
+            >
+              Try again
+            </button>
+          </div>
+        ) : filteredBots.length > 0 ? (
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {filteredBots.map((bot) => (
-              <BotCard key={bot.id} bot={bot} onContactClick={(b) => setSelectedBotForContact(b)} />
+              <BotCard key={bot.id} bot={bot} />
             ))}
           </div>
         ) : (
@@ -116,6 +144,7 @@ export default function BotsCatalogPage() {
                 setSearch('');
                 setSelectedCategory('all');
                 setStatusFilter('all');
+                setTrustedOnly(false);
               }}
               className="text-xs font-semibold text-brand underline"
             >
@@ -125,11 +154,6 @@ export default function BotsCatalogPage() {
         )}
       </div>
 
-      <ContactModal
-        bot={selectedBotForContact}
-        isOpen={!!selectedBotForContact}
-        onClose={() => setSelectedBotForContact(null)}
-      />
     </div>
   );
 }

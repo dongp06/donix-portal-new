@@ -1,5 +1,7 @@
 # Trust Foundation (Sub-project A) Implementation Plan
 
+> **Historical plan notice:** this plan was written before the pure Fastify and opaque-credential migration. Its NestJS/JWT/`donix_token` references describe the old implementation only; the current HTTP/auth contract is in `docs/fastify-migration/`.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Nâng cấp seller thành "shop" có hồ sơ, Trust Score 0–100 thật, hệ tier 4 bậc, xác minh seller bằng hồ sơ + admin duyệt tay (tích xanh có thời hạn 180 ngày), kèm admin trust dashboard.

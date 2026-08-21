@@ -12,6 +12,7 @@ export interface BotContactInfo {
   phone?: string;
   messenger?: string;
   facebook?: string;
+  website?: string;
 }
 
 export interface UserProfile {
@@ -20,14 +21,15 @@ export interface UserProfile {
   email: string;
   avatar: string;
   role: UserRole;
-  isVerifiedSeller?: boolean;
+  isTrustedSeller?: boolean;
+  verificationState?: VerificationState;
   bio?: string;
   joinedDate: string;
   /** Liên hệ của seller (zalo/telegram/phone/messenger/facebook) */
   contact?: BotContactInfo;
 }
 
-export type BotCategorySlug = 'messenger' | 'telegram' | 'discord' | 'zalo' | 'instagram';
+export type BotCategorySlug = 'messenger' | 'telegram' | 'discord' | 'zalo' | 'instagram' | 'ai' | 'automation' | 'other';
 
 export interface BotCategory {
   id: string;
@@ -48,7 +50,13 @@ export interface BotSellerInfo {
   reputation?: number;
   /** Bậc seller */
   tier?: SellerTier;
-  isVerified: boolean;
+  /** Blue badge is shown only for an active Trusted Seller state. */
+  isTrusted: boolean;
+  verificationState?: VerificationState;
+  trustedAt?: string;
+  trustedUntil?: string;
+  basicVerifiedCount?: number;
+  basicVerifiedTotal?: number;
   joinedDate: string;
   /** Slug profile seller (fallback id nếu chưa có) */
   slug?: string;
@@ -56,15 +64,18 @@ export interface BotSellerInfo {
 }
 
 export interface BotPricing {
-  hourly: number;
-  daily: number;
-  monthly: number;
+  /** Mức giá tham chiếu bắt buộc, luôn quy đổi theo tháng. */
+  monthlyPrice: number;
+  /** Markdown/text bảng giá bổ sung do seller tự trình bày. */
+  pricingDescription?: string;
+  /** Ảnh bảng giá bổ sung, tối đa 5 ảnh. */
+  pricingImages?: string[];
 }
 
 export type BotStatus = 'online' | 'maintenance' | 'offline';
 
 /** Đối tượng được bình luận/reaction */
-export type CommentTargetType = 'post' | 'forum' | 'bot';
+export type CommentTargetType = 'post' | 'bot';
 
 export interface ReactionSummary {
   emoji: string;
@@ -102,6 +113,18 @@ export interface BotReview {
   isOwn?: boolean;
 }
 
+/** Đánh giá được gắn với bot khi hiển thị trong hồ sơ seller. */
+export interface SellerReview extends BotReview {
+  botId: string;
+  botTitle: string;
+}
+
+export interface SellerReviewSummary {
+  total: number;
+  average: number;
+  distribution: [number, number, number, number, number];
+}
+
 export interface BotItem {
   id: string;
   slug: string;
@@ -121,55 +144,80 @@ export interface BotItem {
   /** Lượt xem bot */
   views: number;
   tags: string[];
+  targetAudience?: string[];
   version: string;
   systemReqs: string;
   reviews?: BotReview[];
+  pricingUpdatedAt?: string;
   updatedAt: string;
 }
 
-export type ForumCategory =
-  | 'Chia sẻ kinh nghiệm'
-  | 'Yêu cầu làm bot'
-  | 'Thảo luận Dev'
-  | 'Báo lỗi & Hỗ trợ';
+export type PostType =
+  | 'share'
+  | 'question'
+  | 'bot_update'
+  | 'warning'
+  | 'discussion'
+  | 'announcement'
+  | 'resource';
 
-export interface ForumPost {
+export type PostStatus =
+  | 'draft'
+  | 'scheduled'
+  | 'pending'
+  | 'published'
+  | 'hidden'
+  | 'removed';
+
+export type PostOfficialRole = 'owner' | 'admin' | 'system';
+
+export interface PostAuthor {
+  id?: string | null;
+  name: string;
+  avatar: string;
+  role: UserRole | string;
+  slug?: string;
+  tier?: SellerTier;
+  trustScore?: number;
+  isTrusted?: boolean;
+  /** Official authority is separate from Trusted Seller status. */
+  isOfficial?: boolean;
+  officialRole?: PostOfficialRole;
+  verificationState?: VerificationState;
+  trustedAt?: string;
+  trustedUntil?: string;
+}
+
+export interface ResourceFile {
+  id: string;
+  originalName: string;
+  mimeType: string;
+  sizeBytes: number;
+  sizeLabel: string;
+  sha256: string;
+  previewable: boolean;
+  downloadCount: number;
+  language?: string;
+}
+
+export interface ResourceVersion {
+  id: string;
+  version: string;
+  changelog: string;
+  publishedAt?: string | null;
+  files: ResourceFile[];
+}
+
+export interface PostResource {
   id: string;
   title: string;
-  excerpt: string;
-  content: string;
-  /** ID người đăng bài (nếu đăng khi đã đăng nhập) */
-  authorId?: string;
-  authorName: string;
-  authorAvatar: string;
-  authorRole: 'Người mua' | 'Người bán' | 'Admin';
-  category: ForumCategory;
-  upvotes: number;
-  commentsCount: number;
-  createdAt: string;
-  tags: string[];
-  isPinned?: boolean;
-  /** React emoji trên bài viết (tổng hợp từ Reaction) */
-  reactions?: ReactionSummary[];
-  /** true nếu bài này là của người xem đang đăng nhập (cho nút sửa/xóa) */
-  isOwn?: boolean;
-}
-
-export interface PostAttachment {
-  id: string;
-  filename: string;
-  sizeLabel: string;
-  /** ID phục vụ GET /api/files/:fileId */
-  fileId: string;
-}
-
-export interface Category {
-  id: string;
-  slug: string;
-  name: string;
-  /** Hiển thị menu IN HOA kiểu army2.net */
-  navLabel?: string;
-  count: number;
+  description: string;
+  license: string;
+  allowDownload: boolean;
+  showSource: boolean;
+  requiresLogin: boolean;
+  currentVersion: ResourceVersion;
+  versions?: ResourceVersion[];
 }
 
 export interface Post {
@@ -177,26 +225,88 @@ export interface Post {
   slug: string;
   title: string;
   excerpt: string;
-  content: string;
-  coverImage: string;
-  categoryId: string;
+  content?: string;
+  type: PostType;
+  status: PostStatus;
+  category: string;
   categoryName: string;
+  coverImage?: string | null;
+  linkedBotId?: string | null;
+  linkedBot?: BotItem | null;
+  author: PostAuthor;
+  tags: string[];
   views: number;
-  date: string;
+  commentsCount: number;
+  reactionCount: number;
+  bookmarkCount: number;
+  reportCount?: number;
   isPinned: boolean;
-  /** Thời gian đọc ước lượng (phút), hiển thị "Đọc: N phút" */
-  readTimeMinutes?: number;
-  /** Nhãn cạnh icon tài liệu (vd: Python, Node.js) */
-  stackLabel?: string;
-  /** Nhãn cam phụ (vd: LẬP TRÌNH PYTHON) */
-  tagLine?: string;
-  codeExample?: { title?: string; language?: string; code: string };
-  /** Ví dụ output JSON/text demo */
-  sampleOutput?: string;
-  /** File đính kèm — chia sẻ tài nguyên tải về */
-  attachments?: PostAttachment[];
-  /** Slug các bài liên quan */
-  relatedSlugs?: string[];
+  isFeatured: boolean;
+  commentsLocked: boolean;
+  answerCommentId?: string | null;
+  readTimeMinutes: number;
+  createdAt: string;
+  updatedAt: string;
+  publishedAt?: string | null;
+  scheduledAt?: string | null;
+  resource?: PostResource | null;
+  isBookmarked?: boolean;
+  isOwn?: boolean;
+  reactions?: ReactionSummary[];
+}
+
+/** Dữ liệu seed nội dung Posts; không phải payload public của API. */
+export interface PostSeed {
+  id: string;
+  slug: string;
+  title: string;
+  excerpt: string;
+  content: string;
+  authorName: string;
+  authorAvatar: string;
+  authorRole: string;
+  type: PostType;
+  status: PostStatus;
+  category: string;
+  categoryName: string;
+  coverImage?: string | null;
+  linkedBotId?: string | null;
+  views: number;
+  upvotes: number;
+  commentsCount: number;
+  reactionCount: number;
+  readTimeMinutes: number;
+  createdAt: string;
+  tags: string[];
+  isPinned?: boolean;
+  isFeatured?: boolean;
+}
+
+export interface PostFeed {
+  items: Post[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+    hasMore: boolean;
+  };
+  categories: { slug: string; name: string; count: number }[];
+  trendingTags: { tag: string; count: number }[];
+}
+
+export interface PostReport {
+  id: string;
+  postId: string;
+  postTitle: string;
+  reporterId?: string | null;
+  category: string;
+  details?: string | null;
+  status: 'open' | 'resolved' | 'dismissed';
+  createdAt: string;
+  reviewedAt?: string | null;
+  reviewedBy?: string | null;
+  resolution?: string | null;
 }
 
 /** Loại sự kiện trong lịch sử uy tín của seller */
@@ -204,10 +314,39 @@ export type SellerTrustEventType =
   | 'joined'
   | 'tier_changed'
   | 'verification_submitted'
-  | 'verification_approved'
-  | 'verification_rejected'
-  | 'verification_expired'
-  | 'verification_revoked';
+  | 'verification_state_changed'
+  | 'verification_check_updated'
+  | 'verification_reviewed'
+  | 'verification_revoked'
+  | 'trusted_expired';
+
+export type VerificationState =
+  | 'unverified'
+  | 'pending'
+  | 'verified'
+  | 'trusted'
+  | 'under_review'
+  | 'suspended'
+  | 'revoked'
+  | 'rejected';
+
+export type VerificationCheckKind =
+  | 'email'
+  | 'phone'
+  | 'telegram'
+  | 'website'
+  | 'identity';
+
+export interface VerificationCheck {
+  kind: VerificationCheckKind;
+  label: string;
+  status: 'unverified' | 'pending' | 'verified' | 'revoked';
+  provided: boolean;
+  value?: string;
+  method?: string;
+  verifiedAt?: string;
+  expiresAt?: string;
+}
 
 /** Sự kiện trong lịch sử uy tín */
 export interface SellerTrustEvent {
@@ -226,17 +365,33 @@ export interface TrustChecklistItem {
   current?: string;
   /** Giá trị cần đạt (VD "30 ngày", "5 đánh giá") */
   required?: string;
+  category?: 'verification' | 'eligibility' | 'review';
+  automated?: boolean;
+  blocking?: boolean;
 }
 
 /** Trạng thái verification hiện tại của seller */
 export interface TrustStatus {
-  status: 'none' | 'pending' | 'approved' | 'under_review' | 'rejected' | 'expired';
+  status: VerificationState | 'none';
   submittedAt?: string;
   reviewedAt?: string;
   expiresAt?: string;
   note?: string;
   /** true nếu đang chờ hồ sơ của admin (có thể hủy) */
   canCancel: boolean;
+  recommendation?: 'approve' | 'reject';
+}
+
+export interface TrustSummary {
+  state: VerificationState;
+  isTrusted: boolean;
+  trustScore: number;
+  trustedAt?: string;
+  trustedUntil?: string;
+  basicVerifiedCount: number;
+  basicVerifiedTotal: number;
+  checks: VerificationCheck[];
+  checklist: TrustChecklistItem[];
 }
 
 /** Trust Score hiện tại + breakdown theo component */
@@ -255,7 +410,7 @@ export interface SellerProfileUser {
   name: string;
   avatar: string;
   role: UserRole;
-  isVerified: boolean;
+  isTrusted: boolean;
   bio?: string;
   joinedDate: string;
   contact?: BotContactInfo;
@@ -267,12 +422,76 @@ export interface SellerProfileUser {
   slug?: string;
   /** Ngày duyệt xác minh gần nhất (ISO) */
   verifiedAt?: string;
+  verificationState: VerificationState;
+  trustedAt?: string;
+  trustedUntil?: string;
+  basicVerifiedCount: number;
+  basicVerifiedTotal: number;
+  followerCount?: number;
+  isFollowing?: boolean;
+}
+
+export type SellerLookupMatchType =
+  | 'telegram'
+  | 'website'
+  | 'zalo'
+  | 'phone'
+  | 'messenger'
+  | 'facebook'
+  | 'contact'
+  | 'slug'
+  | 'name'
+  | 'id';
+
+export type SellerLookupVerificationStatus = VerificationState | 'none';
+
+export type SellerLookupRiskStatus = 'clear' | 'limited' | 'caution';
+
+export interface SellerLookupVerificationCheck {
+  kind: VerificationCheckKind;
+  label: string;
+  status: VerificationCheck['status'];
+}
+
+/** Public result for the Check Seller lookup. */
+export interface SellerLookupResult {
+  id: string;
+  name: string;
+  shopName: string;
+  avatar: string;
+  slug?: string;
+  profilePath: string;
+  trustScore: number;
+  tier: SellerTier;
+  rating: number | null;
+  reviewCount: number;
+  botCount: number;
+  joinedDate: string;
+  verified: boolean;
+  isTrusted: boolean;
+  verificationStatus: SellerLookupVerificationStatus;
+  verifiedAt?: string;
+  trustedUntil?: string;
+  basicVerifiedCount: number;
+  basicVerifiedTotal: number;
+  matchType: SellerLookupMatchType;
+  exactMatch: boolean;
+  verificationChecks: SellerLookupVerificationCheck[];
+  riskStatus: SellerLookupRiskStatus;
+  riskMessage: string;
+}
+
+export interface SellerLookupResponse {
+  query: string;
+  matches: SellerLookupResult[];
 }
 
 export interface SellerProfile {
   user: SellerProfileUser;
   bots: BotItem[];
-  posts: ForumPost[];
+  posts: Post[];
   /** Lịch sử uy tín (timeline) */
   trustEvents?: SellerTrustEvent[];
+  reviews?: SellerReview[];
+  reviewSummary?: SellerReviewSummary;
 }

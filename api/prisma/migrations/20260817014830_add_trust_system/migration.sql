@@ -118,3 +118,4 @@ CREATE INDEX "TrustVerification_status_idx" ON "TrustVerification"("status");
 
 -- CreateIndex
 CREATE INDEX "TrustEvent_userId_idx" ON "TrustEvent"("userId");
+
