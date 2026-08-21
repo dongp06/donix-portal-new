@@ -33,6 +33,7 @@ Thumbs.db
 
 # IDE (optional: track .vscode/extensions.json via !)
 .idea/
+.impeccable/
 *.swp
 *.swo
 
